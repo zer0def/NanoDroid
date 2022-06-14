@@ -35,6 +35,8 @@ appsfolder[9]="OsmAnd/system"
 appsfolder[10]="${CWD}/${appsfolder[9]}"
 appsfolder[11]="BromiteWebView/system"
 appsfolder[12]="${CWD}/${appsfolder[11]}"
+appsfolder[13]="MulchWebView/system"
+appsfolder[14]="${CWD}/${appsfolder[13]}"
 
 # ripped-out
 appsfolder[5]="Google/gsync"
@@ -56,23 +58,18 @@ for opt in "${@}"; do
 			mk_pkg_full
 		;;
 
-		fdroid )
-			check_nanodroid || error "run 'build-package pull' first!"
-			mk_pkg_fdroid
-		;;
-
 		uninstaller )
 			mk_pkg_uninstaller
 		;;
 
-		bromitewebview )
-			check_nanodroid || error "run 'build-package pull' first!"
-			mk_pkg_bromite_webview
-		;;
+		#bromitewebview )
+		#	check_nanodroid || error "run 'build-package pull' first!"
+		#	mk_pkg_bromite_webview
+		#;;
 
-		osmand )
+		mulchwebview )
 			check_nanodroid || error "run 'build-package pull' first!"
-			mk_pkg_osmand
+			mk_pkg_mulch_webview
 		;;
 
 		systest )
@@ -82,10 +79,9 @@ for opt in "${@}"; do
 		all )
 			check_nanodroid || error "run 'build-package pull' first!"
 			mk_pkg_full
-			mk_pkg_fdroid
 			#mk_pkg_uninstaller
-			mk_pkg_bromite_webview
-			mk_pkg_osmand
+			#mk_pkg_bromite_webview
+			mk_pkg_mulch_webview
 			#mk_pkg_systest
 			#create_report
 		;;
@@ -112,13 +108,6 @@ for opt in "${@}"; do
 			check_nanodroid
 		;;
 
-		u-fdroid )
-			update_indices
-			update_fdroid
-			update_master
-			check_nanodroid
-		;;
-
 		u-apps )
 			update_indices
 			update_apps
@@ -126,19 +115,12 @@ for opt in "${@}"; do
 			check_nanodroid
 		;;
 
-		u-bromite )
-			update_indices
-			update_bromite
-			update_master
-			check_nanodroid
-		;;
-
-		u-osmand )
-			update_indices
-			update_osmand
-			update_master
-			check_nanodroid
-		;;
+		#u-bromite )
+		#	update_indices
+		#	update_webview
+		#	update_master
+		#	check_nanodroid
+		#;;
 
 		check )
 			check_nanodroid

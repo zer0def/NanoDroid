@@ -17,7 +17,7 @@ fi
 
 setup_installer 1
 
-install_bromite_webview
+install_webview
 set_progress 0.75
 
 nanodroid_finalize

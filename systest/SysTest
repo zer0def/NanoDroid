@@ -140,7 +140,7 @@ mount_partitions () {
 	[ -z "${SLOT}" ] && DEVICE_AB=FALSE || DEVICE_AB=TR
 
 	SYSTEM_BLOCK="$(find_block system app)"
-	VENDOR_BLOCK="$(find_block vendor vnr)"
+	VENDOR_BLOCK="$(find_block vendor vnr cust)"
 
 	if "${BOOTMODE}"; then
 		if [[ ! "$(is_mounted /vendor)" && -a /system/vendor ]]; then

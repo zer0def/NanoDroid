@@ -13,7 +13,7 @@ build:
     apt update && DEBIAN_FRONTEND=noninteractive apt -y install curl file gawk gpg jq unzip zip zstd
     ./build-package pull && ./build-package all ||:  # evade gpg signature return code
     tag="$(date +%Y%m%d)" auth="JOB-TOKEN: ${CI_JOB_TOKEN}"
-    for i in NanoDroid NanoDroid-BromiteWebView; do
+    for i in NanoDroid NanoDroid-MulchWebView; do
       echo "$(awk '{print $1}' "${i}-23.2.${tag}.zip.sha256")  ${i}-${tag}.zip" >"${i}-${tag}.zip.sha256"
       curl -s -o /dev/null -H "${auth}" -T "${i}-23.2.${tag}.zip" "${PACKAGE_URL}/${tag}/${i}-${tag}.zip"
       curl -s -o /dev/null -H "${auth}" -T "${i}-${tag}.zip.sha256" "${PACKAGE_URL}/${tag}/${i}-${tag}.zip.sha256"
@@ -41,11 +41,7 @@ publish:
         url: "${PACKAGE_URL}/$(date +%Y%m%d)/NanoDroid-BromiteWebView-$(date +%Y%m%d).zip"
       - name: "NanoDroid-BromiteWebView-$(date +%Y%m%d) sha256"
         url: "${PACKAGE_URL}/$(date +%Y%m%d)/NanoDroid-BromiteWebView-$(date +%Y%m%d).zip.sha256"
-      - name: "NanoDroid-fdroid-$(date +%Y%m%d)"
-        url: "${PACKAGE_URL}/$(date +%Y%m%d)/NanoDroid-fdroid-$(date +%Y%m%d).zip"
-      - name: "NanoDroid-fdroid-$(date +%Y%m%d) sha256"
-        url: "${PACKAGE_URL}/$(date +%Y%m%d)/NanoDroid-fdroid-$(date +%Y%m%d).zip.sha256"
-      - name: "NanoDroid-OsmAnd-$(date +%Y%m%d)"
-        url: "${PACKAGE_URL}/$(date +%Y%m%d)/NanoDroid-OsmAnd-$(date +%Y%m%d).zip"
-      - name: "NanoDroid-OsmAnd-$(date +%Y%m%d) sha256"
-        url: "${PACKAGE_URL}/$(date +%Y%m%d)/NanoDroid-OsmAnd-$(date +%Y%m%d).zip.sha256"
+      - name: "NanoDroid-MulchWebView-$(date +%Y%m%d)"
+        url: "${PACKAGE_URL}/$(date +%Y%m%d)/NanoDroid-MulchWebView-$(date +%Y%m%d).zip"
+      - name: "NanoDroid-MulchWebView-$(date +%Y%m%d) sha256"
+        url: "${PACKAGE_URL}/$(date +%Y%m%d)/NanoDroid-MulchWebView-$(date +%Y%m%d).zip.sha256"

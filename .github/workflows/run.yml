@@ -21,14 +21,12 @@ jobs:
         ./build-package pull
         #./build-package all ||:
         ./build-package bromitewebview ||:
-        #./build-package fdroid ||:
-        #./build-package osmand ||:
 
         id="$(echo "{\"tag_name\":\"${tag}\",\"draft\":true}" | curl -s -d@- -H "${auth}" -H "Content-Type: application/json" "${api}" | jq -r .id)"
         [ -n "${id}" ] && [ "${id}" != "null" ] || exit 1
 
-        #for i in NanoDroid NanoDroid-BromiteWebView NanoDroid-fdroid NanoDroid-OsmAnd; do
-        for i in NanoDroid-BromiteWebView; do
+        #for i in NanoDroid NanoDroid-BromiteWebView NanoDroid-MulchWebView; do
+        for i in NanoDroid-MulchWebView; do
           curl -s --data-binary "@${i}-23.2.${tag}.zip" -o /dev/null -H "${auth}" -H "Content-Type: application/octet-stream" "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/${id}/assets?name=$(basename ${i}-23.2.${tag}.zip)"
           curl -s --data-binary "@${i}-23.2.${tag}.zip.sha256" -o /dev/null -H "${auth}" -H "Content-Type: application/octet-stream" "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/${id}/assets?name=$(basename ${i}-23.2.${tag}.zip.sha256)"
         done

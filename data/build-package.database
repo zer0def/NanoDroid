@@ -1,42 +1,91 @@
 #!/bin/bash
 
 ###
-# NanoDroid self-provided apks
-###
-
-nlx_MPV=(nanolx is.xyz.mpv app MPV)
-
-###
-# F-Droid
-###
-
-fd_FDROID=(fdroid org.fdroid.fdroid app FDroid)
-fd_FDROID_PE=(fdroid org.fdroid.fdroid.privileged priv-app FDroidPrivileged)
-
-###
 # Apps
 ###
 
+fd_ADAWAY=(fdroid org.adaway priv-app AdAway)
+fd_AFWALL=(fdroid dev.ukanth.ufirewall priv-app AFWall)
 fd_ALARMIO=(fdroid me.jfenn.alarmio app Alarmio)
+fd_ANDIODINE=(fdroid org.xapek.andiodine app Andiodine)
 fd_ANYSOFTKEYBOARD=(fdroid com.menny.android.anysoftkeyboard app AnysoftKeyboard)
+fd_APPMANAGER=(fdroid io.github.muntashirakon.AppManager priv-app AppManager)
+fd_BARCODESCANNER=(fdroid com.google.zxing.client.android app BarcodeScanner)
+fd_BINARYEYE=(fdroid de.markusfisch.android.binaryeye app BinaryEye)
+fd_BRIAR=(briar org.briarproject.briar.android app Briar)
+fd_CONVERSATIONS=(fdroid eu.siacs.conversations app Conversations)
+fd_DAVX5=(fdroid at.bitfire.davdroid app DAVx5)
+fd_EXTIRPATER=(divestos us.spotco.extirpater app Extirpater)
+fd_FAIREMAIL=(fdroid eu.faircode.email app FairEmail)
+fd_FCITX5_arm64=(fdroid org.fcitx.fcitx5.android app Fcitx5_arm64 arm64-v8a)
+fd_FCITX5ANTHY_arm64=(fdroid org.fcitx.fcitx5.android.plugin.anthy app Fcitx5Anthy_arm64 arm64-v8a)
+fd_FCITX5_arm=(fdroid org.fcitx.fcitx5.android app Fcitx5_arm armeabi-v7a)
+fd_FCITX5ANTHY_arm=(fdroid org.fcitx.fcitx5.android.plugin.anthy app Fcitx5Anthy_arm armeabi-v7a)
+fd_FOSSBROWSER=(fdroid de.baumann.browser app FOSSBrowser)
 fd_FREETOPP=(fdroid org.liberty.android.freeotpplus app FreeOTPPlus)
 fd_FROST=(fdroid com.pitchedapps.frost app Frost)
+fd_BREEZYWEATHER=(breezyweather org.breezyweather app BreezyWeather)
+fd_GMAPSWV=(divestos us.spotco.maps app GMapsWV)
+fd_GPSTEST=(fdroid com.android.gpstest.osmdroid app GPSTest)
 fd_HACKERSKEYBOARD=(fdroid org.pocketworkstation.pckeyboard app HackersKeyboard)
-fd_KEEPASSDX=(fdroid com.kunzisoft.keepass.libre app KeePassDX)
+fd_HYPATIA=(divestos us.spotco.malwarescanner app Hypatia)
+fd_IMAGEPIPE=(fdroid de.kaffeemitkoffein.imagepipe app Imagepipe)
+fd_INVIZIBLE=(fdroid pan.alexander.tordnscrypt.stable priv-app InviZible)
 fd_K9MAIL=(fdroid com.fsck.k9 app K9Mail)
-fd_OANDBACKUPX=(fdroid com.machiav3lli.backup app OAndBackupX)
-fd_ODYSSEY=(fdroid org.gateshipone.odyssey app Odyssey)
+fd_KEEPASSDX=(fdroid com.kunzisoft.keepass.libre app KeePassDX)
+fd_KRYPTEY=(fdroid com.amnesica.kryptey app KryptEY)
+fd_MOLLY=(mollyfoss im.molly.app app Molly)
+fd_NEBULO=(frostnerd com.frostnerd.smokescreen app Nebulo)
+fd_NEOBACKUP=(fdroid com.machiav3lli.backup app NeoBackup)
+fd_NEOSTORE=(fdroid com.machiav3lli.fdroid app NeoStore)
+fd_NETGUARD=(fdroid eu.faircode.netguard app NetGuard)
 fd_OPENCAMERA=(fdroid net.sourceforge.opencamera app OpenCamera)
 fd_OPENKEYCHAIN=(fdroid org.sufficientlysecure.keychain app OpenKeyChain)
-fd_OPENLAUNCHER=(fdroid com.benny.openlauncher app OpenLauncher)
+fd_ORGANICMAPS=(fdroid app.organicmaps app OrganicMaps)
+fd_OSMAND=(fdroid net.osmand.plus app OsmAnd)
+fd_OSMAND_CONTOURLINES=(fdroid net.osmand.srtmPlugin.paid app OsmAnd_ContourLines)
 fd_OPENVPN=(fdroid de.blinkt.openvpn app OpenVPN)
-fd_PRIVACY_BROWSER=(fdroid com.stoutner.privacybrowser.standard app PrivacyBrowser)
-fd_QKSMS=(fdroid com.moez.QKSMS app QKSMS)
+fd_PASSANDROID=(fdroid org.ligi.passandroid app PassAndroid)
+fd_PILFERSHUSHJAMMER=(fdroid cityfreqs.com.pilfershushjammer app PilferShushJammer)
+fd_PIXELKNOT=(fdroid info.guardianproject.pixelknot app PixelKnot)
+fd_PRIVACYBLUR=(fdroid de.mathema.privacyblur app PrivacyBlur)
+fd_PRIVACYBROWSER=(fdroid com.stoutner.privacybrowser.standard app PrivacyBrowser)
+fd_RCX=(fdroid io.github.x0b.rcx app RCX)
+fd_SAGERNET=(fdroid io.nekohasekai.sagernet app SagerNet)
+fd_SCHILDICHAT=(spiritcroc de.spiritcroc.riotx.foss app SchildiChat)
+fd_SCRAMBLEDEXIF=(fdroid com.jarsilio.android.scrambledeggsif app ScrambledExif)
+fd_SEAL_arm64=(fdroid com.junkfood.seal app Seal_arm64 arm64-v8a)
+fd_SEAL_arm=(fdroid com.junkfood.seal app Seal_arm armeabi-v7a)
+fd_SILENCE=(fdroid org.smssecure.smssecure app Silence)
+fd_SMARTPACKKERNEL=(fdroid com.smartpack.kernelmanager app SmartPackKernelManager)
+fd_TERMUX=(fdroid com.termux priv-app Termux)
+fd_VLC_arm64=(fdroid org.videolan.vlc app VLC_arm64 arm64-v8a)
+fd_VLC_arm=(fdroid org.videolan.vlc app VLC_arm armeabi-v7a)
+fd_WIREGUARD=(fdroid com.wireguard.android app WireGuard)
+fd_XTRA=(fdroid com.github.andreyasadchy.xtra app Xtra)
+fd_YACB=(fdroid dummydomain.yetanothercallblocker app YetAnotherCallBlocker)
+
+fd_FOSSIFYCALCULATOR=(fdroid org.fossify.calculator app FossifyCalculator)
+fd_FOSSIFYCALENDAR=(fdroid org.fossify.calendar app FossifyCalendar)
+fd_FOSSIFYCLOCK=(fdroid org.fossify.clock app FossifyClock)
+fd_FOSSIFYCONTACTS=(fdroid org.fossify.contacts app FossifyContacts)
+fd_FOSSIFYFILEMANAGER=(fdroid org.fossify.filemanager app FossifyFileManager)
+fd_FOSSIFYGALLERY=(fdroid org.fossify.gallery app FossifyGallery)
+fd_FOSSIFYMESSAGES=(fdroid org.fossify.messages app FossifyMessages)
+fd_FOSSIFYNOTES=(fdroid org.fossify.notes app FossifyNotes)
+fd_FOSSIFYPHONE=(fdroid org.fossify.phone app FossifyPhone)
+fd_FOSSIFYVOICERECORDER=(fdroid org.fossify.voicerecorder app FossifyVoiceRecorder)
+
+fd_SIMPLECALCULATOR=(fdroid com.simplemobiletools.calculator app SimpleCalculator)
 fd_SIMPLECALENDAR=(fdroid com.simplemobiletools.calendar.pro app SimpleCalendar)
-fd_SIMPLEGALLERY=(fdroid com.simplemobiletools.gallery.pro app SimpleGallery)
-fd_SMARTPACK=(fdroid com.smartpack.kernelmanager app SmartPackKernelManager)
-fd_TERMUX=(fdroid com.termux app Termux)
-fd_TWIDERE=(fdroid org.mariotaku.twidere app Twidere)
+fd_SIMPLECLOCK=(fdroid com.simplemobiletools.clock app SimpleClock)
+fd_SIMPLECONTACTS=(fdroid com.simplemobiletools.contacts.pro app SimpleContactsPro)
+fd_SIMPLEDIALER=(fdroid com.simplemobiletools.dialer app SimpleDialer)
+fd_SIMPLEFILEMANAGER=(fdroid com.simplemobiletools.filemanager.pro app SimpleFileManagerPro)
+fd_SIMPLEFLASHLIGHT=(fdroid com.simplemobiletools.flashlight app SimpleFlashlight)
+fd_SIMPLEGALLERY=(fdroid com.simplemobiletools.gallery.pro app SimpleGalleryPro)
+fd_SIMPLENOTES=(fdroid com.simplemobiletools.notes.pro app SimpleNotesPro)
+fd_SIMPLEVOICERECORDER=(fdroid com.simplemobiletools.voicerecorder app SimpleVoiceRecorder)
 
 gd_TORBROWSER=(guardian org.torproject.torbrowser app TorBrowser)
 
@@ -46,7 +95,40 @@ np_NEWPIPE=(newpipe org.schabi.newpipe app NewPipe)
 # GitHub
 ###
 
-gh_AMAZE=(TeamAmaze/AmazeFileManager app Amaze)
+gh_ADAWAY=(AdAway/AdAway priv-app AdAway)
+gh_AFWALL=(ukanth/afwall priv-app AFWall)
+gh_APPMANAGER=(MuntashirAkon/AppManager priv-app AppManager)
+gh_BINARYEYE=(markusfisch/BinaryEye app BinaryEye)
+gh_BROMITE_arm64=(uazo/bromite-buildtools app BromiteBrowser_arm64 arm64_ChromePublic.apk)
+gh_BROMITE_x64=(uazo/bromite-buildtools app BromiteBrowser_x64 x64_ChromePublic.apk)
+gh_DAVX5=(bitfireAT/davx5-ose app DAVx5)
+gh_FAIREMAIL=(M66B/FairEmail app FairEmail)
+gh_FROST=(AllanWang/Frost-for-Facebook app Frost)
+gh_K9MAIL=(thundernest/k-9 app K9Mail)
+gh_HACKERSKEYBOARD=(klausw/hackerskeyboard app HackersKeyboard)
+gh_KEEPASSDX=(Kunzisoft/KeePassDX app KeePassDX)
+gh_NEOBACKUP=(NeoApplications/Neo-Backup app NeoBackup)
+gh_NEOSTORE=(NeoApplications/Neo-Store app NeoStore)
+gh_NETGUARD=(M66B/NetGuard app NetGuard)
+gh_OPENVPN=(schwabe/ics-openvpn app OpenVPN)
+gh_ORGANICMAPS=(organicmaps/organicmaps app OrganicMaps)
+gh_PILFERSHUSHJAMMER=(kaputnikGo/PilferShushJammer app PilferShushJammer)
+gh_PIXELKNOT=(guardianproject/PixelKnot app PixelKnot)
+gh_SEAL=(JunkFood02/Seal app Seal)
+gh_SIGNALFOSS=(tw-hx/Signal-Android app Signal)
+gh_XPRIVACYLUA=(M66B/XPrivacyLua app XPrivacyLua)
+
+###
+# Shizuku
+###
+
+fd_DROIDIFY=(fdroid com.looker.droidify app Droid-ify)
+fd_HAIL=(fdroid com.aistra.hail app Hail)
+fd_INSULAR=(fdroid com.oasisfeng.island.fdroid priv-app Insular)
+fd_MERXURYBLOCKER=(fdroid com.merxury.blocker app MerxuryBlocker)
+fd_SMARTPACKPKGMGR=(fdroid com.smartpack.packagemanager app SmartPackPackageManager)
+gh_SDMAIDSE=(d4rken-org/sdmaid-se app SDMaidSE)
+gh_SHIZUKU=(RikkaApps/Shizuku app Shizuku)
 
 ###
 # URL
@@ -55,58 +137,127 @@ gh_AMAZE=(TeamAmaze/AmazeFileManager app Amaze)
 #raw_XDALABS=(https://labs.xda-developers.com/latest app XDALabs)
 
 ###
-# Bromite WebView
+# Bromite
 ###
 
+bm_BROWSER_arm64=(bromite org.bromite.bromite app BromiteBrowser_arm64 arm64-v8a)
+bm_BROWSER_arm=(bromite org.bromite.bromite app BromiteBrowser_arm armeabi-v7a)
+bm_BROWSER_x64=(bromite org.bromite.bromite app BromiteBrowser_x64 x86_64)
+bm_BROWSER_x86=(bromite org.bromite.bromite app BromiteBrowser_x86 x86)
 bm_WEBVIEW_arm64=(bromite org.bromite.webview app BromiteWebView_arm64 arm64-v8a)
 bm_WEBVIEW_arm=(bromite org.bromite.webview app BromiteWebView_arm armeabi-v7a)
+bm_WEBVIEW_x64=(bromite org.bromite.webview app BromiteWebView_x64 x86_64)
 bm_WEBVIEW_x86=(bromite org.bromite.webview app BromiteWebView_x86 x86)
 
 ###
-# OSM And+
+# Mulch
 ###
 
-fd_OSMAND=(fdroid net.osmand.plus app OsmAnd)
-fd_OSMAND_CONTOURLINES=(fdroid net.osmand.srtmPlugin.paid app OsmAnd_ContourLines)
+mulch_BROWSER_arm64=(divestos us.spotco.mulch app MulchBrowser_arm64 arm64-v8a)
+mulch_BROWSER_arm=(divestos us.spotco.mulch app MulchBrowser_arm armeabi-v7a)
+mulch_WEBVIEW_arm64=(divestos us.spotco.mulch_wv app MulchWebView_arm64 arm64-v8a)
+mulch_WEBVIEW_arm=(divestos us.spotco.mulch_wv app MulchWebView_arm armeabi-v7a)
 
 ###
 # Files Database (for consistency check)
 ###
 
 file_database=(
-	"${appsfolder[3]}/Alarmio/Alarmio.apk.zst"
-	"${appsfolder[3]}/Amaze/Amaze.apk.zst"
-	"${appsfolder[3]}/AnysoftKeyboard/AnysoftKeyboard.apk.zst"
-	"${appsfolder[3]}/FreeOTPPlus/FreeOTPPlus.apk.zst"
-	"${appsfolder[3]}/Frost/Frost.apk.zst"
-	"${appsfolder[3]}/FDroid/FDroid.apk.zst"
+	#"${appsfolder[3]}/Alarmio/Alarmio.apk.zst"
+	"${appsfolder[3]}/Andiodine/Andiodine.apk.zst"
+	#"${appsfolder[3]}/AnysoftKeyboard/AnysoftKeyboard.apk.zst"
+	"${appsfolder[3]}/BinaryEye/BinaryEye.apk.zst"
+	#"${appsfolder[3]}/Briar/Briar.apk.zst"
+	"${appsfolder[3]}/Conversations/Conversations.apk.zst"
+	"${appsfolder[3]}/DAVx5/DAVx5.apk.zst"
+	#"${appsfolder[3]}/Extirpater/Extirpater.apk.zst"
+	#"${appsfolder[3]}/FairEmail/FairEmail.apk.zst"
+	"${appsfolder[3]}/FOSSBrowser/FOSSBrowser.apk.zst"
+	"${appsfolder[3]}/BreezyWeather/BreezyWeather.apk.zst"
+	"${appsfolder[3]}/GMapsWV/GMapsWV.apk.zst"
+	"${appsfolder[3]}/GPSTest/GPSTest.apk.zst"
 	"${appsfolder[3]}/HackersKeyboard/HackersKeyboard.apk.zst"
+	#"${appsfolder[3]}/Hypatia/Hypatia.apk.zst"
+	"${appsfolder[3]}/Imagepipe/Imagepipe.apk.zst"
 	"${appsfolder[3]}/K9Mail/K9Mail.apk.zst"
 	"${appsfolder[3]}/KeePassDX/KeePassDX.apk.zst"
-	"${appsfolder[3]}/MPV/MPV.apk.zst"
-	"${appsfolder[3]}/NewPipe/NewPipe.apk.zst"
-	"${appsfolder[3]}/OAndBackupX/OAndBackupX.apk.zst"
-	"${appsfolder[3]}/Odyssey/Odyssey.apk.zst"
+	"${appsfolder[3]}/KryptEY/KryptEY.apk.zst"
+	#"${appsfolder[3]}/Molly/Molly.apk.zst"
+	#"${appsfolder[3]}/Nebulo/Nebulo.apk.zst"
+	"${appsfolder[3]}/NeoBackup/NeoBackup.apk.zst"
+	#"${appsfolder[3]}/NeoStore/NeoStore.apk.zst"
+	"${appsfolder[3]}/NetGuard/NetGuard.apk.zst"
+	#"${appsfolder[3]}/NewPipe/NewPipe.apk.zst"
 	"${appsfolder[3]}/OpenCamera/OpenCamera.apk.zst"
 	"${appsfolder[3]}/OpenKeyChain/OpenKeyChain.apk.zst"
-	"${appsfolder[3]}/OpenLauncher/OpenLauncher.apk.zst"
-	"${appsfolder[3]}/OpenVPN/OpenVPN.apk.zst"
+	"${appsfolder[3]}/OrganicMaps/OrganicMaps.apk.zst"
+	#"${appsfolder[3]}/OsmAnd/OsmAnd.apk.zst"
+	#"${appsfolder[3]}/OsmAnd_ContourLines/OsmAnd_ContourLines.apk.zst"
+	"${appsfolder[3]}/PassAndroid/PassAndroid.apk.zst"
+	#"${appsfolder[3]}/PilferShushJammer/PilferShushJammer.apk.zst"
+	"${appsfolder[3]}/PixelKnot/PixelKnot.apk.zst"
+	"${appsfolder[3]}/PrivacyBlur/PrivacyBlur.apk.zst"
 	"${appsfolder[3]}/PrivacyBrowser/PrivacyBrowser.apk.zst"
-	"${appsfolder[3]}/QKSMS/QKSMS.apk.zst"
-	"${appsfolder[3]}/SimpleCalendar/SimpleCalendar.apk.zst"
-	"${appsfolder[3]}/SimpleGallery/SimpleGallery.apk.zst"
-	"${appsfolder[3]}/SmartPackKernelManager/SmartPackKernelManager.apk.zst"
-	"${appsfolder[3]}/Termux/Termux.apk.zst"
-	"${appsfolder[3]}/TorBrowser/TorBrowser.apk.zst"
-	"${appsfolder[3]}/Twidere/Twidere.apk.zst"
-	"${appsfolder[3]}/Warden/Warden.apk.zst"
+	"${appsfolder[3]}/RCX/RCX.apk.zst"
+	#"${appsfolder[3]}/SagerNet/SagerNet.apk.zst"
+	#"${appsfolder[3]}/SchildiChat/SchildiChat.apk.zst"
+	#"${appsfolder[3]}/ScrambledExif/ScrambledExif.apk.zst"
+	#"${appsfolder[3]}/Signal/Signal.apk.zst"
+	#"${appsfolder[3]}/Silence/Silence.apk.zst"
+	#"${appsfolder[3]}/TorBrowser/TorBrowser.apk.zst"
+	#"${appsfolder[3]}/XPrivacyLua/XPrivacyLua.apk.zst"
+	"${appsfolder[3]}/Xtra/Xtra.apk.zst"
+	"${appsfolder[3]}/YetAnotherCallBlocker/YetAnotherCallBlocker.apk.zst"
 
-	"${appsfolder[4]}/FDroidPrivileged/FDroidPrivileged.apk.zst"
+	"${appsfolder[3]}/FossifyCalendar/FossifyCalendar.apk.zst"
+	#"${appsfolder[3]}/FossifyCalculator/FossifyCalculator.apk.zst"
+	"${appsfolder[3]}/FossifyClock/FossifyClock.apk.zst"
+	"${appsfolder[3]}/FossifyContacts/FossifyContacts.apk.zst"
+	"${appsfolder[3]}/FossifyFileManager/FossifyFileManager.apk.zst"
+	"${appsfolder[3]}/FossifyGallery/FossifyGallery.apk.zst"
+	#"${appsfolder[3]}/FossifyMessages/FossifyMessages.apk.zst"
+	"${appsfolder[3]}/FossifyNotes/FossifyNotes.apk.zst"
+	"${appsfolder[3]}/FossifyPhone/FossifyPhone.apk.zst"
+	"${appsfolder[3]}/FossifyVoiceRecorder/FossifyVoiceRecorder.apk.zst"
 
-	"${appsfolder[11]}/app/BromiteWebView_arm/BromiteWebView_arm.apk.zst"
-	"${appsfolder[11]}/app/BromiteWebView_arm64/BromiteWebView_arm64.apk.zst"
-	"${appsfolder[11]}/app/BromiteWebView_x86/BromiteWebView_x86.apk.zst"
+	#"${appsfolder[3]}/SimpleFlashlight/SimpleFlashlight.apk.zst"
 
-	"${appsfolder[9]}/app/OsmAnd/OsmAnd.apk.zst"
-	"${appsfolder[9]}/app/OsmAnd_ContourLines/OsmAnd_ContourLines.apk.zst"
+	"${appsfolder[4]}/AdAway/AdAway.apk.zst"
+	"${appsfolder[4]}/AFWall/AFWall.apk.zst"
+	#"${appsfolder[4]}/AppManager/AppManager.apk.zst"
+	"${appsfolder[4]}/InviZible/InviZible.apk.zst"
+	"${appsfolder[4]}/Termux/Termux.apk.zst"
+
+	"${appsfolder[3]}/Droid-ify/Droid-ify.apk.zst"
+	"${appsfolder[3]}/Hail/Hail.apk.zst"
+	#"${appsfolder[4]}/Insular/Insular.apk.zst"
+	"${appsfolder[3]}/MerxuryBlocker/MerxuryBlocker.apk.zst"
+	#"${appsfolder[3]}/SDMaidSE/SDMaidSE.apk.zst"
+	"${appsfolder[3]}/Shizuku/Shizuku.apk.zst"
+	"${appsfolder[3]}/SmartPackPackageManager/SmartPackPackageManager.apk.zst"
+
+	#"${appsfolder[3]}/BromiteBrowser_arm64/BromiteBrowser_arm64.apk.zst"
+	#"${appsfolder[3]}/BromiteBrowser_arm/BromiteBrowser_arm.apk.zst"
+	#"${appsfolder[3]}/BromiteBrowser_x64/BromiteBrowser_x64.apk.zst"
+	#"${appsfolder[3]}/BromiteBrowser_x86/BromiteBrowser_x86.apk.zst"
+
+	"${appsfolder[3]}/Fcitx5_arm64/Fcitx5_arm64.apk.zst"
+	"${appsfolder[3]}/Fcitx5Anthy_arm64/Fcitx5Anthy_arm64.apk.zst"
+	#"${appsfolder[3]}/Fcitx5_arm/Fcitx5_arm.apk.zst"
+	#"${appsfolder[3]}/Fcitx5Anthy_arm/Fcitx5Anthy_arm.apk.zst"
+
+	"${appsfolder[3]}/Seal_arm64/Seal_arm64.apk.zst"
+	#"${appsfolder[3]}/Seal_arm/Seal_arm.apk.zst"
+	"${appsfolder[3]}/VLC_arm64/VLC_arm64.apk.zst"
+	#"${appsfolder[3]}/VLC_arm/VLC_arm.apk.zst"
+
+	#"${appsfolder[11]}/app/BromiteWebView_arm/BromiteWebView_arm.apk.zst"
+	#"${appsfolder[11]}/app/BromiteWebView_arm64/BromiteWebView_arm64.apk.zst"
+	#"${appsfolder[11]}/app/BromiteWebView_x64/BromiteWebView_x64.apk.zst"
+	#"${appsfolder[11]}/app/BromiteWebView_x86/BromiteWebView_x86.apk.zst"
+
+	#"${appsfolder[3]}/MulchBrowser_arm64/MulchBrowser_arm64.apk.zst"
+	#"${appsfolder[3]}/MulchBrowser_arm/MulchBrowser_arm.apk.zst"
+	"${appsfolder[13]}/app/MulchWebView_arm/MulchWebView_arm.apk.zst"
+	"${appsfolder[13]}/app/MulchWebView_arm64/MulchWebView_arm64.apk.zst"
 )

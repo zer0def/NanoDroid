@@ -7,12 +7,26 @@
 repo_fdroid="https://f-droid.org/repo"
 repo_guardian="https://guardianproject.info/fdroid/repo"
 repo_microg="https://microg.org/fdroid/repo"
-repo_nanolx="https://nanolx.org/fdroid/repo"
 repo_bromite="https://fdroid.bromite.org/fdroid/repo"
+repo_cromite="https://www.cromite.org/fdroid/repo"
 repo_ogapps="https://gitlab.opengapps.org/opengapps"
 repo_newpipe="https://archive.newpipe.net/fdroid/repo"
+repo_mollyfoss="https://molly.im/fdroid/foss/fdroid/repo"
+repo_briar="https://briarproject.org/fdroid/repo"
+repo_divestos="https://divestos.org/fdroid/official"
+repo_spiritcroc="https://s2.spiritcroc.de/fdroid/repo"
+repo_izzysoft="https://apt.izzysoft.de/fdroid/repo"
+repo_frostnerd="https://fdroid.frostnerd.com/fdroid/repo"
+repo_breezyweather="https://breezy-weather.github.io/fdroid-repo/fdroid-version/fdroid/repo"
+repo_twinhelix="https://fdroid.twinhelix.com/fdroid/repo"
+repo_petercxy="https://fdroid.typeblog.net"
+repo_onionshare="https://raw.githubusercontent.com/onionshare/onionshare-android-nightly/master/fdroid/repo"
+repo_lublin="https://lublin.se/fdroid/repo"
+repo_skyjake="https://skyjake.github.io/fdroid/repo"
+repo_futo="https://app.futo.org/fdroid/repo"
+repo_kaffemitkoffein="https://kaffeemitkoffein.de/fdroid/repo"
 
-useragent='Mozilla/5.0 (X11; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0'
+useragent='Mozilla/5.0 (Windows NT 10.0; rv:109.0) Gecko/20100101 Firefox/115.0'
 
 if [ "${BP_DEBUG}" = '1' ]; then
 	wget_opts="-v --show-progress"
@@ -182,14 +196,53 @@ update_indices () {
 	echo " ++ microG"
 	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_microg}").index-v1.jar" "${repo_microg}"
 
-	echo " ++ Nanolx"
-	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_nanolx}").index-v1.jar" "${repo_nanolx}"
-
-	echo " ++ Bromite"
-	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_bromite}").index-v1.jar" "${repo_bromite}"
+	echo " ++ Cromite"
+	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_cromite}").index-v1.jar" "${repo_cromite}"
 
 	echo " ++ NewPipe"
 	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_newpipe}").index-v1.jar" "${repo_newpipe}"
+
+	echo " ++ Molly FOSS"
+	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_mollyfoss}").index-v1.jar" "${repo_mollyfoss}"
+
+	echo " ++ Briar"
+	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_briar}").index-v1.jar" "${repo_briar}"
+
+	echo " ++ DivestOS"
+	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_divestos}").index-v1.jar" "${repo_divestos}"
+
+	#echo " ++ FrostNerd (Nebulo)"
+	#update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_frostnerd}").index-v1.jar" "${repo_frostnerd}"
+
+	echo " ++ IzzySoft"
+	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_izzysoft}").index-v1.jar" "${repo_izzysoft}"
+
+	echo " ++ SpiritCroc (SchildiChat)"
+	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_spiritcroc}").index-v1.jar" "${repo_spiritcroc}"
+
+	echo " ++ Breezy Weather"
+	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_breezyweather}").index-v1.jar" "${repo_breezyweather}"
+
+	echo " ++ TwinHelix (Signal-FOSS)"
+	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_twinhelix}").index-v1.jar" "${repo_twinhelix}"
+
+	echo " ++ PeterCxy (Shelter)"
+	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_petercxy}").index-v1.jar" "${repo_petercxy}"
+
+	echo " ++ OnionShare"
+	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_onionshare}").index-v1.jar" "${repo_onionshare}"
+
+	#echo " ++ Daniel Lublin (Mumla)"
+	#update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_lublin}").index-v1.jar" "${repo_lublin}"
+
+	echo " ++ SkyJake (Lagrange)"
+	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_skyjake}").index-v1.jar" "${repo_skyjake}"
+
+	echo " ++ FUTO"
+	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_futo}").index-v1.jar" "${repo_futo}"
+
+	echo " ++ Kaffe Mit Koffein"
+	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_kaffemitkoffein}").index-v1.jar" "${repo_kaffemitkoffein}"
 }
 
 grab_apk_from_repo () {
@@ -206,17 +259,69 @@ grab_apk_from_repo () {
 			local repo="${repo_microg}"
 			local repo_p="microG"
 		;;
-		nanolx )
-			local repo="${repo_nanolx}"
-			local repo_p="Nanolx"
-		;;
-		bromite )
-			local repo="${repo_bromite}"
-			local repo_p="Bromite"
+		cromite )
+			local repo="${repo_cromite}"
+			local repo_p="Cromite"
 		;;
 		newpipe )
 			local repo="${repo_newpipe}"
 			local repo_p="NewPipe"
+		;;
+		mollyfoss )
+			local repo="${repo_mollyfoss}"
+			local repo_p="Molly FOSS"
+		;;
+		briar )
+			local repo="${repo_briar}"
+			local repo_p="Briar"
+		;;
+		divestos )
+			local repo="${repo_divestos}"
+			local repo_p="DivestOS"
+		;;
+		#frostnerd )
+		#	local repo="${repo_frostnerd}"
+		#	local repo_p="FrostNerd"
+		#;;
+		izzysoft )
+			local repo="${repo_izzysoft}"
+			local repo_p="IzzySoft"
+		;;
+		spiritcroc )
+			local repo="${repo_spiritcroc}"
+			local repo_p="SpiritCroc"
+		;;
+		breezyweather )
+			local repo="${repo_breezyweather}"
+			local repo_p="Breezy Weather"
+		;;
+		twinhelix )
+			local repo="${repo_twinhelix}"
+			local repo_p="TwinHelix"
+		;;
+		petercxy )
+			local repo="${repo_petercxy}"
+			local repo_p="PeterCxy"
+		;;
+		onionshare )
+			local repo="${repo_onionshare}"
+			local repo_p="OnionShare"
+		;;
+		lublin )
+			local repo="${repo_lublin}"
+			local repo_p="Daniel Lublin"
+		;;
+		skyjake )
+			local repo="${repo_skyjake}"
+			local repo_p="SkyJake"
+		;;
+		futo )
+			local repo="${repo_futo}"
+			local repo_p="FUTO"
+		;;
+		kaffemitkoffein )
+			local repo="${repo_kaffemitkoffein}"
+			local repo_p="Kaffe Mit Koffein"
 		;;
 	esac
 
@@ -238,8 +343,8 @@ grab_apk_from_repo () {
 			local apk_dest="${appsfolder[12]}/${3}/${4}"
 		;;
 
-		net.osmand.plus | net.osmand.srtmPlugin.paid )
-			local apk_dest="${appsfolder[10]}/${3}/${4}"
+		us.spotco.mulch_wv )
+			local apk_dest="${appsfolder[14]}/${3}/${4}"
 		;;
 
 		* )
@@ -283,8 +388,10 @@ grab_apk_from_url () {
 }
 
 grab_apk_from_github () {
+	local jq_filter='.assets[0].browser_download_url'
+	[ -z "${4}" ] || jq_filter=".assets[]|select(.name==\"${4}\").browser_download_url"
 	[ "${BP_DEBUG}" = '1' ] && debug_message normal "curl ${curl_opts} -s -N \"https://api.github.com/repos/${1}/releases\""
-	local apk_url="$(curl -A "${useragent}" -s "https://api.github.com/repos/${1}/releases/latest" | jq -r '.assets[0].browser_download_url')"
+	local apk_url="$(curl -A "${useragent}" -s "https://api.github.com/repos/${1}/releases/latest" | jq -r "${jq_filter}")"
 	local apk_dest="${appsfolder[2]}/${2}/${3}"
 
 	download_apk_common "${apk_dest}" "${3}" "${apk_url}" github
@@ -310,7 +417,7 @@ grab_aurora_apk_from_gitlab () {
 	[ "${BP_DEBUG}" = '1' ] && debug_message newline "curl ${curl_opts} -s -N \"https://gitlab.com/api/v4/projects/${namespace}%2F${repo}/releases/\"" "\n"
 	local apk_path="$(curl -A "${useragent}" -s -N "https://gitlab.com/api/v4/projects/${namespace}%2F${repo}/releases/" | jq -r '.[0].description' | grep ".apk" | cut -d "(" -f2 | cut -d ")" -f1)"
 	local apk_dest="${appsfolder[2]}/${2}/${3}"
-  local apk_url="https://gitlab.com/${1}${apk_path}"
+	local apk_url="https://gitlab.com/${1}${apk_path}"
 
 	download_apk_common "${apk_dest}" "${3}" "${apk_url}" gitlab
 }

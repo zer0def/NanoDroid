@@ -179,7 +179,7 @@ mount_partitions () {
 			mount -o bind /system_root/system /system
 		fi
 
-		VENDOR_BLOCK="$(find_block vendor vnr)"
+		VENDOR_BLOCK="$(find_block vendor vnr cust)"
 		echo " INFO: #7 [VENDOR_BLOCK] ${VENDOR_BLOCK}"
 
 		! is_mounted /vendor && mount -o ro /vendor
@@ -343,7 +343,7 @@ rm -f /system/addon.d/70-nanodroidpatcher.sh
 rm -f /data/adb/NanoDroid_Patched
 
 for module in NanoDroid NanoDroid_FDroid \
-	NanoDroid_BromiteWebView NanoDroid_OsmAnd; do
+	NanoDroid_BromiteWebView NanoDroid_MulchWebView NanoDroid_OsmAnd; do
 	if [ -d "/data/adb/modules/${module}" ]; then
 		ui_print " << uninstalling: ${module}"
 		rm -rf "/data/adb/modules/${module}"

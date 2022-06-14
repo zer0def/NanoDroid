@@ -314,7 +314,7 @@ mount_partitions () {
 			mount -o bind /system_root/system /system
 		fi
 
-		VENDOR_BLOCK="$(find_block vendor vnr)"
+		VENDOR_BLOCK="$(find_block vendor vnr cust)"
 		decho " INFO: #7 [VENDOR_BLOCK] ${VENDOR_BLOCK}"
 
 		[ -z "${VENDOR_BLOCK}" ] && error "failed to detect block device for /vendor"
@@ -778,14 +778,8 @@ show_banner () {
 		NanoDroid )
 			print_info " > Full package              "
 		;;
-		NanoDroid_FDroid )
-			print_info " > F-Droid package           "
-		;;
-		NanoDroid_BromiteWebView )
-			print_info " > Bromite WebView package   "
-		;;
-		NanoDroid_OsmAnd )
-			print_info " > OsmAnd package            "
+		NanoDroid_${MODID#*_} )
+			print_info " > ${MODID#*_} package   "
 		;;
 	esac
 
@@ -1051,7 +1045,7 @@ magisk_install_setup () {
 			done
 		;;
 
-		NanoDroid_OsmAnd | NanoDroid_BromiteWebView ) :;;
+		NanoDroid_OsmAnd | NanoDroid_BromiteWebView | NanoDroid_MulchWebView ) :;;
 
 		* )
 			error "unknown module intended to be installed!?"
@@ -1135,31 +1129,6 @@ magisk_install_finish () {
 ##########################################################################################
 
 ##########################################################################################
-# Install F-Droid
-##########################################################################################
-
-install_fdroid () {
-	# install F-Droid if requested
-	# respectively force if it's the F-Droid package
-
-	if [ "$((${nanodroid_fdroid}%2))" -eq 1 ] || [ "${MODID}" = "NanoDroid_FDroid" ]; then
-		print_info " << with F-Droid"
-		if ! "${BOOTMODE}" && [ -n "${nanodroid_forcepart}" ]; then
-			local old_instpart="${INSTPART}"
-			INSTPART="${nanodroid_forcepart}"
-		fi
-		nanodroid_install_apk FDroid
-		nanodroid_install_apk FDroidPrivileged
-
-		"${NANODROID_BINDIR}/nanodroid-overlay" --add FDroidPriv
-
-		nanodroid_install_file etc/org.fdroid.fdroid/additional_repos.xml
-		"${BOOTMODE}" || [ -z "${nanodroid_forcepart}" ] || INSTPART="${old_instpart}"
-	else	print_info " << without F-Droid"
-	fi
-}
-
-##########################################################################################
 # Install Applications
 ##########################################################################################
 
@@ -1232,71 +1201,54 @@ install_initd () {
 }
 
 ##########################################################################################
-# Install Bromite System WebView
+# Install System WebView
 ##########################################################################################
 
-install_bromite_webview () {
-	if [ "${MODID}" = "NanoDroid_BromiteWebView" ]; then
+install_webview () {
+	if [ "${MODID}" = "NanoDroid_BromiteWebView" ] || [ "${MODID}" = "NanoDroid_MulchWebView" ]; then
 		local init_base overlaydir lib_suffix i multilib
 		[ "$(uname -m)" = "aarch64" ] && lib_suffix=64
 		[ "$(uname -m)" = "x86_64"  ] && lib_suffix=64
 		for i in system_ext/overlay product/overlay overlay; do
 			[ -d "/system/${i}" ] && overlaydir="${i}" && break
 		done
-		mkdir -p "${TMPDIR}/bromite/res/xml" "${INSTALLER}/system/${overlaydir}"
+		mkdir -p "${TMPDIR}/syswebview/res/xml" "${INSTALLER}/system/${overlaydir}"
 		"${AAPT}" dump xmltree /system/framework/framework-res.apk res/xml/config_webview_packages.xml | \
-			parse_aapt_dump_xmltree | sed "s|</webviewproviders>|<webviewprovider availableByDefault=\"true\" description=\"${WEBVIEW_DESC:-Bromite Webview}\" packageName=\"${WEBVIEW_PKG:-org.bromite.webview}\"><signature>${WEBVIEW_SIG:-MIIDbTCCAlWgAwIBAgIEHcsmjjANBgkqhkiG9w0BAQsFADBmMQswCQYDVQQGEwJERTEQMA4GA1UECBMHVW5rbm93bjEPMA0GA1UEBxMGQmVybGluMRAwDgYDVQQKEwdCcm9taXRlMRAwDgYDVQQLEwdCcm9taXRlMRAwDgYDVQQDEwdjc2FnYW41MCAXDTE4MDExOTA3MjE1N1oYDzIwNjgwMTA3MDcyMTU3WjBmMQswCQYDVQQGEwJERTEQMA4GA1UECBMHVW5rbm93bjEPMA0GA1UEBxMGQmVybGluMRAwDgYDVQQKEwdCcm9taXRlMRAwDgYDVQQLEwdCcm9taXRlMRAwDgYDVQQDEwdjc2FnYW41MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtakjGj0eTavbBB2vWXj8KBixWn4zgXAKc+yGFu3SLEGF1VB5aJWwcMHxVI55yH/8M2eNnJP0BkSidfKgPVcm1sk/GrNEs9uk5sWod9byO5M5QWQmGP2REeTd6J0BVVVaMp2MZnqeR3Su3pwFzrSwTqIGyf8dkPSEz7ifj792+EeRNrov4oRQK7lIfqInzwc4d34wU069Lrw6m7J7HM0KbRYISsWMiYj025Qg+dTrtdWt7jbdcj7htW0eYyJoLd90+s43RWnOpENmWpcWv1EVPxUD4mCdV9idYwoHRIESpSu9IWvqDZp1VoRc43nLgsNfNBwmYdTkIaPiz1m7TBcr7QIDAQABoyEwHzAdBgNVHQ4EFgQUuWoGd7W7wMyQ1pOdjiMv10YHTR0wDQYJKoZIhvcNAQELBQADggEBAA7iw6eKz+T8HIpKDoDcX1Ywjn9JUzuCFu20LnsLzreO/Pog1xErYjdLAS7LTZokfbAnitBskO9QhV9BYkDiM0Qr5v2/HsJTtxa1mz9ywCcI36jblMyuXFj8tuwQI9/t9i+Fc3+bOFBV3t7djPo9qX1dIK0lZ6s8HcIhaCNdqm65fH+nWhC/H9djqC6qOtrkTiACKEcHQ4a/5dfROU0q0M4bS4YuiaAQWgjiGbik4LrZ8wZX1aqJCLt0Hs7MzXyyf0cRSO11FIOViHwzh6WTZGufq2J3YBFXPond8kLxkKL3LNezbi5yTcecxsbKQ6OS46CnIKcy/M8asSreLpoCDvw=}</signature></webviewprovider></webviewproviders>|g" > "${TMPDIR}/bromite/res/xml/config_webview_packages.xml"
+			parse_aapt_dump_xmltree | sed "s|</webviewproviders>|<webviewprovider availableByDefault=\"true\" description=\"${WEBVIEW_DESC:-Bromite Webview}\" packageName=\"${WEBVIEW_PKG:-org.bromite.webview}\"><signature>${WEBVIEW_SIG:-MIIDbTCCAlWgAwIBAgIEHcsmjjANBgkqhkiG9w0BAQsFADBmMQswCQYDVQQGEwJERTEQMA4GA1UECBMHVW5rbm93bjEPMA0GA1UEBxMGQmVybGluMRAwDgYDVQQKEwdCcm9taXRlMRAwDgYDVQQLEwdCcm9taXRlMRAwDgYDVQQDEwdjc2FnYW41MCAXDTE4MDExOTA3MjE1N1oYDzIwNjgwMTA3MDcyMTU3WjBmMQswCQYDVQQGEwJERTEQMA4GA1UECBMHVW5rbm93bjEPMA0GA1UEBxMGQmVybGluMRAwDgYDVQQKEwdCcm9taXRlMRAwDgYDVQQLEwdCcm9taXRlMRAwDgYDVQQDEwdjc2FnYW41MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtakjGj0eTavbBB2vWXj8KBixWn4zgXAKc+yGFu3SLEGF1VB5aJWwcMHxVI55yH/8M2eNnJP0BkSidfKgPVcm1sk/GrNEs9uk5sWod9byO5M5QWQmGP2REeTd6J0BVVVaMp2MZnqeR3Su3pwFzrSwTqIGyf8dkPSEz7ifj792+EeRNrov4oRQK7lIfqInzwc4d34wU069Lrw6m7J7HM0KbRYISsWMiYj025Qg+dTrtdWt7jbdcj7htW0eYyJoLd90+s43RWnOpENmWpcWv1EVPxUD4mCdV9idYwoHRIESpSu9IWvqDZp1VoRc43nLgsNfNBwmYdTkIaPiz1m7TBcr7QIDAQABoyEwHzAdBgNVHQ4EFgQUuWoGd7W7wMyQ1pOdjiMv10YHTR0wDQYJKoZIhvcNAQELBQADggEBAA7iw6eKz+T8HIpKDoDcX1Ywjn9JUzuCFu20LnsLzreO/Pog1xErYjdLAS7LTZokfbAnitBskO9QhV9BYkDiM0Qr5v2/HsJTtxa1mz9ywCcI36jblMyuXFj8tuwQI9/t9i+Fc3+bOFBV3t7djPo9qX1dIK0lZ6s8HcIhaCNdqm65fH+nWhC/H9djqC6qOtrkTiACKEcHQ4a/5dfROU0q0M4bS4YuiaAQWgjiGbik4LrZ8wZX1aqJCLt0Hs7MzXyyf0cRSO11FIOViHwzh6WTZGufq2J3YBFXPond8kLxkKL3LNezbi5yTcecxsbKQ6OS46CnIKcy/M8asSreLpoCDvw=}</signature></webviewprovider></webviewproviders>|g" > "${TMPDIR}/syswebview/res/xml/config_webview_packages.xml"
 		mkdir -p "${INSTALLER}/system/${overlaydir}"
-		${AAPT} package -f -M "${INSTALLER}/AndroidManifest.xml" -I /system/framework/framework-res.apk -S "${TMPDIR}/bromite/res" -F "${TMPDIR}/BromiteOverlay.apk" --target-sdk-version "$(grep_prop ro.system.build.version.sdk)"
-		${ZIPALIGN} 4 "${TMPDIR}/BromiteOverlay.apk" "${INSTALLER}/system/${overlaydir}/BromiteOverlay.apk"
-		jar_sign "${INSTALLER}/system/${overlaydir}/BromiteOverlay.apk"
-		apk_sign "${INSTALLER}/system/${overlaydir}/BromiteOverlay.apk"
-		print_info " << with Bromite WebView"
+		"${AAPT}" package -f -M "${INSTALLER}/AndroidManifest.xml" -I /system/framework/framework-res.apk -S "${TMPDIR}/syswebview/res" -F "${TMPDIR}/SystemWebviewOverlay.apk" --target-sdk-version "$(grep_prop ro.system.build.version.sdk)"
+		"${ZIPALIGN}" 4 "${TMPDIR}/SystemWebviewOverlay.apk" "${INSTALLER}/system/${overlaydir}/SystemWebviewOverlay.apk"
+		jar_sign "${INSTALLER}/system/${overlaydir}/SystemWebviewOverlay.apk"
+		apk_sign "${INSTALLER}/system/${overlaydir}/SystemWebviewOverlay.apk"
+		print_info " << with ${MODID#*_}"
 
 		case "${ARCH}" in
-			arm | arm64 | x86 ) BROMITE_ARCH="${ARCH}" ;;
-			x86_64 ) BROMITE_ARCH=x86 ;;
+			arm | arm64 | x86 ) SYSWEBVIEW_ARCH="${ARCH}" ;;
+			x86_64 ) SYSWEBVIEW_ARCH=x86 ;;
 		esac
 
 		if [ "${NANODROID_UPGRADE}" -eq 0 ]; then
-			rm -rf /data/data/org.bromite.webview
-			rm -rf /data/user/*/org.bromite.webview
-			rm -rf /data/user_de/*/org.bromite.webview
-			rm -rf /data/app/org.bromite.webview-*
-			rm -rf /mnt/asec/org.bromite.webview-*
-			rm -rf "${STORAGE}/Android/data/org.bromite.webview"
+			rm -rf "/data/data/${WEBVIEW_PKG:-org.bromite.webview}"
+			rm -rf "/data/user/"*"/${WEBVIEW_PKG:-org.bromite.webview}"
+			rm -rf "/data/user_de/"*"/${WEBVIEW_PKG:-org.bromite.webview}"
+			rm -rf "/data/app/${WEBVIEW_PKG:-org.bromite.webview}-"*
+			rm -rf "/mnt/asec/${WEBVIEW_PKG:-org.bromite.webview}-"*
+			rm -rf "${STORAGE}/Android/data/${WEBVIEW_PKG:-org.bromite.webview}"
 		fi
 
-		if ! "${BOOTMODE}" && [ -n "${nanodroid_forcepart_bromite}" ]; then
+		if ! "${BOOTMODE}" && [ -n "${nanodroid_forcepart_webview}" ]; then
 			local old_instpart="${INSTPART}"
-			INSTPART="${nanodroid_forcepart_bromite}"
+			INSTPART="${nanodroid_forcepart_webview}"
 		fi
-		[ "${nanodroid_bromite_multilib}" -ne 1 ] || multilib="multilib"
-		nanodroid_install_apk "BromiteWebView_${BROMITE_ARCH}" BromiteWebView "${multilib}"
+		[ "${nanodroid_webview_multilib}" -ne 1 ] || multilib="multilib"
+		nanodroid_install_apk "${MODID#*_}_${SYSWEBVIEW_ARCH}" "${MODID#*_}" "${multilib}"
 		case "${INSTPART}" in
 			/system)	INSTPART=/system;;
 			/system_root)	INSTPART=/system;;
 			*)		INSTPART=/;;
 		esac
-		nanodroid_install_file "${overlaydir}/BromiteOverlay.apk"
-		"${BOOTMODE}" || [ -z "${nanodroid_forcepart_bromite}" ] || INSTPART="${old_instpart}"
-	fi
-}
-
-##########################################################################################
-# Install OpenStreetMap Android
-##########################################################################################
-
-install_osmand () {
-	if [ "${MODID}" = "NanoDroid_OsmAnd" ]; then
-		print_info " << with OsmAnd"
-		if ! "${BOOTMODE}" && [ -n "${nanodroid_forcepart_osmand}" ]; then
-			local old_instpart="${INSTPART}"
-			INSTPART="${nanodroid_forcepart_osmand}"
-		fi
-		nanodroid_install_apk OsmAnd
-		nanodroid_install_apk OsmAnd_ContourLines
-		"${BOOTMODE}" || [ -z "${nanodroid_forcepart_osmand}" ] || INSTPART="${old_instpart}"
+		nanodroid_install_file "${overlaydir}/SystemWebviewOverlay.apk"
+		"${BOOTMODE}" || [ -z "${nanodroid_forcepart_webview}" ] || INSTPART="${old_instpart}"
 	fi
 }
 

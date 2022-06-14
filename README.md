@@ -9,8 +9,6 @@ Table of Contents
          * [Snapshots](#snapshots)
       * [ChangeLog](#changelog)
       * [Summary](#summary)
-      * [Packages](#packages)
-         * [F-Droid Repository](#f-droid-repository)
       * [Details](#details)
       * [Installation](#installation)
       * [Issues](#issues)
@@ -20,7 +18,7 @@ Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 
 # NanoDroid
 
-NanoDroid is an installer for various OpenSource projects, most noticably [Bromite WebView](https://bromite.org/), [F-Droid](https://f-droid.org/) and [OsmAnd](http://osmand.net/). It supports all Android 4.4+ phones and all partition layouts (System-as-root, A/B) and can be installed as a Magisk module. NanoDroid also includes additional features (system debloating, init scripts, automatic logcat creation), aswell as a companion F-Droid Repository.
+NanoDroid is an installer for various OpenSource projects, most noticably [Bromite WebView](https://bromite.org/), [F-Droid](https://f-droid.org/) and [OsmAnd](http://osmand.net/). It supports all Android 4.4+ phones and all partition layouts (System-as-root, A/B) and can be installed as a Magisk module. NanoDroid also includes additional features (system debloating, init scripts, automatic logcat creation).
 
 Furthermore it allows the user to do fine-graded installations using configuration files to choose what to install, or if several alternatives are available, which of them. See [Installation](#installation) below.
 
@@ -81,14 +79,6 @@ NanoDroid includes
 * additional components
   * Addon.d support for System Mode installation
      * restores NanoDroid after ROM update
-
-## Packages
-
-See the [Packages](doc/Packages.md) summary for information about the available packages.
-
-### F-Droid Repository
-
-In order to ease updating NanoDroid's custom application builds, you can use its companion [F-Droid Repository](https://www.nanolx.org/fdroid/repo).
 
 ## Details
 

@@ -12,24 +12,7 @@ create_full_package () {
 }
 
 mk_pkg_full () {
-	create_full_package &
-	progress "${!}"
-}
-
-create_fdroid_package() {
-	ZIP="NanoDroid-fdroid-${VERSION}".zip
-
-	print_package "FDroid"
-
-	zip_add FDroid
-	zip_add_setup 0
-
-	sum_sign_package "${ZIP}"
-}
-
-mk_pkg_fdroid () {
-	create_fdroid_package &
-	progress "${!}"
+	create_full_package
 }
 
 create_bromite_webview_package () {
@@ -44,24 +27,22 @@ create_bromite_webview_package () {
 }
 
 mk_pkg_bromite_webview () {
-	create_bromite_webview_package &
-	progress "${!}"
+	create_bromite_webview_package
 }
 
-create_osmand_package() {
-	ZIP="NanoDroid-OsmAnd-${VERSION}.zip"
+create_mulch_webview_package () {
+	ZIP="NanoDroid-MulchWebView-${VERSION}.zip"
 
-	print_package "OsmAnd"
+	print_package MulchWebView
 
-	zip_add OsmAnd
+	zip_add MulchWebView
 	zip_add_setup 0
 
 	sum_sign_package "${ZIP}"
 }
 
-mk_pkg_osmand () {
-	create_osmand_package &
-	progress "${!}"
+mk_pkg_mulch_webview () {
+	create_mulch_webview_package
 }
 
 create_uninstaller_package() {
@@ -75,8 +56,7 @@ create_uninstaller_package() {
 }
 
 mk_pkg_uninstaller () {
-	create_uninstaller_package &
-	progress "${!}"
+	create_uninstaller_package
 }
 
 create_systest_package() {
@@ -90,6 +70,5 @@ create_systest_package() {
 }
 
 mk_pkg_systest () {
-	create_systest_package &
-	progress "${!}"
+	create_systest_package
 }

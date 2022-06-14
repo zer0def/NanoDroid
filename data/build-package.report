@@ -234,6 +234,9 @@ get_msc_info () {
 		*Bromite*update*  ) local msc_type="NanoDroid BromiteWebView Package TWRP invoker" ;;
 		*Bromite*.prop*   ) local msc_type="NanoDroid BromiteWebView Package Module Module properties" ;;
 
+		*Mulch*update*    ) local msc_type="NanoDroid MulchWebView Package TWRP invoker" ;;
+		*Mulch*.prop*     ) local msc_type="NanoDroid MulchWebView Package Module Module properties" ;;
+
 		*OsmAnd*update*   ) local msc_type="NanoDroid OsmAnd Package TWRP invoker" ;;
 		*OsmAnd*.prop*    ) local msc_type="NanoDroid OsmAnd Package Module Module properties" ;;
 
@@ -296,6 +299,7 @@ get_dst_info () {
 			*NanoDroid-[0-9]*.zip*) local dst_pkg="NanoDroid Full" ;;
 			*fdroid*.zip*         ) local dst_pkg="NanoDroid F-Droid" ;;
 			*BromiteWebView*.zip* ) local dst_pkg="NanoDroid BromiteWebView" ;;
+			*MulchWebView*.zip*   ) local dst_pkg="NanoDroid MulchWebView" ;;
 			*OsmAnd*.zip*         ) local dst_pkg="NanoDroid OsmAnd" ;;
 			*systest*.zip*        ) local dst_pkg="NanoDroid System Tester" ;;
 			*uninstaller*.zip*    ) local dst_pkg="NanoDroid Uninstaller" ;;
