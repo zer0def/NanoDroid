@@ -1,19 +1,12 @@
 #!/bin/bash
 
+## ripped-out
 # MicroG
 update_act[0]='0'
 # Swipe
 update_act[1]='0'
 # Gsync
 update_act[2]='0'
-# Bromite
-update_act[3]='0'
-# Osmand
-update_act[4]='0'
-# FDroid
-update_act[5]='0'
-# FDroid Privileged Extension
-update_act[6]='0'
 # AuroraDroid
 update_act[7]='0'
 # AuroraStore
@@ -22,76 +15,29 @@ update_act[8]='0'
 update_act[9]='0'
 # Phonesky
 update_act[10]='0'
+
+## relevant
+# Bromite
+update_act[3]='0'
+# Osmand
+update_act[4]='0'
+# FDroid
+update_act[5]='0'
+# FDroid Privileged Extension
+update_act[6]='0'
 # General Apps
 update_act[11]='0'
 
 nanodroid_pull () {
-	update_microg
 	update_fdroid
 	update_apps
-	update_swipe
-	update_gsync
 	update_bromite
 	update_osmand
-}
-
-grab_swipe () {
-	for arch in arm arm64 x86 x86_64; do
-		grab_lib_from_ogapps libjni_keyboarddecoder.so 23 "${arch}" false
-	done
-
-	for arch in arm arm64; do
-		for sdk in 19 21 22 23 27 28; do
-			grab_lib_from_ogapps libjni_latinimegoogle.so "${sdk}" "${arch}" true
-		done
-	done
-
-	for arch in x86 x86_64; do
-		grab_lib_from_ogapps libjni_latinimegoogle.so 23 "${arch}" false
-	done
-}
-
-update_swipe () {
-	update_act[1]='1'
-}
-
-grab_microg () {
-	# applications managed in repositories
-	grab_apk_from_repo ${uG_GMSCORE[@]}
-	grab_apk_from_repo ${uG_GSFPROXY[@]}
-	grab_apk_from_repo ${uG_FAKESTORE[@]}
-	grab_apk_from_repo ${fd_NLPDEJAVU[@]}
-	grab_apk_from_repo ${fd_NLPMOZILLA[@]}
-	grab_apk_from_repo ${fd_NLPNOMINATIM[@]}
-	grab_apk_from_repo ${fd_NLPAPPLE[@]}
-	grab_apk_from_repo ${fd_NLPRADIOCELL[@]}
-}
-
-update_microg () {
-	update_act[0]='1'
-	update_act[8]='1'
-	update_act[9]='1'
-	update_act[10]='1'
-}
-
-grab_gsync () {
-	#          KK LL M  N  O  P  Q
-	for API in 19 21 23 24 26 28 29 30; do
-		grab_apk_from_ogapps ${og_CALSYNC[@]} "${API}"
-		grab_apk_from_ogapps ${og_CONSYNC[@]} "${API}"
-		grab_apk_from_ogapps ${og_BTRANSP[@]} "${API}"
-	done
-}
-
-update_gsync () {
-	update_act[2]='1'
 }
 
 update_fdroid () {
 	update_act[5]='1'
 	update_act[6]='1'
-	update_act[7]='1'
-	update_act[9]='1'
 }
 
 grab_apps () {
@@ -152,16 +98,9 @@ update_osmand () {
 }
 
 update_master () {
-	[ "${update_act[0]}" = "1" ] && grab_microg
-	[ "${update_act[7]}" = "1" ] && grab_apk_from_repo ${fd_AURORADROID[@]}
-	[ "${update_act[8]}" = "1" ] && grab_apk_from_repo ${fd_AURORASTORE[@]}
-	[ "${update_act[9]}" = "1" ] && grab_aurora_apk_from_gitlab ${gl_AURORASERVICES[@]}
 	[ "${update_act[5]}" = "1" ] && grab_apk_from_repo ${fd_FDROID[@]}
 	[ "${update_act[6]}" = "1" ] && grab_apk_from_repo ${fd_FDROID_PE[@]}
-	[ "${update_act[10]}" = "1" ] && grab_apk_from_repo ${nlx_PHONESKY[@]}
 	[ "${update_act[3]}" = "1" ] && grab_bromite
 	[ "${update_act[4]}" = "1" ] && grab_osmand
 	[ "${update_act[11]}" = "1" ] && grab_apps
-	[ "${update_act[2]}" = "1" ] && grab_gsync
-	[ "${update_act[1]}" = "1" ] && grab_swipe
 }

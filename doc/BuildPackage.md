@@ -24,27 +24,17 @@ download required files:
 For apks downloaded from F-Droid repositories or from APK Mirror, `build-package` checks the SHA256 hash.
 
 update required files:
-* `build-package u-microg` to update microG
 * `build-package u-fdroid` to update F-Droid
 * `build-package u-apps` to update applications
-* `build-package u-swipe` to update swipe libraries
-* `build-package u-gsync` to update Google Sync Adapters
 * `build-package u-bromite` to update Bromite WebView
 * `build-package u-osmand` to update OpenStreetMap (OsmAnd)
-* `build-package u-patch` to update Haystack patches
-  * currently disabled as NanoDroid uses new patches from [this pull request](https://github.com/Lanchon/haystack/pull/34)
 * `build-package pull` to update/re-download everything
 
 build packages:
 * `build-package full` to create the Full package
-* `build-package microg` to create the microG only package
 * `build-package fdroid` to create the F-Droid only package
-* `build-package patcher` to create the on-device framework-patcher package
-* `build-package uninstaller` to create the uninstaller package
 * `build-package bromitewebview` to create the Bromite WebView package
 * `build-package osmand` for the OpenStreetMap (OsmAnd) package
-* `build-package systest` to create the SysTest package
-* `build-package google` to create the Google (Sync Adapters & Swipe libraries) package
 * `build-package all` to create all packages at once
 
 ## Additional Features

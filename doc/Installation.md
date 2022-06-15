@@ -18,9 +18,7 @@ Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 * Create the setup configuration, if you don't want to stick with the default setup
    * see [> Alter Installation](AlterInstallation.md) for configuration settings (all packages)
    * see [> Applications](Applications.md) for which appliations to install (only Full package)
-   * see [> NanoDroid-Overlay](NanoDroidOverlay.md) for which applications to (pseudo-)debloat (only Full and microG packages)
-      * note: all GApps that conflict with microG will be (pseudo-)debloated regardless of your choice here
-      * see [> GApps Removal List](GAppsRemoval.md) to see which GApps are auto-destroyed
+   * see [> NanoDroid-Overlay](NanoDroidOverlay.md) for which applications to (pseudo-)debloat (only Full package)
    * the above links contain information on how to create the configuration files and links to the default configuration files
       * so you can use those to edit the configuration to your liking instead of starting from scratch
           * alternatively you can grab the configuration files from your downloaded (or created) zip and edit those
@@ -33,9 +31,9 @@ Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 
 ## Parallel Installations
 
-Given that **microG** and **F-Droid** packages are subsets of the **Full NanoDroid** package, they can't be installed alongside.
+Given that **F-Droid** packages are subsets of the **Full NanoDroid** package, they can't be installed alongside.
 
-The **microG** and **F-Droid** packages can however be installed in parallel, as they complement each other.
+The **F-Droid** packages can however be installed in parallel, as they complement each other.
 
 ## Installation on Stock/custom ROM without GApps/OpenGApps
 
@@ -110,11 +108,9 @@ You'll find the files in
 where `MODID` is either
 
 * NanoDroid
-* NanoDroid_microG
 * NanoDroid_FDroid
 * NanoDroid_BromiteWebView
 * NanoDroid_OsmAnd
-* NanoDroid_Google
 
 and `INSTALLDATE` is the date of installation in `%Y%m%D_%H.%M.%S` format (eg: `20180709_20.34.14`).
 

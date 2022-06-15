@@ -72,4 +72,4 @@ The syntax is pretty simple:
   * see names in `{}` brackets above
 * commented out lines (starting with #) will be ignored
 
-applications managed by other setup variables (F-Droid, microG, PlayStore) are not effected by this file.
+applications managed by other setup variables are not effected by this file.

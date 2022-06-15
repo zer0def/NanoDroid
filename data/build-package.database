@@ -5,21 +5,6 @@
 ###
 
 nlx_MPV=(nanolx is.xyz.mpv app MPV)
-nlx_PHONESKY=(nanolx com.android.vending priv-app Phonesky)
-
-###
-# microG
-###
-
-uG_GMSCORE=(microg com.google.android.gms priv-app GmsCore)
-uG_GSFPROXY=(microg com.google.android.gsf priv-app GsfProxy)
-uG_FAKESTORE=(microg com.android.vending priv-app FakeStore)
-fd_NLPDEJAVU=(fdroid org.fitchfamily.android.dejavu app nlpBackendDejavu)
-fd_NLPMOZILLA=(fdroid org.microg.nlp.backend.ichnaea app nlpBackendIchnaea)
-fd_NLPNOMINATIM=(fdroid org.microg.nlp.backend.nominatim app nlpBackendNominatim)
-fd_NLPAPPLE=(fdroid org.microg.nlp.backend.apple app nlpBackendApple)
-fd_NLPRADIOCELL=(fdroid org.openbmap.unifiedNlp app nlpBackendRadiocell)
-fd_AURORASTORE=(fdroid com.aurora.store app AuroraStore)
 
 ###
 # F-Droid
@@ -27,7 +12,6 @@ fd_AURORASTORE=(fdroid com.aurora.store app AuroraStore)
 
 fd_FDROID=(fdroid org.fdroid.fdroid app FDroid)
 fd_FDROID_PE=(fdroid org.fdroid.fdroid.privileged priv-app FDroidPrivileged)
-fd_AURORADROID=(fdroid com.aurora.adroid app AuroraDroid)
 
 ###
 # Apps
@@ -59,25 +43,10 @@ gd_TORBROWSER=(guardian org.torproject.torbrowser app TorBrowser)
 np_NEWPIPE=(newpipe org.schabi.newpipe app NewPipe)
 
 ###
-# Google Sync Adapters
-###
-
-og_CALSYNC=(com.google.android.syncadapters.calendar app GoogleCalendarSync)
-og_CONSYNC=(com.google.android.syncadapters.contacts app GoogleContactsSync)
-og_BTRANSP=(com.google.android.backuptransport priv-app GoogleBackupTransport)
-
-###
 # GitHub
 ###
 
 gh_AMAZE=(TeamAmaze/AmazeFileManager app Amaze)
-
-###
-# GitLab
-###
-
-gl_AURORASERVICES=(AuroraOSS/AuroraServices priv-app AuroraServices)
-gl_AURORAWARDEN=(AuroraOSS/AppWarden app Warden)
 
 ###
 # URL
@@ -108,8 +77,6 @@ file_database=(
 	"${appsfolder[3]}/Alarmio/Alarmio.apk.zst"
 	"${appsfolder[3]}/Amaze/Amaze.apk.zst"
 	"${appsfolder[3]}/AnysoftKeyboard/AnysoftKeyboard.apk.zst"
-	"${appsfolder[3]}/AuroraDroid/AuroraDroid.apk.zst"
-	"${appsfolder[3]}/AuroraStore/AuroraStore.apk.zst"
 	"${appsfolder[3]}/FreeOTPPlus/FreeOTPPlus.apk.zst"
 	"${appsfolder[3]}/Frost/Frost.apk.zst"
 	"${appsfolder[3]}/FDroid/FDroid.apk.zst"
@@ -118,11 +85,6 @@ file_database=(
 	"${appsfolder[3]}/KeePassDX/KeePassDX.apk.zst"
 	"${appsfolder[3]}/MPV/MPV.apk.zst"
 	"${appsfolder[3]}/NewPipe/NewPipe.apk.zst"
-	"${appsfolder[3]}/nlpBackendApple/nlpBackendApple.apk.zst"
-	"${appsfolder[3]}/nlpBackendDejavu/nlpBackendDejavu.apk.zst"
-	"${appsfolder[3]}/nlpBackendIchnaea/nlpBackendIchnaea.apk.zst"
-	"${appsfolder[3]}/nlpBackendNominatim/nlpBackendNominatim.apk.zst"
-	"${appsfolder[3]}/nlpBackendRadiocell/nlpBackendRadiocell.apk.zst"
 	"${appsfolder[3]}/OAndBackupX/OAndBackupX.apk.zst"
 	"${appsfolder[3]}/Odyssey/Odyssey.apk.zst"
 	"${appsfolder[3]}/OpenCamera/OpenCamera.apk.zst"
@@ -139,37 +101,7 @@ file_database=(
 	"${appsfolder[3]}/Twidere/Twidere.apk.zst"
 	"${appsfolder[3]}/Warden/Warden.apk.zst"
 
-	"${appsfolder[4]}/AuroraServices/AuroraServices.apk.zst"
-	"${appsfolder[4]}/FakeStore/FakeStore.apk.zst"
 	"${appsfolder[4]}/FDroidPrivileged/FDroidPrivileged.apk.zst"
-	"${appsfolder[4]}/GmsCore/GmsCore.apk.zst"
-	"${appsfolder[4]}/GsfProxy/GsfProxy.apk.zst"
-	"${appsfolder[4]}/Phonesky/Phonesky.apk.zst"
-
-	"${appsfolder[5]}/K/app/GoogleCalendarSync/GoogleCalendarSync.apk.zst"
-	"${appsfolder[5]}/K/app/GoogleContactsSync/GoogleContactsSync.apk.zst"
-	"${appsfolder[5]}/K/priv-app/GoogleBackupTransport/GoogleBackupTransport.apk.zst"
-	"${appsfolder[5]}/L/app/GoogleCalendarSync/GoogleCalendarSync.apk.zst"
-	"${appsfolder[5]}/L/app/GoogleContactsSync/GoogleContactsSync.apk.zst"
-	"${appsfolder[5]}/L/priv-app/GoogleBackupTransport/GoogleBackupTransport.apk.zst"
-	"${appsfolder[5]}/M/app/GoogleCalendarSync/GoogleCalendarSync.apk.zst"
-	"${appsfolder[5]}/M/app/GoogleContactsSync/GoogleContactsSync.apk.zst"
-	"${appsfolder[5]}/M/priv-app/GoogleBackupTransport/GoogleBackupTransport.apk.zst"
-	"${appsfolder[5]}/N/app/GoogleCalendarSync/GoogleCalendarSync.apk.zst"
-	"${appsfolder[5]}/N/app/GoogleContactsSync/GoogleContactsSync.apk.zst"
-	"${appsfolder[5]}/N/priv-app/GoogleBackupTransport/GoogleBackupTransport.apk.zst"
-	"${appsfolder[5]}/O/app/GoogleCalendarSync/GoogleCalendarSync.apk.zst"
-	"${appsfolder[5]}/O/app/GoogleContactsSync/GoogleContactsSync.apk.zst"
-	"${appsfolder[5]}/O/priv-app/GoogleBackupTransport/GoogleBackupTransport.apk.zst"
-	"${appsfolder[5]}/P/app/GoogleCalendarSync/GoogleCalendarSync.apk.zst"
-	"${appsfolder[5]}/P/app/GoogleContactsSync/GoogleContactsSync.apk.zst"
-	"${appsfolder[5]}/P/priv-app/GoogleBackupTransport/GoogleBackupTransport.apk.zst"
-	"${appsfolder[5]}/Q/app/GoogleCalendarSync/GoogleCalendarSync.apk.zst"
-	"${appsfolder[5]}/Q/app/GoogleContactsSync/GoogleContactsSync.apk.zst"
-	"${appsfolder[5]}/Q/priv-app/GoogleBackupTransport/GoogleBackupTransport.apk.zst"
-	"${appsfolder[5]}/R/app/GoogleCalendarSync/GoogleCalendarSync.apk.zst"
-	"${appsfolder[5]}/R/app/GoogleContactsSync/GoogleContactsSync.apk.zst"
-	"${appsfolder[5]}/R/priv-app/GoogleBackupTransport/GoogleBackupTransport.apk.zst"
 
 	"${appsfolder[11]}/app/BromiteWebView_arm/BromiteWebView_arm.apk.zst"
 	"${appsfolder[11]}/app/BromiteWebView_arm64/BromiteWebView_arm64.apk.zst"
@@ -177,25 +109,4 @@ file_database=(
 
 	"${appsfolder[9]}/app/OsmAnd/OsmAnd.apk.zst"
 	"${appsfolder[9]}/app/OsmAnd_ContourLines/OsmAnd_ContourLines.apk.zst"
-
-	"${appsfolder[7]}/arm/libjni_keyboarddecoder.so"
-	"${appsfolder[7]}/arm/libjni_latinimegoogle.so_19"
-	"${appsfolder[7]}/arm/libjni_latinimegoogle.so_21"
-	"${appsfolder[7]}/arm/libjni_latinimegoogle.so_22"
-	"${appsfolder[7]}/arm/libjni_latinimegoogle.so_23"
-	"${appsfolder[7]}/arm/libjni_latinimegoogle.so_27"
-	"${appsfolder[7]}/arm/libjni_latinimegoogle.so_28"
-
-	"${appsfolder[7]}/arm64/libjni_keyboarddecoder.so"
-	"${appsfolder[7]}/arm64/libjni_latinimegoogle.so_21"
-	"${appsfolder[7]}/arm64/libjni_latinimegoogle.so_22"
-	"${appsfolder[7]}/arm64/libjni_latinimegoogle.so_23"
-	"${appsfolder[7]}/arm64/libjni_latinimegoogle.so_27"
-	"${appsfolder[7]}/arm64/libjni_latinimegoogle.so_28"
-
-	"${appsfolder[7]}/x86/libjni_keyboarddecoder.so"
-	"${appsfolder[7]}/x86/libjni_latinimegoogle.so"
-
-	"${appsfolder[7]}/x86_64/libjni_keyboarddecoder.so"
-	"${appsfolder[7]}/x86_64/libjni_latinimegoogle.so"
 )

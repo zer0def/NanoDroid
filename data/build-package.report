@@ -66,13 +66,6 @@ get_apk_info () {
 	zstd_sha="$("${sumsha256}" "${1}" | gawk '{print $1}')"
 
 	case "${1}" in
-		*gsync/K* ) APK_TYPE="Google Sync Adapters [KitKat]" ;;
-		*gsync/L* ) APK_TYPE="Google Sync Adapters [Lolipop]" ;;
-		*gsync/M* ) APK_TYPE="Google Sync Adapters [Marshmallow]" ;;
-		*gsync/N* ) APK_TYPE="Google Sync Adapters [Nougat]" ;;
-		*gsync/O* ) APK_TYPE="Google Sync Adapters [Oreo]" ;;
-		*gsync/P* ) APK_TYPE="Google Sync Adapters [Pie]" ;;
-		*gsync/common*) APK_TYPE="Google Sync Adapters [Generic]" ;;
 		*priv-app*) APK_TYPE="Privileged Application" ;;
 		*app*     ) APK_TYPE="Generic Application" ;;
 	esac
@@ -101,7 +94,6 @@ get_lib_info () {
 	local lib_path="$(dirname "${1}" | sed -e 's/.*NanoDroid/NanoDroid/')"
 
 	case "${lib_file}" in
-		*libjni_latinimegoogle* ) LIB_NAME="Latin IME Google" ;;
 		*libjni_keyboarddecoder*) LIB_NAME="Keyboard Decoder" ;;
 	esac
 
@@ -169,8 +161,6 @@ get_etc_info () {
 	local etc_pkgs=""
 
 	case "${1}" in
-		*gsync*default-permissions* ) local etc_type="Google Sync Adapters Permissions"
-		                              local etc_pkgs="$(gawk -F\" '/package=/{print $2}' ${1})" ;;
 		*etc/permissions*           ) local etc_type="Application Permissions"
 		                              local etc_pkgs="$(gawk -F\" '/package=/{print $2}' "${1}")" ;;
 		*etc/default-permissions*   ) local etc_type="Application Permissions"
@@ -238,9 +228,6 @@ get_msc_info () {
 		*Full*update*     ) local msc_type="NanoDroid Full Package TWRP invoker" ;;
 		*Full*.prop*      ) local msc_type="NanoDroid Full Package Module Module properties" ;;
 
-		*microG*update*   ) local msc_type="NanoDroid microG Package TWRP invoker" ;;
-		*microG*.prop*    ) local msc_type="NanoDroid microG Package Module Module properties" ;;
-
 		*FDroid*update*   ) local msc_type="NanoDroid F-Droid Package TWRP invoker" ;;
 		*FDroid*.prop*    ) local msc_type="NanoDroid F-Droid Package Module Module properties" ;;
 
@@ -250,20 +237,11 @@ get_msc_info () {
 		*OsmAnd*update*   ) local msc_type="NanoDroid OsmAnd Package TWRP invoker" ;;
 		*OsmAnd*.prop*    ) local msc_type="NanoDroid OsmAnd Package Module Module properties" ;;
 
-		*CommonPatcher*   ) local msc_type="NanoDroid Framework Patcher" ;;
-		*70-nanodroidpatcher.sh* ) local msc_type="NanoDroid Framework Patcher addon.d" ;;
-		*org.spoofing.apk*) local msc_type="NanoDroid Framework Patcher spoofing info provider" ;;
-		*patcher*update*  ) local msc_type="NanoDroid Framework Patcher TWRP invoker" ;;
-		*patcher*.prop*      ) local msc_type="NanoDroid Framework Patcher Module Module properties" ;;
-
 		*SysTest*         ) local msc_type="NanoDroid System Tester" ;;
 		*systest*update*  ) local msc_type="NanoDroid System Tester TWRP invoker" ;;
 
 		*uninstaller*binary*) local msc_type="NanoDroid Uninstaller" ;;
 		*uninstaller*update*) local msc_type="NanoDroid Uninstaller TWRP invoker" ;;
-
-		*Google*update*   ) local msc_type="NanoDroid Google Package TWRP invoker" ;;
-		*Google*.prop*    ) local msc_type="NanoDroid Google Module properties" ;;
 
 		*ChangeLog.md*    ) local msc_type="NanoDroid ChangeLog" ;;
 		*README.md*       ) local msc_type="NanoDroid README" ;;
@@ -271,9 +249,6 @@ get_msc_info () {
 		*.nanodroid-apps* ) local msc_type="NanoDroid default app installation configuration" ;;
 		*.nanodroid-setup*) local msc_type="NanoDroid default installation configuration" ;;
 		*.nanodroid-overlay*) local msc_type="NanoDroid default overlay configuration" ;;
-
-		*.maps.jar*       ) local msc_type="microG Maps v1 support"
-				    local msc_name="$(basename "${1}")" ;;
 
 		*LICENSE*         ) local msc_type="exclude" ;;
 		*doc*             ) local msc_type="exclude" ;;
@@ -319,14 +294,11 @@ get_dst_info () {
 
 		case "${dst_file}" in
 			*NanoDroid-[0-9]*.zip*) local dst_pkg="NanoDroid Full" ;;
-			*microG*.zip*         ) local dst_pkg="NanoDroid microG" ;;
 			*fdroid*.zip*         ) local dst_pkg="NanoDroid F-Droid" ;;
 			*BromiteWebView*.zip* ) local dst_pkg="NanoDroid BromiteWebView" ;;
 			*OsmAnd*.zip*         ) local dst_pkg="NanoDroid OsmAnd" ;;
-			*patcher*.zip*        ) local dst_pkg="NanoDroid Framework Patcher" ;;
 			*systest*.zip*        ) local dst_pkg="NanoDroid System Tester" ;;
 			*uninstaller*.zip*    ) local dst_pkg="NanoDroid Uninstaller" ;;
-			*Google*.zip*         ) local dst_pkg="NanoDroid Google" ;;
 		esac
 
 		case "${dst_file}" in

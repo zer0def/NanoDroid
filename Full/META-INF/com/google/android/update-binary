@@ -18,17 +18,13 @@ fi
 setup_installer 1 1 1
 
 install_nanodroidscripts
-install_microg
-install_mapsv1
 install_fdroid
-install_store
 set_progress 0.5
 
 install_apps
 set_progress 0.75
 
 install_initd
-install_bash
 set_progress 0.9
 
 nanodroid_finalize

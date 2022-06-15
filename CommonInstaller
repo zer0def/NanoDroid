@@ -433,84 +433,6 @@ umount_partitions () {
 }
 
 ##########################################################################################
-# migrate from Nanolx to Official APKs and vice-versa
-##########################################################################################
-
-detect_migrate_apk () {
-	local app_id="${1}"
-	local app_name="${2}"
-
-	USER_PATH="$(find /data/app -type d -name "${app_id}-*" &>/dev/null)"
-
-	if [ -n "${USER_PATH}" ]; then
-		if "${UNZIP}" -l "${MODPATH}/system/priv-app/${app_name}/${app_name}.apk" | grep META-INF/NANOLX.RSA &>/dev/null; then
-			BUILD_INST=Nanolx
-		else	BUILD_INST=Official
-		fi
-
-		if "${UNZIP}" -l "${USER_PATH}/base.apk" | grep META-INF/NANOLX.RSA &>/dev/null; then
-			BUILD_USER=Nanolx
-		else	BUILD_USER=Official
-		fi
-
-		if [ "${BUILD_INST}" != "${BUILD_USER}" ]; then
-			decho "    + Removing ${BUILD_USER} ${app_name} in favor of ${BUILD_INST} ${app_name}"
-			rm -rf "${USER_PATH}"
-
-			if [ "${app_id}" = "com.google.android.gms" ]; then
-				decho "    + Resetting GCM/FCM connection of all apps to allow re-registration"
-				find /data/data/*/shared_prefs -name com.google.android.gms.*.xml -delete
-			fi
-		fi
-	fi
-}
-
-##########################################################################################
-# check if ROM has native fake signature spoofing support
-# origingally by @ale5000 - revised by me
-##########################################################################################
-
-check_fake_package_signature () {
-	PERMISSION=android.permission.FAKE_PACKAGE_SIGNATURE
-	PERMISSION_OD="$(echo -n "${PERMISSION}" | od -A n -t x1 | tr -d '\n' | sed -e 's/^ //g;s/ /00/g')"
-	PATCH_TYPE=""
-	FRAMEWORKRES_PATCH=false
-	SERVICESJAR_PATCH=false
-
-	mkdir -p "${TMPDIR}/sigcheck"
-
-	# natively patched ROM: only framework-res.apk patched (old)
-	# natively patched ROM: both framework-res.apk and services.jar patched (new)
-	# self patched ROM: only services.jar patched
-
-	# check framework-res.apk for the patch
-	unzip -oq /system/framework/framework-res.apk -d "${TMPDIR}/sigcheck" \
-		|| error "failed to unpack framework-res.apk"
-
-	grep -qF "${PERMISSION}" "${TMPDIR}"/sigcheck/AndroidManifest.xml && FRAMEWORKRES_PATCH=true
-	od -A n -t x1 "${TMPDIR}"/sigcheck/AndroidManifest.xml | tr -d ' \n' | grep -qF "${PERMISSION_OD}" && FRAMEWORKRES_PATCH=true
-
-	# check services.jar for the patch
-	unzip -oq /system/framework/services.jar -d "${TMPDIR}/sigcheck" \
-		|| error "failed to unpack services.jar"
-
-	grep -qF "${PERMISSION}" "${TMPDIR}"/sigcheck/*.dex && SERVICESJAR_PATCH=true
-	od -A n -t x1 "${TMPDIR}"/sigcheck/*.dex | tr -d ' \n' | grep -qF "${PERMISSION_OD}" && SERVICESJAR_PATCH=true
-
-	# we don't use this anywhere (except in SysTest log),
-	# but may still come in hand in the future
-	if "${FRAMEWORKRES_PATCH}" && ! "${SERVICESJAR_PATCH}"; then
-		PATCH_TYPE="native_old"
-	elif "${FRAMEWORKRES_PATCH}" && "${SERVICESJAR_PATCH}"; then
-		PATCH_TYPE="native_new"
-	elif ! "${FRAMEWORKRES_PATCH}" && "${SERVICESJAR_PATCH}"; then
-		PATCH_TYPE="self_patched"
-	fi
-
-	[ -n "${PATCH_TYPE}" ] && return 0 || return 1
-}
-
-##########################################################################################
 # parse output from "aapt dump xmltree" back to xml
 ##########################################################################################
 
@@ -740,10 +662,6 @@ dump_system_privapp_permissions () {
 		grep "${pattern}" "${tmp_list}" | \
 		awk -F\" '{print $2}' >> "${sys_list}"
 	done
-
-	# XXX pre-patched custom ROM
-	check_fake_package_signature && \
-		echo "android.permission.FAKE_PACKAGE_SIGNATURE" >> "${sys_list}"
 }
 
 create_privapp_permissions_whitelist () {
@@ -835,9 +753,6 @@ show_banner () {
 		NanoDroid )
 			print_info " > Full package              "
 		;;
-		NanoDroid_microG )
-			print_info " > microG package            "
-		;;
 		NanoDroid_FDroid )
 			print_info " > F-Droid package           "
 		;;
@@ -846,9 +761,6 @@ show_banner () {
 		;;
 		NanoDroid_OsmAnd )
 			print_info " > OsmAnd package            "
-		;;
-		NanoDroid_Google )
-			print_info " > Google package            "
 		;;
 	esac
 
@@ -883,16 +795,16 @@ detect_arch () {
 	case "${ARCH}" in
 		arm )		BIN_ARCH="arm"
 				LIB_ARCHES="armeabi-v7a armeabi"
-				SWIPE_LIBDIR=lib ;;
+		;;
 		arm64 )		BIN_ARCH="arm"
 				LIB_ARCHES="arm64-v8a armeabi-v7a armeabi"
-				SWIPE_LIBDIR=lib64 ;;
+		;;
 		x86 )		BIN_ARCH="x86"
 				LIB_ARCHES="x86 armeabi-v7a armeabi"
-				SWIPE_LIBDIR=lib ;;
+		;;
 		x86_64 )	BIN_ARCH="x86"
 				LIB_ARCHES="x86_64 x86 armeabi-v7a armeabi"
-				SWIPE_LIBDIR=lib64 ;;
+		;;
 	esac
 
 	UNZIP="${INSTALLER}/unzip.${BIN_ARCH}"
@@ -902,68 +814,6 @@ detect_arch () {
 	ZIP="${INSTALLER}/zip.${BIN_ARCH}"
 	ZIPALIGN="${INSTALLER}/zipalign.${BIN_ARCH}"
 	chmod +x "${UNZIP}" "${AAPT}" "${ZSTD}"
-
-	case "${SDK_VERSION}" in
-		19 )		GSYNC_VER=K	;;
-		21 | 22 )	GSYNC_VER=L	;;
-		23 )		GSYNC_VER=M	;;
-		24 | 25 )	GSYNC_VER=N	;;
-		26 | 27 )	GSYNC_VER=O	;;
-		28 )		GSYNC_VER=P	;;
-		29 )		GSYNC_VER=Q	;;
-		30 )		GSYNC_VER=R ;;
-		* )	GSYNC_UNSUPPORTED=1	;;
-	esac
-
-	case "${ARCH}" in
-		arm )
-			case "${SDK_VERSION}" in
-				29 | 30 )
-					LIBJNI_IME=libjni_latinimegoogle.so_28
-				;;
-				19 | 21 | 22 | 23 | 27 | 28 )
-					LIBJNI_IME=libjni_latinimegoogle.so_${SDK_VERSION}
-				;;
-				24 | 25 | 26 )
-					LIBJNI_IME=libjni_latinimegoogle.so_23
-				;;
-				* )
-					SWIPE_UNSUPPORTED=1
-				;;
-			esac
-		;;
-
-		arm64 )
-			case "${SDK_VERSION}" in
-				29 | 30 )
-					LIBJNI_IME=libjni_latinimegoogle.so_28
-				;;
-				21 | 22 | 23 | 27 | 28 )
-					LIBJNI_IME=libjni_latinimegoogle.so_${SDK_VERSION}
-				;;
-				24 | 25 | 26 )
-					LIBJNI_IME=libjni_latinimegoogle.so_23
-				;;
-				* )
-					SWIPE_UNSUPPORTED=1
-				;;
-			esac
-		;;
-
-		x86 | x86_64 )
-			case "${SDK_VERSION}" in
-				19 | 21 | 22 )
-					SWIPE_UNSUPPORTED=1
-				;;
-				23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 )
-					LIBJNI_IME=libjni_latinimegoogle.so
-				;;
-				* )
-					SWIPE_UNSUPPORTED=1
-				;;
-			esac
-		;;
-	esac
 
 	if [[ "${SDK_VERSION}" -lt 21 ]]; then
 		UNFOLD_APP_DIR=1
@@ -1032,12 +882,7 @@ detect_mode () {
 
 		MAGISK )
 			magisk_install_setup
-
-			case "${MODID}" in
-				NanoDroid | NanoDroid_microG )
-					magisk_install_preinst
-				;;
-			esac
+			[ "${MODID}" != "NanoDroid" ] || magisk_install_preinst
 		;;
 	esac
 
@@ -1049,16 +894,14 @@ detect_mode () {
 ##########################################################################################
 
 nanodroid_finalize () {
-	case "${MODID}" in
-		NanoDroid | NanoDroid_microG )
-			if [ "${nanodroid_overlay}" -eq 1 ]; then
-				print_info " << with /system applications overlays"
-				"${NANODROID_BINDIR}/nanodroid-overlay" --create
-			else
-				print_info " << without /system applications overlays"
-			fi
-		;;
-	esac
+	if [ "${MODID}" = "NanoDroid" ]; then
+		if [ "${nanodroid_overlay}" -eq 1 ]; then
+			print_info " << with /system applications overlays"
+			"${NANODROID_BINDIR}/nanodroid-overlay" --create
+		else
+			print_info " << without /system applications overlays"
+		fi
+	fi
 
 	if [ "${MODE}" = "MAGISK" ]; then
 		magisk_install_finish
@@ -1161,27 +1004,23 @@ magisk_install_setup () {
 		NanoDroid )
 			# check for sub-modules  which are not
 			# supposed to be installed alongside
-			for dir in NanoDroid_microG NanoDroid_FDroid; do
-				[ -d "${MAGISKBASE}/modules/${dir}" ] && NANODROID_UPGRADE=1
-				for mod_dir in modules modules_update; do
-					if [ -d "${MAGISKBASE}/${mod_dir}/${dir}" ]; then
-						print_info " !! ${dir} module detected - uninstalling!"
-						rm -rf "${MAGISKBASE}/${mod_dir}/${dir}"
-					fi
-				done
+			[ -d "${MAGISKBASE}/modules/NanoDroid_FDroid" ] && NANODROID_UPGRADE=1
+			for mod_dir in modules modules_update; do
+				if [ -d "${MAGISKBASE}/${mod_dir}/NanoDroid_FDroid" ]; then
+					print_info " !! NanoDroid_FDroid module detected - uninstalling!"
+					rm -rf "${MAGISKBASE}/${mod_dir}/NanoDroid_FDroid"
 				fi
 			done
 		;;
 
-		NanoDroid_microG | NanoDroid_FDroid )
+		NanoDroid_FDroid )
 			# check for Full package and abort if found
-			[ -d "${MAGISKBASE}/modules/NanoDroid" -o -d "${MAGISKBASE}/modules_update/NanoDroid" ] && \
-				error "${MODID} can't be installed along side the Full package"
+			for mod_dir in modules modules_update; do
+				[ -d "${MAGISKBASE}/${mod_dir}/NanoDroid" ] && error "${MODID} can't be installed along side the Full package"
+			done
 		;;
 
-		NanoDroid_OsmAnd | NanoDroid_Google | NanoDroid_BromiteWebView )
-			true
-		;;
+		NanoDroid_OsmAnd | NanoDroid_BromiteWebView ) :;;
 
 		* )
 			error "unknown module intended to be installed!?"
@@ -1224,12 +1063,6 @@ magisk_install_postinst () {
 		cp "${TMPDIR}/system.prop" "${MODPATH}/system.prop"
 	fi
 
-	if [ "${nanodroid_microg}" -ne 0 -o "${MODID}" = "NanoDroid_microG" ]; then
-		if [ -n "$(grep_prop ro.setupwizard.mode)" ]; then
-			echo "ro.setupwizard.mode=DISABLED" >> "${MODPATH}/system.prop"
-		fi
-	fi
-
 	if [ -d "${TMPDIR}/logs" ]; then
 		print_info " << restoring init.d script logs"
 		cp -r "${TMPDIR}/logs" "${MODPATH}/logs"
@@ -1254,11 +1087,7 @@ magisk_install_finish () {
 		chmod +x "${MODPATH}/service.sh"
 	fi
 
-	case "${MODID}" in
-		NanoDroid | NanoDroid_microG )
-			magisk_install_postinst
-		;;
-	esac
+	[ "${MODID}" != "NanoDroid" ] || magisk_install_postinst
 
 	if "${BOOTMODE}"; then
 		touch "${MAGISKBASE}/modules/${MODID}/update" 2>/dev/null
@@ -1275,79 +1104,6 @@ magisk_install_finish () {
 ##########################################################################################
 
 ##########################################################################################
-# Install microG
-##########################################################################################
-
-install_microg () {
-	# install microG if requested
-	# respectively force if it's the microG package
-	if [ "${nanodroid_microg}" -ne 0 -o "${MODID}" = "NanoDroid_microG" ]; then
-
-		gapps_solve_conflicts
-		gapps_destroy_artifacts
-
-		print_info " << with microg"
-		print_info "   ++ microG GmsCore"
-		nanodroid_install_apk GmsCore
-		detect_migrate_apk com.google.android.gms GmsCore
-
-		[ "${nanodroid_microg}" -ne 2 ] && nanodroid_install_apk GsfProxy
-
-		NLPBACKEND="nlpBackendNominatim"
-		print_info "   ++ Nominatim geocoder backend"
-		"${NANODROID_BINDIR}/nanodroid-overlay" --add NominatimGeocoderBackend
-		"${NANODROID_BINDIR}/nanodroid-overlay" --add NominatimNlpBackend
-
-		if [ "${nanodroid_nlpbackend:0:1}" -eq 1 ]; then
-			NLPBACKEND="${NLPBACKEND} nlpBackendDejavu"
-			print_info "   ++ Déjà Vu location backend"
-			"${NANODROID_BINDIR}/nanodroid-overlay" --add DejaVuNlpBackend
-			"${NANODROID_BINDIR}/nanodroid-overlay" --add DejaVuBackend
-		fi
-
-		if [ "${nanodroid_nlpbackend:1:1}" -eq 1 ]; then
-			NLPBACKEND="${NLPBACKEND} nlpBackendIchnaea"
-			print_info "   ++ Ichnaea location backend"
-			"${NANODROID_BINDIR}/nanodroid-overlay" --add IchnaeaNlpBackend
-			"${NANODROID_BINDIR}/nanodroid-overlay" --add MozillaNlpBackend
-		fi
-
-		if [ "${nanodroid_nlpbackend:2:1}" -eq 1 ]; then
-			NLPBACKEND="${NLPBACKEND} nlpBackendApple"
-			print_info "   ++ Apple location backend"
-		fi
-
-		if [ "${nanodroid_nlpbackend:3:1}" -eq 1 ]; then
-			NLPBACKEND="${NLPBACKEND} nlpBackendRadiocell"
-			print_info "   ++ Radiocell location backend"
-		fi
-
-		for app in ${NLPBACKEND}; do
-			nanodroid_install_apk "${app}"
-		done
-
-		nanodroid_install_file etc/sysconfig/microg-a5k.xml
-		nanodroid_install_file etc/default-permissions/microg-permissions.xml
-
-	else	print_info " << without microG"
-	fi
-}
-
-##########################################################################################
-# Install Maps API v1 support
-##########################################################################################
-
-install_mapsv1 () {
-	# install mapsv1 if requested
-	if [ "${nanodroid_mapsv1}" -eq 1 ]; then
-		print_info " << with Maps API version 1"
-		nanodroid_install_file etc/permissions/com.google.android.maps.xml
-		nanodroid_install_file framework/com.google.android.maps.jar
-	else	print_info " << without Maps API version 1"
-	fi
-}
-
-##########################################################################################
 # Install F-Droid
 ##########################################################################################
 
@@ -1355,31 +1111,16 @@ install_fdroid () {
 	# install F-Droid if requested
 	# respectively force if it's the F-Droid package
 
-	if [ "${nanodroid_fdroid}" -eq 3 ]; then
-		install_fdroid_fdroid
-		install_fdroid_aurora
-	elif [ "${nanodroid_fdroid}" -eq 2 ]; then
-		install_fdroid_aurora
-	elif [ "${nanodroid_fdroid}" -eq 1 -o "${MODID}" = "NanoDroid_FDroid" ]; then
-		install_fdroid_fdroid
+	if [ "$((${nanodroid_fdroid}%2))" -eq 1 ] || [ "${MODID}" = "NanoDroid_FDroid" ]; then
+		print_info " << with F-Droid"
+		nanodroid_install_apk FDroid
+		nanodroid_install_apk FDroidPrivileged
+
+		"${NANODROID_BINDIR}/nanodroid-overlay" --add FDroidPriv
+
+		nanodroid_install_file etc/org.fdroid.fdroid/additional_repos.xml
 	else	print_info " << without F-Droid"
 	fi
-}
-
-install_fdroid_aurora () {
-	print_info " << with Aurora Droid"
-	nanodroid_install_apk AuroraDroid
-	nanodroid_install_apk AuroraServices
-}
-
-install_fdroid_fdroid () {
-	print_info " << with F-Droid"
-	nanodroid_install_apk FDroid
-	nanodroid_install_apk FDroidPrivileged
-
-	"${NANODROID_BINDIR}/nanodroid-overlay" --add FDroidPriv
-
-	nanodroid_install_file etc/org.fdroid.fdroid/additional_repos.xml
 }
 
 ##########################################################################################
@@ -1406,112 +1147,14 @@ install_apps () {
 }
 
 ##########################################################################################
-# Install App Store
-##########################################################################################
-
-install_store () {
-	STORE_CHOICE="${nanodroid_play:0:1}"
-	FAKE_STORE="${nanodroid_play:1:1}"
-
-	[ "${FAKE_STORE}" -eq 1 ] && STORE_CONFLICT="Phonesky" || STORE_CONFLICT=""
-
-	# install Aurora and/or Play Store whichever requested
-	case "${STORE_CHOICE}" in
-		1 )
-			install_store_play
-		;;
-
-		2 )
-			install_store_aurora
-		;;
-
-		3 )
-			install_store_play
-			install_store_aurora
-		;;
-
-		* )
-			print_info " << without App Store"
-		;;
-	esac
-
-	# Only install Fake Store if requested and Play Store is not installed
-	if [ "${FAKE_STORE}" -eq 1 ]; then
-		print_info " << with Fake Store"
-		nanodroid_install_apk FakeStore
-	else 	print_info " << without Fake Store"
-	fi
-
-	[ -n "${STORE_CONFLICT}" ] && "${NANODROID_BINDIR}/nanodroid-overlay" --add "${STORE_CONFLICT}"
-
-	if [ "${NANODROID_UPGRADE}" -eq 0 ]; then
-		rm -rf /data/data/com.android.vending
-		rm -rf /data/user/*/com.android.vending
-		rm -rf /data/user_de/*/com.android.vending
-		rm -rf /data/app/com.android.vending-*
-	fi
-}
-
-install_store_play () {
-	# force unselect Fake Store when user has choosen Play Store
-	STORE_CONFLICT="FakeStore"
-	FAKE_STORE=0
-
-	print_info " << with Play Store"
-	"${NANODROID_BINDIR}/nanodroid-overlay" --remove Phonesky
-	nanodroid_install_apk Phonesky
-
-	nanodroid_install_file etc/default-permissions/phonesky-permissions.xml
-}
-
-install_store_aurora () {
-	print_info " << with Aurora Store"
-	nanodroid_install_apk AuroraStore
-	nanodroid_install_apk AuroraServices
-}
-
-##########################################################################################
-# Install GNU Bash
-##########################################################################################
-
-install_bash () {
-	if [ "${nanodroid_bash}" -eq 1 ]; then
-		print_info " << with GNU Bash Shell and Less Pager"
-		for file in etc/bash_logout etc/bashrc; do
-			nanodroid_install_file "${file}"
-		done
-
-		for file in bin/bash "bin/bash.bin.${BIN_ARCH}" \
-			"bin/bashbug.${BIN_ARCH}" bin/less "bin/less.bin.${BIN_ARCH}" \
-			"bin/lessecho.${BIN_ARCH}" "bin/lesskey.${BIN_ARCH}"; do
-			nanodroid_install_file "${file}" bin
-		done
-	else	print_info " << without GNU Bash Shell"
-	fi
-}
-
-##########################################################################################
 # Install NanoDroid Scripts
 ##########################################################################################
 
 install_nanodroidscripts () {
 	print_info " << with NanoDroid Scripts"
 
-	for script in npem nutl novl \
-		nanodroid-perm nanodroid-util \
-		nanodroid-overlay; do
-		nanodroid_install_file bin/${script} bin
-	done
-
+	nanodroid_install_file bin/nanodroid-overlay bin
 	nanodroid_substitute bin/nanodroid-overlay
-
-	if [ "${MODE}" = "MAGISK" ]; then
-		for script in nprp nanodroid-prop; do
-			nanodroid_install_file "bin/${script}" bin
-		done
-
-		nanodroid_substitute bin/nanodroid-prop
-	fi
 }
 
 ##########################################################################################
@@ -1596,88 +1239,6 @@ install_osmand () {
 }
 
 ##########################################################################################
-# Install Google Sync Adapters
-##########################################################################################
-
-install_gsync () {
-	# install GSync if requested
-	if [ "${nanodroid_gsync}" -eq 1 ]; then
-		if [ "${GSYNC_UNSUPPORTED}" -eq 1 ]; then
-			print_info " << Google Sync Adapters are unsupported on SDK ${SDK_VERSION}"
-		else
-			print_info " << with Google Sync Adapters (${GSYNC_VER})"
-
-			for app in GoogleCalendarSync GoogleContactsSync GoogleBackupTransport; do
-				nanodroid_install_apk "${app}"
-			done
-
-			nanodroid_install_file etc/default-permissions/google-sync-permissions.xml
-		fi
-	else	print_info " << without Google Sync Adapters"
-	fi
-}
-
-##########################################################################################
-# Install swipe libraries
-##########################################################################################
-
-install_swipe () {
-	if [ "${nanodroid_swipe}" -eq 1 ]; then
-		if [ "${SWIPE_UNSUPPORTED}" -eq 1 ]; then
-			print_info " << Swipe Libraries are unsupported on SDK ${SDK_VERSION}"
-		else
-			print_info " << with swipe libraries"
-
-			SWIPE_SRC="${INSTALLER}/swipe/${ARCH}"
-			SWIPE_DEST="/system/${SWIPE_LIBDIR}"
-
-			APPL_IME="/system/app/LatinIME/${SWIPE_LIBDIR}/${ARCH}"
-			PRODL_IME="/system/product/app/LatinIME/${SWIPE_LIBDIR}/${ARCH}"
-
-			mkdir -p "${MODPATH}${SWIPE_DEST}"
-
-			cp "${SWIPE_SRC}/libjni_keyboarddecoder.so" "${MODPATH}${SWIPE_DEST}" || \
-				error "failed to install libjni_keyboarddecoder.so"
-			set_perm_data "${MODPATH}${SWIPE_DEST}/libjni_keyboarddecoder.so"
-
-			cp "${SWIPE_SRC}/${LIBJNI_IME}" "${MODPATH}${SWIPE_DEST}/libjni_latinimegoogle.so" || \
-				error "failed to install libjni_latinimegoogle.so"
-			set_perm_data "${MODPATH}${SWIPE_DEST}/libjni_latinimegoogle.so"
-
-			installinfo_add "${SWIPE_DEST}/libjni_keyboarddecoder.so"
-			installinfo_add "${SWIPE_DEST}/libjni_latinimegoogle.so"
-
-			link_swipe_libs "${APPL_IME}"
-			link_swipe_libs "${PRODL_IME}"
-		fi
-	else	print_info " << without swipe libraries"
-	fi
-}
-
-link_swipe_libs () {
-	DEST_IME="${1}"
-	if [ -f "${DEST_IME}/libjni_latinime.so" ]; then
-		decho " swipe: symlinking libjni_latinimegoogle as libjni_latinime in ${DEST_IME}"
-
-		mkdir -p "${MODPATH}${DEST_IME}"
-		ln -sfn "${MODPATH}${SWIPE_DEST}/libjni_latinimegoogle.so" "${MODPATH}${DEST_IME}/libjni_latinime.so"
-		ln -sfn "${MODPATH}${SWIPE_DEST}/libjni_keyboarddecoder.so" "${MODPATH}${DEST_IME}/libjni_keyboarddecoder.so"
-
-		installinfo_add "${MODPATH}${DEST_IME}/libjni_latinime.so"
-		installinfo_add "${MODPATH}${DEST_IME}/libjni_keyboarddecoder.so"
-	elif [ -f "${DEST_IME}/libjni_latinimegoogle.so" ]; then
-		decho " swipe: symlinking libjni_latinimegoogle as libjni_latinimegoogle in ${DEST_IME}"
-
-		mkdir -p "${MODPATH}${DEST_IME}"
-		ln -sfn "${MODPATH}${SWIPE_DEST}/libjni_latinimegoogle.so" "${MODPATH}${DEST_IME}/libjni_latinimegoogle.so"
-		ln -sfn "${MODPATH}${SWIPE_DEST}/libjni_keyboarddecoder.so" "${MODPATH}${DEST_IME}/libjni_keyboarddecoder.so"
-
-		installinfo_add "${MODPATH}${DEST_IME}/libjni_latinimegoogle.so"
-		installinfo_add "${MODPATH}${DEST_IME}/libjni_keyboarddecoder.so"
-	fi
-}
-
-##########################################################################################
 # SYSTEM MODE addon.d
 ##########################################################################################
 
@@ -1715,12 +1276,10 @@ nanodroid_install_file () {
 	file="$(basename "${1}")"
 	unset source
 
-	for sdir in system gsync; do
-		if [ -f "${INSTALLER}/${sdir}/${dir}/${file}" ]; then
-			source="${INSTALLER}/${sdir}/${dir}/${file}"
-			break
-		fi
-	done
+	if [ -f "${INSTALLER}/system/${dir}/${file}" ]; then
+		source="${INSTALLER}/system/${dir}/${file}"
+		break
+	fi
 
 	[ -z "${source}" ] && error "file: ${file} not found"
 
@@ -1780,8 +1339,7 @@ nanodroid_install_apk () {
 	unset prefix
 	unset source
 
-	for sdir in system/app system/priv-app \
-		"gsync/${GSYNC_VER}/app" "gsync/${GSYNC_VER}/priv-app"; do
+	for sdir in system/app system/priv-app; do
 		if [ -f "${INSTALLER}/${sdir}/${app}/${app}.apk.zst" ]; then
 			source="${INSTALLER}/${sdir}/${app}/${app}.apk"
 			dir="system/$(basename "${sdir}")"
@@ -1944,12 +1502,10 @@ SDK_VERSION=${SDK_VERSION}
 ARCH=${ARCH}
 LIB_ARCHES=${LIB_ARCHES}
 MODPATH=${MODPATH}
-SWIPE_LIBDIR=${SWIPE_LIBDIR}
 MODE=${MODE}
 MAGISK_VER_CODE=${MAGISK_VER_CODE}
 NANODROID_UPGRADE=${NANODROID_UPGRADE}
 NANODROID_BINDIR=${NANODROID_BINDIR}
-HAS_FAKESIGN=${HAS_FAKESIGN}
 
 ### MOUNTED PARTITIONS ###
 " >> "${nanodroid_logfile}"
@@ -2074,64 +1630,9 @@ check_cfg_setup () {
 	source "${cfg_setup}"
 
 	[ -z "${nanodroid_fdroid}" ] && set_prop nanodroid_fdroid 1
-	[ -z "${nanodroid_microg}" ] && set_prop nanodroid_microg 1
 	[ -z "${nanodroid_apps}" ] && set_prop nanodroid_apps 1
-	[ -z "${nanodroid_play}" ] && set_prop nanodroid_play 10
-
-	# in NanoDroid 20.3 nanodroid_play has changed
-	if [ "${#nanodroid_play}" -lt 2 ]; then
-		case "${nanodroid_play}" in
-			0 ) tmp_prop="00" ;;
-			1 ) tmp_prop="10" ;;
-			2 ) tmp_prop="20" ;;
-			3 ) tmp_prop="01" ;;
-			4 ) tmp_prop="21" ;;
-			* ) tmp_prop="10" ;;
-		esac
-
-		sed -e '/^nanodroid_play/d' -i "${cfg_setup}"
-		set_prop nanodroid_play "${tmp_prop}"
-	fi
-
-	# in NanoDroid 22.5 nanodroid_play has changed
-	if [ "${nanodroid_play}" -gt 30 ]; then
-		sed -e '/^nanodroid_play/d' -i "${cfg_setup}"
-		set_prop nanodroid_play 20
-	fi
-
-	if [ "${MODID}" = "NanoDroid" ]; then
-		[ -z "${nanodroid_overlay}" ] && set_prop nanodroid_overlay 1
-	else	[ -z "${nanodroid_overlay}" ] && set_prop nanodroid_overlay 0
-	fi
-
-	[ -z "${nanodroid_mapsv1}" ] && set_prop nanodroid_mapsv1 1
-	[ -z "${nanodroid_gsync}" ] && set_prop nanodroid_gsync 0
+	[ -z "${nanodroid_overlay}" ] && set_prop nanodroid_overlay "$([ "${MODID}" != "NanoDroid" ]; echo "${?}")"
 	[ -z "${nanodroid_forcesystem}" ] && set_prop nanodroid_forcesystem 0
-	[ -z "${nanodroid_swipe}" ] && set_prop nanodroid_swipe 0
-	[ -z "${nanodroid_bash}" ] && set_prop nanodroid_bash 1
-	[ -z "${nanodroid_nlpbackend}" ] && set_prop nanodroid_nlpbackend 1000
-
-	# in NanoDroid 20.3 nanodroid_nlpbackend has changed
-	if [ "${#nanodroid_nlpbackend}" -eq 1 ]; then
-		case "${nanodroid_nlpbackend}" in
-			0 ) tmp_prop="0000" ;;
-			1 ) tmp_prop="1000" ;;
-			2 ) tmp_prop="0100" ;;
-			3 ) tmp_prop="1100" ;;
-			* ) tmp_prop="1000" ;;
-		esac
-
-		sed -e '/^nanodroid_nlpbackend/d' -i "${cfg_setup}"
-		set_prop nanodroid_nlpbackend "${tmp_prop}"
-	fi
-
-	# in NanoDroid 20.5 nanodroid_nlpbackend has changed (again)
-	if [ "${#nanodroid_nlpbackend}" -eq 3 ]; then
-		tmp_prop="${nanodroid_nlpbackend}0"
-		sed -e '/^nanodroid_nlpbackend/d' -i "${cfg_setup}"
-		set_prop nanodroid_nlpbackend "${tmp_prop}"
-	fi
-
 	[ -z "${nanodroid_init+x}" ] && set_prop nanodroid_init "${nanodroid_all_init}"
 
 	# in NanoDroid 22.7 nanodroid_init has changed
@@ -2139,21 +1640,6 @@ check_cfg_setup () {
 		sed -e '/^nanodroid_init/d' -i "${cfg_setup}"
 		set_prop nanodroid_init "${nanodroid_all_init}"
 	fi
-
-	# in NanoDroid 21.0.90 nanodroid_override was dropped
-	sed -e '/^nanodroid_override/d' -i "${cfg_setup}"
-
-	# in NanoDroid 22.5 nanodroid_fonts was dropped
-	sed -e '/^nanodroid_fonts/d' -i "${cfg_setup}"
-
-	# in NanoDroid 22.6 nanodroid_nano was dropped
-	sed -e '/^nanodroid_nano/d' -i "${cfg_setup}"
-
-	# in NanoDroid 22.6 nanodroid_zelda was dropped
-	sed -e '/^nanodroid_zelda/d' -i "${cfg_setup}"
-
-	# in NanoDroid 23.0 nanodroid_utils was dropped
-	sed -e '/^nanodroid_uitls/d' -i "${cfg_setup}"
 
 	source "${cfg_setup}"
 }
@@ -2178,11 +1664,6 @@ get_cfg_overlay () {
 check_cfg_overlay () {
 	# see https://gitlab.com/Nanolx/NanoDroid/-/issues/147
 	dos2unix "${cfg_overlay}" &>/dev/null
-
-	# 22.0 flagged the following for overlay creation which caused issues
-	grep -q "^GmsCore$" "${cfg_overlay}" && sed '/^GmsCore$/d' -i "${cfg_overlay}"
-	grep -q "^GsfProxy$" "${cfg_overlay}" && sed '/^GsfProxy$/d' -i "${cfg_overlay}"
-	grep -q "^DroidGuard$" "${cfg_overlay}" && sed '/^DroidGuard$/d' -i "${cfg_overlay}"
 }
 
 ##########################################################################################
@@ -2193,190 +1674,9 @@ get_cfg_apps () {
 	get_config apps
 	if [ "${config_exists}" -eq 1 ]; then
 		cfg_apps="${config}"
-		check_cfg_apps
 		print_info " > Config | nanodroid-apps    | $(dirname "${cfg_apps}")"
 	else
 		cfg_apps="${INSTALLER}/.nanodroid-apps"
 		print_info " > Config | nanodroid-apps    | fallback"
 	fi
-}
-
-# check whether '.nanodroid-apps' is up to date
-check_cfg_apps () {
-	# see https://gitlab.com/Nanolx/NanoDroid/-/issues/147
-	dos2unix "${cfg_apps}" &>/dev/null
-
-	# <= 16.3 has KeePass DX instead of KeePassDroid, migrate
-	grep -q KeePassDroid "${cfg_apps}" && sed -e 's/KeePassDroid/KeePassDX/g' -i "${cfg_apps}"
-
-	# <= 17.7 has Substratum instead of Bucket (LibreSubtratum), migrate
-	grep -q Bucket "${cfg_apps}" && sed -e 's/Bucket/Substratum/g' -i "${cfg_apps}"
-
-	# <= 18.1 has Orfox instead of TorBrowser, migrate
-	grep -q Orfox "${cfg_apps}" && sed -e 's/Orfox/TorBrowser/g' -i "${cfg_apps}"
-
-	# >= 20.7.92 no longer ships YahooWeatherProvider, remove
-	grep -q YahooWeatherProvider "${cfg_apps}" && sed -e '/YahooWeatherProvider/d' -i "${cfg_apps}"
-
-	# >= 20.8.90 no longer ships OmniJAWS, remove
-	grep -q OmniJAWS "${cfg_apps}" && sed -e '/OmniJAWS/d' -i "${cfg_apps}"
-
-	# >= 21.0.90 has Alarmio instead of OmniClock, migrate
-	grep -q OmniClock "${cfg_apps}" && sed -e 's/OmniClock/Alarmio/g' -i "${cfg_apps}"
-
-	# >= 21.0.90 no longer ships OpenWeatherMapProvider, remove
-	grep -q OpenWeatherMapProvider "${cfg_apps}" && sed -e '/OpenWeatherMapProvider/d' -i "${cfg_apps}"
-
-	# >= 21.0.90 has Lightning instead of Privacy Browser, migrate
-	grep -q Lightning "${cfg_apps}" && sed -e 's/Lightning/PrivacyBrowser/g' -i "${cfg_apps}"
-
-	# >= 21.0.90 has Hacker's Keyboard instead of BeHeKeyboard, migrate
-	grep -q BeHeKeyboard "${cfg_apps}" && sed -e 's/BeHeKeyboard/HackersKeyboard/g' -i "${cfg_apps}"
-
-	# >= 22.1 has SmartPack-Kernel-Manager instead of Kernel Adiutor, migrate
-	grep -q KernelAdiutor "${cfg_apps}" && sed -e 's/KernelAdiutor/SmartPackKernelManager/g' -i "${cfg_apps}"
-
-	# >= 22.6 has Frost instead of FaceSlim, migrate
-	grep -q FaceSlim "${cfg_apps}" && sed -e 's/FaceSlim/Frost/g' -i "${cfg_apps}"
-
-	# >= 22.6 no longer ships Substratum, remove
-	grep -q Substratum "${cfg_apps}" && sed -e '/Substratum/d' -i "${cfg_apps}"
-
-	# >= 22.6 no longer ships Orbot, remove
-	grep -q Orbot "${cfg_apps}" && sed -e '/Orbot/d' -i "${cfg_apps}"
-
-	# >= 22.7 has OAndBackupX instead of Oandbackup
-	grep -q Oandbackup "${cfg_apps}" && sed -e 's/Oandbackup/OAndBackupX/g' -i "${cfg_apps}"
-
-	# >= 23.1 no longer ships XDA Labs, remove
-	grep -q XDALabs "${cfg_apps}" && sed -e '/XDALabs/d' -i "${cfg_apps}"
-
-	# >= 23.2 no longer ships Blokada, remove
-	grep -q Blokada "${cfg_apps}" && sed -e '/Blokada/d' -i "${cfg_apps}"
-
-}
-
-##########################################################################################
-# Destroy all GApps!
-##########################################################################################
-
-gapps_solve_conflicts () {
-	# first get rid of conflicting packages
-	print_google_apps | while read app; do
-		decho " ++ removing app: ${app} [google_apps]"
-		"${NANODROID_BINDIR}/nanodroid-overlay" --add "${app}"
-
-		rm -rf /data/dalvik-cache/*/system"@priv-app@${app}"[@\.]*@classes.*
-		rm -rf /data/dalvik-cache/*/system"@app@${app}"[@\.]*@classes.*
-	done
-
-	print_google_data | while read app; do
-		decho " ++ removing data for: ${app} [google_data]"
-		rm -rf "/data/data/${app}"
-		rm -rf /data/user/*"/${app}"
-		rm -rf /data/user_de/*"/${app}"
-		rm -rf "/data/app/${app}"-*
-		rm -rf "/mnt/asec/${app}"-*
-		rm -rf "${STORAGE}/Android/data/${app}"
-	done
-}
-
-gapps_destroy_artifacts () {
-	# this removes original Play Services
-	# only if this is a fresh NanoDroid installation
-	if [ "${NANODROID_UPGRADE}" -eq 0 ]; then
-		rm -rf /data/dalvik-cache/*/system"@priv-app@GmsCore"[@\.]*@classes.*
-
-		print_google_data_dirty | while read app; do
-			decho " ++ removing data for: ${app} [google_data_dirty]"
-			rm -rf "/data/data/${app}"
-			rm -rf /data/user/*"/${app}"
-			rm -rf /data/user_de/*"/${app}"
-			rm -rf "/data/app/${app}-"*
-			rm -rf "/mnt/asec/${app}-"*
-			rm -rf "${STORAGE}/Android/data/${app}"
-		done
-
-		find /data/system* -type f -name 'accounts*db' 2>/dev/null | while read database; do
-			decho "  ++ deleting Google Accounts from ${database} (if any)"
-			"${INSTALLER}/sqlite3.${BIN_ARCH}" "${database}" \
-				"DELETE FROM accounts WHERE type='com.google';"
-		done
-
-		find /data/system/users -type f -name 'runtime-permissions.xml' 2>/dev/null | while read file; do
-			if grep -q "com.google.android" "${file}"; then
-				decho "  ++ resetting permissions: ${file}"
-				rm -f "${file}"
-			fi
-		done
-
-		if [ -f /data/system/packages.list ]; then
-			print_google_data_dirty | while read app; do
-				decho "  ++ de-registering app: ${app} (if installed)"
-				sed -e "/${app}/d" -i /data/system/packages.list
-			done
-		fi
-	fi
-}
-
-##########################################################################################
-# GApps debloat list
-# mostly by @ale5000
-# extended for NanoDroid
-##########################################################################################
-
-print_google_apps()
-{
-cat <<EOF
-AMAPNetworkLocation
-BaiduNetworkLocation
-BlankStore
-ConfigUpdater
-GCS
-GmsCoreSetupPrebuilt
-GmsCore_update
-GoogleFeedback
-GoogleLoginService
-GoogleOneTimeInitializer
-GoogleServicesFramework
-GoogleConnectivityServices
-GoogleTTS
-LegacyNetworkLocation
-MarketUpdater
-MarkupGoogle
-NetworkLocation
-Phonesky
-PlayGames
-PlayStore
-PrebuiltGmsCore
-PrebuiltGmsCorePi
-PrebuiltGmsCorePix
-UnifiedNlp
-Velvet
-Vending
-WhisperPush
-EOF
-}
-
-print_google_data ()
-{
-cat <<EOF
-com.amap.android.location
-com.baidu.location
-com.google.android.location
-org.microg.nlp
-org.microg.unifiednlp
-EOF
-}
-
-print_google_data_dirty ()
-{
-cat <<EOF
-com.android.vending
-com.google.android.gms
-com.google.android.gsf
-com.google.android.gsf.login
-com.google.android.feedback
-com.mgoogle.android.gms
-EOF
 }

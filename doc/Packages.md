@@ -13,15 +13,8 @@ Module packages: flash through TWRP or Magisk Manager
 **NanoDroid**: includes
   * everything mentioned in the Summary
 
-**NanoDroid-microG**: includes (only)
-  * microG and its companions
-  * pseudo/force-debloat feature
-  * app store(s)
-  * GApps and location packages auto-removal
-
 **NanoDroid-fdroid**: includes (only)
   * F-Droid and its privileged extension
-  * Aurora Droid and it's privileged extension
 
 **NanoDroid-BromiteWebView**: includes (only)
   * [Bromite WebView](https://www.bromite.org/system_web_view)
@@ -29,10 +22,6 @@ Module packages: flash through TWRP or Magisk Manager
 **NanoDroid-OsmAnd**: includes (only)
   * [OsmAnd](https://f-droid.org/de/packages/net.osmand.plus/)
   * [OsmAnd Contour Lines plugin](https://f-droid.org/de/packages/net.osmand.srtmPlugin.paid/)
-
-**NanoDroid-Google**: includes (only)
-  * Google Sync Adapters
-  * Swipe libaries
 
 # Extra Packages
 
@@ -52,15 +41,6 @@ Extra packages, flash through TWRP or Magisk Manager
      * whether the ROM supports Bromite WebView installations
      * more (not **no** personal information)
   * use this to provide additional informations when posting issues
-
-**NanoDroid-patcher**:
-  * on-device framework-patcher for signature spoofing support
-     * on Android up to 8.1 the Patcher will automatically deodex your services.jar
-     * on Android 9 to 10 you need to manually deodex your services.jar
-         * see [> Deodex Instructions](DeodexServices.md)
-  * installs an addon.d script for automatic re-patching after ROM update
-     * addon.d support files reside in `/data/adb/nanodroid-patcher/`
-  * when Magisk is installed it creates the `NanoDroid_Patcher` module and install the patched `services.jar` there
 
 **NanoDroid-uninstaller**:
   * uninstalls *all* NanoDroid Magisk Modules

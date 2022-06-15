@@ -16,22 +16,6 @@ mk_pkg_full () {
 	progress "${!}"
 }
 
-create_microg_package() {
-	ZIP="NanoDroid-microG-${VERSION}.zip"
-
-	print_package "microG"
-
-	zip_add microG
-	zip_add_setup 0
-
-	sum_sign_package "${ZIP}"
-}
-
-mk_pkg_microg () {
-	create_microg_package &
-	progress "${!}"
-}
-
 create_fdroid_package() {
 	ZIP="NanoDroid-fdroid-${VERSION}".zip
 
@@ -80,21 +64,6 @@ mk_pkg_osmand () {
 	progress "${!}"
 }
 
-create_patcher_package() {
-	ZIP="NanoDroid-patcher-${VERSION}.zip"
-
-	print_package "Framework Patcher"
-
-	zip_add patcher
-
-	sum_sign_package "${ZIP}"
-}
-
-mk_pkg_patcher () {
-	create_patcher_package &
-	progress "${!}"
-}
-
 create_uninstaller_package() {
 	ZIP="NanoDroid-uninstaller-${VERSION}.zip"
 
@@ -122,21 +91,5 @@ create_systest_package() {
 
 mk_pkg_systest () {
 	create_systest_package &
-	progress "${!}"
-}
-
-create_google_package () {
-	ZIP="NanoDroid-Google-${VERSION}.zip"
-
-	print_package "Google"
-
-	zip_add Google
-	zip_add_setup 0
-
-	sum_sign_package "${ZIP}"
-}
-
-mk_pkg_google () {
-	create_google_package &
 	progress "${!}"
 }

@@ -31,14 +31,16 @@ appsfolder[1]="${appsfolder[0]}/system"
 appsfolder[2]="${CWD}/${appsfolder[1]}"
 appsfolder[3]="${appsfolder[1]}/app"
 appsfolder[4]="${appsfolder[1]}/priv-app"
-appsfolder[5]="Google/gsync"
-appsfolder[6]="${CWD}/${appsfolder[5]}"
-appsfolder[7]="Google/swipe"
-appsfolder[8]="${CWD}/${appsfolder[7]}"
 appsfolder[9]="OsmAnd/system"
 appsfolder[10]="${CWD}/${appsfolder[9]}"
 appsfolder[11]="BromiteWebView/system"
 appsfolder[12]="${CWD}/${appsfolder[11]}"
+
+# ripped-out
+appsfolder[5]="Google/gsync"
+appsfolder[6]="${CWD}/${appsfolder[5]}"
+appsfolder[7]="Google/swipe"
+appsfolder[8]="${CWD}/${appsfolder[7]}"
 
 
 for funcfile in pkg update common download database report; do
@@ -54,18 +56,9 @@ for opt in "${@}"; do
 			mk_pkg_full
 		;;
 
-		microg )
-			check_nanodroid || error "run 'build-package pull' first!"
-			mk_pkg_microg
-		;;
-
 		fdroid )
 			check_nanodroid || error "run 'build-package pull' first!"
 			mk_pkg_fdroid
-		;;
-
-		patcher )
-			mk_pkg_patcher
 		;;
 
 		uninstaller )
@@ -86,22 +79,14 @@ for opt in "${@}"; do
 			mk_pkg_systest
 		;;
 
-		google )
-			check_nanodroid || error "run 'build-package pull' first!"
-			mk_pkg_google
-		;;
-
 		all )
 			check_nanodroid || error "run 'build-package pull' first!"
 			mk_pkg_full
-			#mk_pkg_microg
 			mk_pkg_fdroid
-			#mk_pkg_patcher
 			#mk_pkg_uninstaller
 			mk_pkg_bromite_webview
 			mk_pkg_osmand
 			#mk_pkg_systest
-			#mk_pkg_google
 			#create_report
 		;;
 
@@ -127,13 +112,6 @@ for opt in "${@}"; do
 			check_nanodroid
 		;;
 
-		u-microg )
-			update_indices
-			update_microg
-			update_master
-			check_nanodroid
-		;;
-
 		u-fdroid )
 			update_indices
 			update_fdroid
@@ -144,18 +122,6 @@ for opt in "${@}"; do
 		u-apps )
 			update_indices
 			update_apps
-			update_master
-			check_nanodroid
-		;;
-
-		u-swipe )
-			update_swipe
-			update_master
-			check_nanodroid
-		;;
-
-		u-gsync )
-			update_gsync
 			update_master
 			check_nanodroid
 		;;
@@ -172,11 +138,6 @@ for opt in "${@}"; do
 			update_osmand
 			update_master
 			check_nanodroid
-		;;
-
-		u-patch )
-			#update_patches
-			echo "u-patch is currently disabled as we use new patches from: https://github.com/Lanchon/haystack/pull/34"
 		;;
 
 		check )

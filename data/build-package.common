@@ -95,19 +95,6 @@ check_nanodroid () {
 	fi
 }
 
-update_patches () {
-	grab_patches sigspoof-core/services.jar.dex core_services.jar.dex
-	grab_patches sigspoof-core-11.0-12.1/services.jar.dex core_11.0-12.1_services.jar.dex
-	grab_patches sigspoof-core-13.0/services.jar.dex core_13.0_services.jar.dex
-	grab_patches sigspoof-core-14.0/services.jar.dex core_14.0_services.jar.dex
-	grab_patches sigspoof-hook-4.1-6.0/services.jar.dex hook_4.1-6.0_services.jar.dex
-	grab_patches sigspoof-hook-7.0-9.0/services.jar.dex hook_7.0-9.0_services.jar.dex
-	grab_patches sigspoof-hook-11.0/services.jar.dex hook_11.0_services.jar.dex
-	grab_patches sigspoof-hook-12.0-12.1 /services.jar.dex hook_12.0_services.jar.dex
-	grab_patches sigspoof-hook-13.0 /services.jar.dex hook_13.0_services.jar.dex
-	grab_patches sigspoof-hook-14.0 /services.jar.dex hook_14.0_services.jar.dex
-}
-
 progress () {
 	sleep 0.5
 	while [ -d "/proc/${1}" ];do
@@ -175,14 +162,14 @@ increase_version_number () {
 	sed -e "s/^version_code.*/version_code=${1}/g" -i "${CWD}/build-package"
 	sed -e "s/^version_date.*/version_date=${date}/g" -i "${CWD}/build-package"
 
-	for module in Full microG FDroid BromiteWebView OsmAnd Google patcher/dexpatcher; do
+	for module in Full FDroid BromiteWebView OsmAnd; do
 		sed -e "s/version=.*/version=v${1}.${date}/" -i \
 			"${CWD}/${module}/module.prop"
 	done
 }
 
 increase_module_version () {
-	for module in Full microG FDroid BromiteWebView OsmAnd Google patcher/dexpatcher; do
+	for module in Full FDroid BromiteWebView OsmAnd; do
 		eval "$(grep versionCode "${CWD}/${module}/module.prop")"
 		local versionCode="$((versionCode+1))"
 		sed -e "s/versionCode.*/versionCode=${versionCode}/" \
@@ -214,25 +201,17 @@ setup NanoDroid [! do this first !]:
 	pull			| download all required apks for NanoDroid
 
 update contents:
-	u-microg		| update microG and companions
 	u-fdroid		| update F-Droid and Extension
 	u-bromite		| update Bromite System WebView
 	u-osmand		| update OsmAnd and Plugins
 	u-apps			| update applications
-	u-swipe			| update swipe libraries
-	u-gsync			| update Google Sync Adapters
-	u-patch			| download Haystack patches
-				| currently disabled as we use new Haystack patches
 
 create zip files:
 	full			| create Full package zip from repo
-	microg			| create microG package zip from repo
 	fdroid			| create FDroid package zip from repo
-	patcher			| create framework patcher zip from repo
 	uninstaller		| create uninstaller zip from repo
 	bromitewebview		| create Bromite WebView zip from repo
 	osmand			| create OsmAnd package zip from repo
-	google			| create Google package zip from repo
 	all			| create all zips from repo
 
 misc. stuff:

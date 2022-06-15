@@ -41,10 +41,8 @@ grep_prop() {
 show_help () {
 
 	echo "nanodroid-overlay
-
 Magisk Mode: Manages Overlays (Pseudo Debloat feature)
 System Mode: Manages Moved-Outs (Force Debloat feature)
-
 Options Magisk Mode:
 -a | --add		[appname]	add override for app [appname]
 -r | --remove		[appname]	remove override for app [appname]
@@ -54,7 +52,6 @@ Options Magisk Mode:
 -u | --update				update all overrides (= clear + create)
 -c | --clear				remove all overrides
 -g | --genconfig			(re-)create configuration from existing overrides
-
 Options System Mode:
 -a | --add		[appname]	add override for app [appname]
 -r | --remove		[appname]	remove override for app [appname] from configuration

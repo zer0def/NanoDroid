@@ -23,12 +23,6 @@ run_initscripts () {
 	done
 }
 
-run_npem () {
-	# wait until boot completed
-	until [ "$(getprop sys.boot_completed)." = "1." ]; do sleep 1; done
-	"${MODDIR}/system/bin/npem"
-}
-
 install_bromitewebview () {
 	# wait until boot completed
 	until [ "$(getprop sys.boot_completed)." = "1." ]; do sleep 1; done
@@ -46,11 +40,6 @@ install_bromitewebview () {
 case "${MODULE}" in
 	NanoDroid )
 		run_initscripts &
-		run_npem &
-	;;
-
-	NanoDroid_microG )
-		run_npem &
 	;;
 
 	NanoDroid_BromiteWebView )
