@@ -1,11 +1,10 @@
+
 Table of Contents
 =================
 
    * [NanoDroid](#nanodroid)
    * [Table of Contents](#table-of-contents)
-      * [Current Release](#current-release)
       * [Downloads](#downloads)
-         * [Primary Mirror](#primary-mirror)
          * [SHA256 Checksum and GPG Signature](#sha256-checksum-and-gpg-signature)
          * [Snapshots](#snapshots)
       * [Custom builds](#custom-builds)
@@ -36,19 +35,9 @@ The full microG experience NanoDroid contains a modified Play Store allowing (in
 
 **NanoDroid** was previously called **NanoMod** (before version 16.0).
 
-## Current Release
-
-* Stable: 23.1.2.20210117 "BusyCompat"
-* Beta: ---
-
 ## Downloads
 
-### Primary Mirror
-
-Only the latest stable and beta releases are maintained and are available on Nanolx:
-
-* Stable Downloads [> Nanolx](https://downloads.nanolx.org/NanoDroid/Stable)
-* Beta Downloads [> Nanolx](https://downloads.nanolx.org/NanoDroid/Beta)
+Weekly builds are available on Gitlab: [![Latest Release](https://gitlab.com/zer0def/NanoDroid/-/badges/release.svg)](https://gitlab.com/zer0def/NanoDroid/-/releases)
 
 ### SHA256 Checksum and GPG Signature
 
@@ -127,7 +116,7 @@ Full, user-readible [> ChangeLog](ChangeLog.md)
 
 ## Summary
 
-**NanoDroid** can be installed as a Magisk Module or directly to `/system`, most of the functionalities are available, in System Mode too.
+**NanoDroid** can be installed as a Magisk Module or directly systemized, most of the functionalities are available, in System Mode too.
 
 More information about Magisk [> XDA](https://forum.xda-developers.com/apps/magisk)
 

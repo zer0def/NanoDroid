@@ -1,0 +1,51 @@
+variables:
+  PACKAGE_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/NanoDroid"
+
+workflow:
+  rules:
+  - if: $CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_BRANCH == "personal"
+  - if: $CI_PIPELINE_SOURCE == "web"
+
+build:
+  stage: build
+  image: ubuntu:latest
+  script: |
+    apt update && DEBIAN_FRONTEND=noninteractive apt -y install curl file gawk gpg jq unzip zip zstd
+    ./build-package pull && ./build-package all ||:  # evade gpg signature return code
+    tag="$(date +%Y%m%d)" auth="JOB-TOKEN: ${CI_JOB_TOKEN}"
+    for i in NanoDroid NanoDroid-BromiteWebView; do
+      echo "$(awk '{print $1}' "${i}-23.2.${tag}.zip.sha256")  ${i}-${tag}.zip" >"${i}-${tag}.zip.sha256"
+      curl -s -o /dev/null -H "${auth}" -T "${i}-23.2.${tag}.zip" "${PACKAGE_URL}/${tag}/${i}-${tag}.zip"
+      curl -s -o /dev/null -H "${auth}" -T "${i}-${tag}.zip.sha256" "${PACKAGE_URL}/${tag}/${i}-${tag}.zip.sha256"
+    done
+  artifacts:
+    paths:
+    - "*.zip"
+    - "*.zip.sha256"
+    expire_in: 1 week
+
+publish:
+  stage: deploy
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  script: echo
+  release:
+    tag_name: "$(date +%Y%m%d)"
+    description: "$(date +%Y%m%d)"
+    assets:
+      links:
+      - name: "NanoDroid-$(date +%Y%m%d)"
+        url: "${PACKAGE_URL}/$(date +%Y%m%d)/NanoDroid-$(date +%Y%m%d).zip"
+      - name: "NanoDroid-$(date +%Y%m%d) sha256"
+        url: "${PACKAGE_URL}/$(date +%Y%m%d)/NanoDroid-$(date +%Y%m%d).zip.sha256"
+      - name: "NanoDroid-BromiteWebView-$(date +%Y%m%d)"
+        url: "${PACKAGE_URL}/$(date +%Y%m%d)/NanoDroid-BromiteWebView-$(date +%Y%m%d).zip"
+      - name: "NanoDroid-BromiteWebView-$(date +%Y%m%d) sha256"
+        url: "${PACKAGE_URL}/$(date +%Y%m%d)/NanoDroid-BromiteWebView-$(date +%Y%m%d).zip.sha256"
+      - name: "NanoDroid-fdroid-$(date +%Y%m%d)"
+        url: "${PACKAGE_URL}/$(date +%Y%m%d)/NanoDroid-fdroid-$(date +%Y%m%d).zip"
+      - name: "NanoDroid-fdroid-$(date +%Y%m%d) sha256"
+        url: "${PACKAGE_URL}/$(date +%Y%m%d)/NanoDroid-fdroid-$(date +%Y%m%d).zip.sha256"
+      - name: "NanoDroid-OsmAnd-$(date +%Y%m%d)"
+        url: "${PACKAGE_URL}/$(date +%Y%m%d)/NanoDroid-OsmAnd-$(date +%Y%m%d).zip"
+      - name: "NanoDroid-OsmAnd-$(date +%Y%m%d) sha256"
+        url: "${PACKAGE_URL}/$(date +%Y%m%d)/NanoDroid-OsmAnd-$(date +%Y%m%d).zip.sha256"
