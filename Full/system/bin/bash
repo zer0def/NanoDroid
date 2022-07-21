@@ -3,13 +3,13 @@
 # osm0sis @ xda-developers
 # adopted to GNU Bash setialpha @ xda-developers
 
-dir="$(cd "$(dirname "$0")"; pwd)"
+dir="$(cd "$(dirname "${0}")"; pwd)"
 
-if [ "$1" == "--term" ]; then
-	term=$2;
+if [ "${1}" == "--term" ]; then
+	term="${2}";
 	shift 2;
 else
 	term=xterm
 fi
 
-${dir}/bash.bin --rcfile /system/etc/bashrc $*
+"${dir}/bash.bin" --rcfile /system/etc/bashrc ${*}

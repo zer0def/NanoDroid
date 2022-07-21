@@ -35,13 +35,13 @@ show_banner () {
 }
 
 ui_print() {
-	${BOOTMODE} && echo "${1}" || \
-		echo -e "ui_print ${1}\nui_print" >> /proc/self/fd/${OUTFD}
+	"${BOOTMODE}" && echo "${1}" || \
+		echo -e "ui_print ${1}\nui_print" >> "/proc/self/fd/${OUTFD}"
 }
 
 is_mounted () {
-	grep -q " $(readlink -f ${1}) " /proc/mounts 2>/dev/null
-	return $?
+	grep -q " $(readlink -f "${1}") " /proc/mounts 2>/dev/null
+	return "${?}"
 }
 
 # taken from Magisk, with modifications for NanoDroid
@@ -50,13 +50,13 @@ mount_apex_loop () {
 	local minorx=1
 	local loop
 
-	[ -e /dev/block/loop1 ] && minorx=$(stat -Lc '%T' /dev/block/loop1)
+	[ -e /dev/block/loop1 ] && minorx="$(stat -Lc '%T' /dev/block/loop1)"
 
 	apex_mount="${1}"
 
-	while [ ${number} -lt 64 ]; do
-		loop=/dev/block/loop${number}
-		[ -e ${loop} ] || mknod ${loop} b 7 $((number * minorx))
+	while [ "${number}" -lt 64 ]; do
+		loop="/dev/block/loop${number}"
+		[ -e "${loop}" ] || mknod "${loop}" b 7 "$((number * minorx))"
 
 		if losetup "${loop}" /apex/apex_payload.img 2>/dev/null; then
 			if mount -text4 -oro,noatime "${loop}" "${apex_mount}"; then
@@ -65,7 +65,7 @@ mount_apex_loop () {
 			fi
 		fi
 
-		number=$((number + 1))
+		number="$((number + 1))"
 	done
 }
 
@@ -76,21 +76,21 @@ mount_apex () {
 	mount -t tmpfs tmpfs /apex -o mode=755
 
 	for apex in /system/apex/*; do
-		apex_loop="/dev/loop_apex_$(basename ${apex} .apex)"
+		apex_loop="/dev/loop_apex_$(basename "${apex}" .apex)"
 
 		if [ -f "${apex}" ]; then
 			unzip -oq "${apex}" apex_payload.img -d /apex
-			apex_mount=$(unzip -qp ${apex} apex_manifest.pb | strings | head -n 1)
-			[ -z ${apex_mount} ] && apex_mount=$(unzip -qp ${apex} apex_manifest.json | sed -n ${pattern})
-			[ -z ${apex_mount} ] && continue
+			apex_mount="$(unzip -qp "${apex}" apex_manifest.pb | strings | head -n 1)"
+			[ -z "${apex_mount}" ] && apex_mount="$(unzip -qp "${apex}" apex_manifest.json | sed -n "${pattern}")"
+			[ -z "${apex_mount}" ] && continue
 
 			mkdir -p "${apex_mount}"
 			mount_apex_loop "${apex_mount}" || error "APEX loop setup failed!"
 		elif [ -d "${apex}" ]; then
-			if [ -f ${apex}/apex_manifest.json ]; then
-				apex_mount=/apex/$(sed -n ${pattern} ${apex}/apex_manifest.json)
-			elif [ -f ${apex}/apex_manifest.pb ]; then
-				apex_mount=/apex/$(strings ${apex}/apex_manifest.pb | head -n 1)
+			if [ -f "${apex}/apex_manifest.json" ]; then
+				apex_mount="/apex/$(sed -n "${pattern}" "${apex}/apex_manifest.json")"
+			elif [ -f "${apex}/apex_manifest.pb" ]; then
+				apex_mount="/apex/$(strings "${apex}/apex_manifest.pb" | head -n 1)"
 			else
 				continue
 			fi
@@ -99,44 +99,44 @@ mount_apex () {
 		fi
 	done
 
-	echo " INFO: #10 [APEX [ALL]] $(ls /system/apex/*)"
+    echo " INFO: #10 [APEX [ALL]] $(ls /system/apex/*)"
 }
 
 # taken from Magisk, with minor modifications for NanoDroid
 toupper() {
-	echo "$@" | tr '[:lower:]' '[:upper:]'
+	echo "${@}" | tr '[:lower:]' '[:upper:]'
 }
 
 find_block () {
 	local block partname devname device
 
 	for block in "${@}"; do
-		block=${block}${SLOT}
-		device=$(find /dev/block \( -type b -o -type c -o -type l \) -name ${block} | head -n 1)
+		block="${block}${SLOT}"
+		device="$(find /dev/block \( -type b -o -type c -o -type l \) -name "${block}" | head -n 1)"
 
-		if [ -n "$device" ]; then
-			readlink -f "$device"
+		if [ -n "${device}" ]; then
+			readlink -f "${device}"
 			return 0
 		fi
 	done
 
 	for block in "${@}"; do
-		block=${block}${SLOT}
+		block="${block}${SLOT}"
 		for uevent in /sys/dev/block/*/uevent; do
-			partname=$(awk -F= '/PARTNAME/{print $2}' ${uevent})
-			devname=$(awk -F= '/DEVNAME/{print $2}' ${uevent})
-			if [ "$(toupper ${block})" = "$(toupper ${partname})" ]; then
-				echo /dev/block/${devname}
+			partname="$(awk -F= '/PARTNAME/{print $2}' "${uevent}")"
+			devname="$(awk -F= '/DEVNAME/{print $2}' "${uevent}")"
+			if [ "$(toupper "${block}")" = "$(toupper "${partname}")" ]; then
+				echo "/dev/block/${devname}"
 				return 0
 			fi
 		done
 	done
 
 	for block in "${@}"; do
-		block=${block}${SLOT}
-		device=$(find /dev \( -type b -o -type c -o -type l \) -maxdepth 1 -iname ${block} | head -n 1)
-		if [ -n "$device" ]; then
-			readlink -f "$device"
+		block="${block}${SLOT}"
+		device="$(find /dev \( -type b -o -type c -o -type l \) -maxdepth 1 -iname "${block}" | head -n 1)"
+		if [ -n "${device}" ]; then
+			readlink -f "${device}"
 			return 0
 		fi
 	done
@@ -145,23 +145,23 @@ find_block () {
 }
 
 mount_partitions () {
-	if ! ${BOOTMODE}; then
+	if ! "${BOOTMODE}"; then
 		VENDOR_COMPAT=FALSE
 		SYSTEM_AS_ROOT=FALSE
 
-		SLOT=$(grep_cmdline androidboot.slot_suffix)
-		if [ -z ${SLOT} ]; then
-			SLOT=$(grep_cmdline androidboot.slot)
-			[ -z ${SLOT} ] || SLOT=_${SLOT}
+		SLOT="$(grep_cmdline androidboot.slot_suffix)"
+		if [ -z "${SLOT}" ]; then
+			SLOT="$(grep_cmdline androidboot.slot)"
+			[ -z "${SLOT}" ] || SLOT="_${SLOT}"
 		fi
-		[ -z ${SLOT} ] && DEVICE_AB=FALSE || DEVICE_AB=TRUE
+		[ -z "${SLOT}" ] && DEVICE_AB=FALSE || DEVICE_AB=TRUE
 		echo " INFO: #1 [SLOT] ${SLOT}"
 
 		is_mounted /data || mount /data || echo "failed to mount /data!"
 
 		mount -o bind /dev/urandom /dev/random
 
-		SYSTEM_BLOCK=$(find_block system app)
+		SYSTEM_BLOCK="$(find_block system app)"
 		echo " INFO: #5 [SYSTEM_BLOCK] ${SYSTEM_BLOCK}"
 
 		if is_mounted /system_root; then
@@ -170,7 +170,7 @@ mount_partitions () {
 		fi
 
 		mkdir -p /system /system_root
-		mount -o rw ${SYSTEM_BLOCK} /system
+		mount -o rw "${SYSTEM_BLOCK}" /system
 
 		if [ -f /system/build.prop ]; then
 			SYSTEM=/system
@@ -180,18 +180,18 @@ mount_partitions () {
 			if ! mount --move /system /system_root; then
 				umount /system
 				umount -l /system
-				mount -o rw ${SYSTEM_BLOCK} /system_root
+				mount -o rw "${SYSTEM_BLOCK}" /system_root
 			fi
 			mount -o bind /system_root/system /system
 		fi
 
-		VENDOR_BLOCK=$(find_block vendor vnr)
+		VENDOR_BLOCK="$(find_block vendor vnr)"
 		echo " INFO: #7 [VENDOR_BLOCK] ${VENDOR_BLOCK}"
 
 		! is_mounted /vendor && mount -o ro /vendor
-		! is_mounted /vendor && mount -o ro ${VENDOR_BLOCK} /vendor
+		! is_mounted /vendor && mount -o ro "${VENDOR_BLOCK}" /vendor
 
-		if [[ ! $(is_mounted /vendor) && -d /system/vendor ]]; then
+		if [[ ! "$(is_mounted /vendor)" && -d /system/vendor ]]; then
 			### XXX work-around required for some devices
 			VENDOR_COMPAT=TRUE
 			ln -sf /system/vendor /vendor >/dev/null
@@ -240,37 +240,37 @@ error () {
 	ui_print " !! ${@}"
 	ui_print " "
 
-	${BOOTMODE} || umount_partitions
+	"${BOOTMODE}" || umount_partitions
 
 	exit 1
 }
 
 set_perm () {
-	chown ${2}:${3} ${1} || error "failed change owner for ${1}"
-	chmod ${4} ${1} || error "failed to change mode for ${1}"
+	chown "${2}:${3}" "${1}" || error "failed change owner for ${1}"
+	chmod "${4}" "${1}" || error "failed to change mode for ${1}"
 
 	if [ -n "${5}" ]; then
-		chcon ${5} ${1} 2>/dev/null
-	else	chcon 'u:object_r:system_file:s0' ${1} 2>/dev/null
+		chcon "${5}" "${1}" 2>/dev/null
+	else	chcon 'u:object_r:system_file:s0' "${1}" 2>/dev/null
 	fi
 }
 
 set_perm_recursive() {
-	find ${1} -type d 2>/dev/null | while read dir; do
-		set_perm ${dir} ${2} ${3} ${4} ${6}
+	find "${1}" -type d 2>/dev/null | while read dir; do
+		set_perm "${dir}" "${2}" "${3}" "${4}" "${6}"
 	done
-	find ${1} -type f 2>/dev/null | while read file; do
-		set_perm ${file} ${2} ${3} ${5} ${6}
+	find "${1}" -type f 2>/dev/null | while read file; do
+		set_perm "${file}" "${2}" "${3}" "${5}" "${6}"
 	done
 }
 
 set_perm_data () {
 	if [ "${1}" = "-r" ]; then
 		echo "    perm: data [recursive] {${2}}"
-		set_perm_recursive ${2} 0 0 0755 0644
+		set_perm_recursive "${2}" 0 0 0755 0644
 	else
 		echo "    perm: data [single] {${1}}"
-		set_perm ${1} 0 0 0644
+		set_perm "${1}" 0 0 0644
 	fi
 }
 
@@ -279,12 +279,12 @@ set_perm_data () {
 ##########################################################################################
 
 detect_outfd () {
-	if [ -z $OUTFD ] || readlink /proc/$$/fd/$OUTFD | grep -q /tmp; then
+	if [ -z "${OUTFD}" ] || readlink "/proc/${$}/fd/${OUTFD}" | grep -q /tmp; then
 		# We will have to manually find out OUTFD
-		for FD in `ls /proc/$$/fd`; do
-			if readlink /proc/$$/fd/$FD | grep -q pipe; then
-				if ps | grep -v grep | grep -q " 3 $FD "; then
-					OUTFD=$FD
+		for FD in `ls "/proc/${$}/fd"`; do
+			if readlink "/proc/${$}/fd/${FD}" | grep -q pipe; then
+				if ps | grep -v grep | grep -q " 3 ${FD} "; then
+					OUTFD="${FD}"
 					break
 				fi
 			fi
@@ -301,13 +301,13 @@ detect_mode () {
 }
 
 detect_bootmode () {
-	[ -z $BOOTMODE ] && ps | grep zygote | grep -qv grep && BOOTMODE=true
-	[ -z $BOOTMODE ] && ps -A 2>/dev/null | grep zygote | grep -qv grep && BOOTMODE=true
-	[ -z $BOOTMODE ] && BOOTMODE=false
+	[ -z "${BOOTMODE}" ] && ps | grep zygote | grep -qv grep && BOOTMODE=true
+	[ -z "${BOOTMODE}" ] && ps -A 2>/dev/null | grep zygote | grep -qv grep && BOOTMODE=true
+	[ -z "${BOOTMODE}" ] && BOOTMODE=false
 }
 
 grep_prop() {
-	sed -n "s/^${1}=//p" /system/build.prop ${2} | head -n 1
+	sed -n "s/^${1}=//p" /system/build.prop "${2}" | head -n 1
 }
 
 grep_cmdline() {
@@ -317,7 +317,7 @@ grep_cmdline() {
 }
 
 detect_odex () {
-	SERVICES_JAR_DEX=$(unzip -lq /system/framework/services.jar | grep classes.dex)
+	SERVICES_JAR_DEX="$(unzip -lq /system/framework/services.jar | grep classes.dex)"
 
 	if [ -n "$(find '/system/framework/' -name 'services.vdex')" ]; then
 		ROM_DEX_STATUS=VDEX
@@ -342,56 +342,56 @@ detect_odex () {
 ##########################################################################################
 
 setup_busybox () {
-	case $(uname -m) in
+	case "$(uname -m)" in
 		arm* | aarch* )	local bb_arch=arm ;;
 		x86* )	local bb_arch=x86 ;;
 		*    ) error "arch \"$(uname -m)\" is not supported"
 	esac
 
-	if [ -f ${TMPDIR}/busybox.${bb_arch} ]; then
-		BUSY=${TMPDIR}/busybox.${bb_arch}
-	else	BUSY=${BASEDIR}/busybox.${bb_arch}
+	if [ -f "${TMPDIR}/busybox.${bb_arch}" ]; then
+		BUSY="${TMPDIR}/busybox.${bb_arch}"
+	else	BUSY="${BASEDIR}/busybox.${bb_arch}"
 	fi
 
-	chmod 0755 ${BUSY}
+	chmod 0755 "${BUSY}"
 
-	rm -rf ${BASEDIR}/busybox
-	mkdir -p ${BASEDIR}/busybox
+	rm -rf "${BASEDIR}/busybox"
+	mkdir -p "${BASEDIR}/busybox"
 
-	ln -sf ${BUSY} ${BASEDIR}/busybox/busybox
-	${BUSY} --install -s ${BASEDIR}/busybox/
+	ln -sf "${BUSY}" "${BASEDIR}/busybox/busybox"
+	"${BUSY}" --install -s "${BASEDIR}/busybox/"
 
 	export PATH="${BASEDIR}/busybox:/system/bin:/system/xbin"
 }
 
 detect_arch () {
-	ABI=$(grep_prop ro.product.cpu.abi | cut -c-3)
-	ABI2=$(grep_prop ro.product.cpu.abi2 | cut -c-3)
-	ABILONG=$(grep_prop ro.product.cpu.abi)
+	ABI="$(grep_prop ro.product.cpu.abi | cut -c-3)"
+	ABI2="$(grep_prop ro.product.cpu.abi2 | cut -c-3)"
+	ABILONG="$(grep_prop ro.product.cpu.abi)"
 
 	ARCH=arm
 
-	[ "$ABI" = "x86" ] && ARCH=x86
-	[ "$ABI2" = "x86" ] && ARCH=x86
-	[ "$ABILONG" = "arm64-v8a" ] && ARCH=arm64
-	[ "$ABILONG" = "x86_64" ] && ARCH=x86_64
+	[ "${ABI}" = "x86" ] && ARCH=x86
+	[ "${ABI2}" = "x86" ] && ARCH=x86
+	[ "${ABILONG}" = "arm64-v8a" ] && ARCH=arm64
+	[ "${ABILONG}" = "x86_64" ] && ARCH=x86_64
 
-	case ${ARCH} in
+	case "${ARCH}" in
 		arm | arm64 )
-				ZIPB=${BASEDIR}/zip.arm
-				FILE=${BASEDIR}/file.arm
+				ZIPB="${BASEDIR}/zip.arm"
+				FILE="${BASEDIR}/file.arm"
 		;;
 		x86 | x86_64 )
-				ZIPB=${BASEDIR}/zip.x86
-				FILE=${BASEDIR}/file.x86
+				ZIPB="${BASEDIR}/zip.x86"
+				FILE="${BASEDIR}/file.x86"
 		;;
 	esac
 
-	V_EX=${BASEDIR}/vdexExtractor.${ARCH}
+	V_EX="${BASEDIR}/vdexExtractor.${ARCH}"
 
-	DALVIKVM_ARCH=$("${FILE}" -m "${BASEDIR}/magic.mgc" -L "$dalvikvm")
+	DALVIKVM_ARCH="$("${FILE}" -m "${BASEDIR}/magic.mgc" -L "$dalvikvm")"
 
-	case ${DALVIKVM_ARCH} in
+	case "${DALVIKVM_ARCH}" in
 		*32-bit* )
 			export LD_LIBRARY_PATH="/system/lib:/vendor/lib:/system/vendor/lib:/product/lib:/system/product/lib:${APEX_LD}"
 		;;
@@ -401,9 +401,9 @@ detect_arch () {
 		;;
 	esac
 
-	if [ -f ${ANDROID_RUNTIME_ROOT}/etc/ld.config.txt ]; then
+	if [ -f "${ANDROID_RUNTIME_ROOT}/etc/ld.config.txt" ]; then
 		export LD_CONFIG_FILE="${ANDROID_RUNTIME_ROOT}/etc/ld.config.txt"
-	elif [ -f ${ANDROID_RUNTIME_ROOT}/etc/ld.config.${SDK_VERSION}.txt ]; then
+	elif [ -f "${ANDROID_RUNTIME_ROOT}/etc/ld.config.${SDK_VERSION}.txt" ]; then
 		export LD_CONFIG_FILE="${ANDROID_RUNTIME_ROOT}/etc/ld.config.${SDK_VERSION}.txt"
 	fi
 
@@ -414,7 +414,7 @@ detect_arch () {
 }
 
 detect_sdk () {
-	SDK_VERSION=$(grep_prop ro.build.version.sdk)
+	SDK_VERSION="$(grep_prop ro.build.version.sdk)"
 
 	[ "${SDK_VERSION}" -gt 34 ] && \
 		error "Android versions beyond Android 14 are not yet supported"
@@ -475,12 +475,12 @@ detect_sdk () {
 
 check_fake_package_signature () {
 	PERMISSION=android.permission.FAKE_PACKAGE_SIGNATURE
-	PERMISSION_OD=$(echo -n "${PERMISSION}" | od -A n -t x1 | tr -d '\n' | sed -e 's/^ //g;s/ /00/g')
+	PERMISSION_OD="$(echo -n "${PERMISSION}" | od -A n -t x1 | tr -d '\n' | sed -e 's/^ //g;s/ /00/g')"
 	PATCH_TYPE=""
 	FRAMEWORKRES_PATCH=false
 	SERVICESJAR_PATCH=false
 
-	mkdir -p ${TMPDIR}/sigcheck
+	mkdir -p "${TMPDIR}/sigcheck"
 
 	# natively patched ROM: only framework-res.apk patched (old)
 	# natively patched ROM: both framework-res.apk and services.jar patched (new)
@@ -502,11 +502,11 @@ check_fake_package_signature () {
 
 	# we don't use this anywhere (except in SysTest log),
 	# but may still come in hand in the future
-	if ${FRAMEWORKRES_PATCH} && ! ${SERVICESJAR_PATCH}; then
+	if "${FRAMEWORKRES_PATCH}" && ! "${SERVICESJAR_PATCH}"; then
 		PATCH_TYPE="native_old"
-	elif ${FRAMEWORKRES_PATCH} && ${SERVICESJAR_PATCH}; then
+	elif "${FRAMEWORKRES_PATCH}" && "${SERVICESJAR_PATCH}"; then
 		PATCH_TYPE="native_new"
-	elif ! ${FRAMEWORKRES_PATCH} && ${SERVICESJAR_PATCH}; then
+	elif ! "${FRAMEWORKRES_PATCH}" && "${SERVICESJAR_PATCH}"; then
 		PATCH_TYPE="self_patched"
 	fi
 
@@ -520,10 +520,10 @@ check_fake_package_signature () {
 setup_patcher () {
 	ui_print " > preparing environment"
 
-	rm -rf ${TMPDIR}
-	mkdir -p ${TMPDIR}
+	rm -rf "${TMPDIR}"
+	mkdir -p "${TMPDIR}"
 
-	unzip -oq "${ZIP}" -d ${TMPDIR} || \
+	unzip -oq "${ZIP}" -d "${TMPDIR}" || \
 		error "failed to prepare environment"
 
 	BASEDIR="${TMPDIR}/dexpatcher"
@@ -542,15 +542,15 @@ call_dalvikvm  () {
 	if [ -z "${ND_BOOTCLASSPATH}" ]; then
 		DALVIKVM_OPTS=""
 
-		if ! ${BOOTMODE}; then
-			local apex_jars=$(find /apex -name '*.jar' | sort | tr '\n' ':')
+		if ! "${BOOTMODE}"; then
+			local apex_jars="$(find /apex -name '*.jar' | sort | tr '\n' ':')"
 			local frame=/system/framework
 			ND_BOOTCLASSPATH="${apex_jars}:${frame}/framework.jar:${frame}/ext.jar:${frame}/telephony-common.jar:\
-${frame}/voip-common.jar:${frame}/ims-common.jar:$frame}/telephony-ext.jar"
-			export BOOTCLASSPATH=${ND_BOOTCLASSPATH}
+${frame}/voip-common.jar:${frame}/ims-common.jar:${frame}/telephony-ext.jar"
+			export BOOTCLASSPATH="${ND_BOOTCLASSPATH}"
 		fi
 
-		supported_opts=$("$dalvikvm" --help 2>&1)
+		supported_opts="$("$dalvikvm" --help 2>&1)"
 
 		echo "${supported_opts}" | grep -q "\[no\]image-dex2oat" && DALVIKVM_OPTS="${DALVIKVM_OPTS} -Xnoimage-dex2oat"
 		echo "${supported_opts}" | grep -q "verbose:.*gc" && DALVIKVM_OPTS="${DALVIKVM_OPTS} -verbose:gc"
@@ -568,18 +568,18 @@ ${frame}/voip-common.jar:${frame}/ims-common.jar:$frame}/telephony-ext.jar"
 deodex_vdex () {
 	ui_print " >> deodexing services.jar [VDEX]"
 
-	cp /system/framework/oat/${ARCH}/services.vdex \
-		${BASEDIR}/services.vdex || \
+	cp "/system/framework/oat/${ARCH}/services.vdex" \
+		"${BASEDIR}/services.vdex" || \
 		error "failed to copy services.vdex"
 
-	${V_EX} -i ${BASEDIR}/services.vdex \
+	"${V_EX}" -i "${BASEDIR}/services.vdex" \
 		--ignore-crc-error --debug=4 || \
 		error "failed to deodex services.vdex"
 
-	mv ${BASEDIR}/services.apk_classes.dex ${BASEDIR}/classes.dex || \
+	mv "${BASEDIR}/services.apk_classes.dex" "${BASEDIR}/classes.dex" || \
 		error "failed to deodex services.vdex"
 
-	${ZIPB} -j "${BASEDIR}/services.jar" \
+	"${ZIPB}" -j "${BASEDIR}/services.jar" \
 		"${BASEDIR}/classes.dex" || \
 		error "zip failed"
 }
@@ -608,10 +608,10 @@ deodex_odex () {
 	call_dalvikvm  \
 		-classpath "${BAKSMALI}" \
 		org.jf.baksmali.${MAIN} \
-		${DEODEX} \
-		${BOOTCLASS} "/system/framework/${ARCH}/boot.oat" \
-		${CLASSPATH} "/system/framework/${ARCH}" \
-		${CLASSPATH} "/system/framework" \
+		"${DEODEX}" \
+		"${BOOTCLASS}" "/system/framework/${ARCH}/boot.oat" \
+		"${CLASSPATH}" "/system/framework/${ARCH}" \
+		"${CLASSPATH}" "/system/framework" \
 		-o "${BASEDIR}/services.jar-deodex" \
 		"${BASEDIR}/services.odex" || \
 		  error "failed to deodex services.jar"
@@ -620,13 +620,13 @@ deodex_odex () {
 
 	call_dalvikvm  \
 		-classpath "${SMALI}" \
-		org.jf.smali.${MAIN} \
-		${ASSEMBLE} \
+		"org.jf.smali.${MAIN}" \
+		"${ASSEMBLE}" \
 		-o "${BASEDIR}/services.jar-deodex/classes.dex" \
 		"${BASEDIR}/services.jar-deodex" || \
 		  error "failed to rebuild classes.dex"
 
-	${ZIPB} -j "${BASEDIR}/services.jar" \
+	"${ZIPB}" -j "${BASEDIR}/services.jar" \
 		"${BASEDIR}/services.jar-deodex"/classes*.dex || \
 			error "zip failed"
 
@@ -639,7 +639,7 @@ patch_services () {
 	ui_print " "
 
 	cp /system/framework/services.jar \
-		${BASEDIR}/services.jar || \
+		"${BASEDIR}/services.jar" || \
 		error "failed to copy services.jar"
 
 	if [ "${ROM_DEX_STATUS}" = "VDEX" ]; then
@@ -657,17 +657,17 @@ patch_services () {
 	call_dalvikvm  \
 		-classpath "${DEXPATCHER}" \
 		lanchon.dexpatcher.Main \
-		${DEX_OPTS} --api-level "${SDK_VERSION}" \
+		"${DEX_OPTS}" --api-level "${SDK_VERSION}" \
 		--verbose --debug \
-		--output ${BASEDIR}/services.jar-mod \
-		${BASEDIR}/services.jar ${PATCHES} || \
+		--output "${BASEDIR}/services.jar-mod" \
+		"${BASEDIR}/services.jar" "${PATCHES}" || \
 			error "failed to apply patches"
 
-	${ZIPB} -d "${BASEDIR}/services.jar" \
+	"${ZIPB}" -d "${BASEDIR}/services.jar" \
 		'classes*.dex' || \
 			error "zip failed"
 
-	${ZIPB} -j "${BASEDIR}/services.jar" \
+	"${ZIPB}" -j "${BASEDIR}/services.jar" \
 		"${BASEDIR}/services.jar-mod"/classes*.dex || \
 			error "zip failed"
 
@@ -705,7 +705,7 @@ install_services () {
 	ui_print " << installing patched files to: ${install_path}"
 
 	mkdir -p "${install_path}/system/framework"
-	cp ${BASEDIR}/services.jar "${install_path}/system/framework/" \
+	cp "${BASEDIR}/services.jar" "${install_path}/system/framework/" \
 		|| error "failed to install services.jar"
 	set_perm_data "${install_path}/system/framework/services.jar"
 
@@ -724,7 +724,7 @@ install_services () {
 	if [ "${MODE}" = "MAGISK" ]; then
 		cp -af "${BASEDIR}/module.prop" "${install_path}"
 
-		if ${BOOTMODE}; then
+		if "${BOOTMODE}"; then
 			touch "${MAGISKBASE}/modules/${MODID}/update" 2>/dev/null
 			cp -af "${BASEDIR}/module.prop" "${MAGISKBASE}/${MODID}/module.prop" 2>/dev/null
 		fi
@@ -739,8 +739,8 @@ install_addond () {
 	ui_print " "
 	ui_print " Installing addon.d restoration setup"
 
-	rm -rf ${PATCHER_ADDOND_DATA}
-	mkdir -p ${PATCHER_ADDOND_DATA}
+	rm -rf "${PATCHER_ADDOND_DATA}"
+	mkdir -p "${PATCHER_ADDOND_DATA}"
 
 	for file in core_services.jar.dex \
 		core_11.0-12.1_services.jar.dex \
@@ -762,14 +762,14 @@ install_addond () {
 		smali_26.dex \
 		magic.mgc \
 		org.spoofing.apk; do
-		cp "${BASEDIR}/${file}" ${PATCHER_ADDOND_DATA}/
+		cp "${BASEDIR}/${file}" "${PATCHER_ADDOND_DATA}/"
 	done
 
-	cp /dev/tmp/CommonPatcher ${PATCHER_ADDOND_DATA}/
+	cp /dev/tmp/CommonPatcher "${PATCHER_ADDOND_DATA}/"
 
-	for file in ${ZIPB} ${V_EX} ${BUSY} ${FILE}; do
-		cp ${file} ${PATCHER_ADDOND_DATA}/
-		chmod 0755 ${PATCHER_ADDOND_DATA}/$(basename "${file}")
+	for file in "${ZIPB}" "${V_EX}" "${BUSY}" "${FILE}"; do
+		cp "${file}" "${PATCHER_ADDOND_DATA}/"
+		chmod 0755 "${PATCHER_ADDOND_DATA}/$(basename "${file}")"
 	done
 
 	cp "${BASEDIR}/70-nanodroidpatcher.sh" /system/addon.d/

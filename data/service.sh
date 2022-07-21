@@ -1,19 +1,19 @@
 #!/system/bin/sh
 
-MODDIR=${0%/*}
-MODULE=$(basename ${MODDIR})
+MODDIR="${0%/*}"
+MODULE="$(basename "${MODDIR}")"
 
 run_initscripts () {
 	# wait until boot completed
 	until [ `getprop vold.post_fs_data_done`. = 1. ]; do sleep 1; done
 
 	# Set current date in 20170607-12.07.25 format
-	CURDATE=$(date +%Y%m%d-%H.%M.%S)
+	CURDATE="$(date +%Y%m%d-%H.%M.%S)"
 
 	# Create private Log directory
 	LOGDIR="${MODDIR}/logs"
 
-	[[ ! -d ${LOGDIR} ]] && mkdir -p "${LOGDIR}"
+	[[ ! -d "${LOGDIR}" ]] && mkdir -p "${LOGDIR}"
 
 	# NanoDroid init scripts
 	for init in 10_sqlite 20_fstrim 30_logcat 40_external_sd 50_logscleaner; do
@@ -25,13 +25,13 @@ run_initscripts () {
 
 run_npem () {
 	# wait until boot completed
-	until [ $(getprop sys.boot_completed). = 1. ]; do sleep 1; done
-	${MODDIR}/system/bin/npem
+	until [ "$(getprop sys.boot_completed)." = "1." ]; do sleep 1; done
+	"${MODDIR}/system/bin/npem"
 }
 
 install_bromitewebview () {
 	# wait until boot completed
-	until [ $(getprop sys.boot_completed). = 1. ]; do sleep 1; done
+	until [ "$(getprop sys.boot_completed)." = "1." ]; do sleep 1; done
 
 	# Bromite WebView needs to be installed as user app to prevent crashes
 	if [ -d "${MODDIR}/system/product/app" ]; then
@@ -43,7 +43,7 @@ install_bromitewebview () {
 	fi
 }
 
-case ${MODULE} in
+case "${MODULE}" in
 	NanoDroid )
 		run_initscripts &
 		run_npem &

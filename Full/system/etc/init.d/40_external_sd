@@ -9,18 +9,18 @@ if getprop ro.build.characteristics | grep -q nosdcard; then
 	echo ">> no SD Card Slot"
 	exit 0
 else
-	media_rw=$(grep "^/dev/block.*/mnt/media_rw" /proc/mounts \
+	media_rw="$(grep "^/dev/block.*/mnt/media_rw" /proc/mounts \
 		| cut -d " " -f 2 \
-		| cut -d "/" -f 4)
+		| cut -d "/" -f 4)"
 	storage="/storage/${media_rw}"
 fi
 
-if [[ -d ${storage} ]]; then
+if [[ -d "${storage}" ]]; then
 	echo ">> SD Card inserted"
 	echo ">> storage:  \"${storage}\""
 
 	if [[ -e /external_sd ]]; then
-		link=$(ls -l /external_sd | sed -e 's/.*-> //g')
+		link="$(ls -l /external_sd | sed -e 's/.*-> //g')"
 		if [[ "${link}" != "${storage}" ]]; then
 			echo ">> removing old link: \"${link}\""
 			mount -orw,remount /
@@ -34,7 +34,7 @@ if [[ -d ${storage} ]]; then
 	else
 		echo ">> /external_sd link created"
 		mount -orw,remount /
-		ln -sf ${storage} /external_sd
+		ln -sf "${storage}" /external_sd
 		mount -oro,remount /
 	fi
 else

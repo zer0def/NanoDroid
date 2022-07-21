@@ -7,7 +7,7 @@ NANODROID_LIST=/system/addon.d/NanoDroid_FileList
 NANODROID_LIST_OLD=/data/adb/NanoDroid_FileList
 
 STORAGE=/data/media/0
-curdate=$(date +%Y%m%d_%H.%M.%S)
+curdate="$(date +%Y%m%d_%H.%M.%S)"
 nanodroid_logfile="${STORAGE}/nanodroid_logs/${MODID}_${VERSION}_log_${curdate}.log"
 
 config_locations="${STORAGE} /external_sd /sdcard /sdcard1 /data /system/addon.d /tmp"
@@ -21,7 +21,7 @@ nanodroid_all_init='"10_sqlite 20_fstrim 30_logcat 40_external_sd 50_logscleaner
 setup_installer () {
 	detect_bootmode
 	detect_outfd
-	! ${BOOTMODE} && [ "${MODID}" = "NanoDroid" ] && check_space
+	! "${BOOTMODE}" && [ "${MODID}" = "NanoDroid" ] && check_space
 	show_progress 1.0 0
 
 	show_banner
@@ -33,10 +33,8 @@ setup_installer () {
 	detect_arch
 	set_progress 0.2
 
-	if ${BOOTMODE}; then
-		media_rw=$(grep "^/dev/block.*/mnt/media_rw" /proc/mounts \
-		| cut -d " " -f 2 \
-		| cut -d "/" -f 4)
+	if "${BOOTMODE}"; then
+		media_rw="$(grep "^/dev/block.*/mnt/media_rw" /proc/mounts | cut -d " " -f 2 | cut -d "/" -f 4)"
 		ext_storage="/storage/${media_rw}"
 
 		[ -r "${ext_storage}" ] && config_locations="${ext_storage} ${config_locations}"
@@ -61,10 +59,10 @@ setup_installer () {
 decho () {
 	mkdir -p "${STORAGE}/nanodroid_logs"
 
-	if ${BOOTMODE}; then
-		echo "$@" >> "${nanodroid_logfile}"
+	if "${BOOTMODE}"; then
+		echo "${@}" >> "${nanodroid_logfile}"
 	else
-		echo "$@"
+		echo "${@}"
 	fi
 }
 
@@ -73,21 +71,21 @@ decho () {
 ##########################################################################################
 
 print_info () {
-	if ${BOOTMODE}; then
+	if "${BOOTMODE}"; then
 		echo "${@}"
 		decho "${@}"
 	else
-		echo -e "ui_print ${@}" >> /proc/self/fd/${OUTFD}
-		echo -e "ui_print" >> /proc/self/fd/${OUTFD}
+		echo -e "ui_print ${@}" >> "/proc/self/fd/${OUTFD}"
+		echo -e "ui_print" >> "/proc/self/fd/${OUTFD}"
 	fi
 }
 
 show_progress () {
-	${BOOTMODE} || echo "progress ${1} ${2}" >> /proc/self/fd/${OUTFD}
+	"${BOOTMODE}" || echo "progress ${1} ${2}" >> "/proc/self/fd/${OUTFD}"
 }
 
 set_progress () {
-	${BOOTMODE} || echo "set_progress ${1}" >> /proc/self/fd/${OUTFD}
+	"${BOOTMODE}" || echo "set_progress ${1}" >> "/proc/self/fd/${OUTFD}"
 }
 
 ##########################################################################################
@@ -108,7 +106,7 @@ error () {
 		nanodroid_storelogs
 	fi
 
-	${BOOTMODE} || umount_partitions
+	"${BOOTMODE}" || umount_partitions
 
 	exit 1
 }
@@ -118,12 +116,12 @@ error () {
 ##########################################################################################
 
 detect_outfd () {
-	if [ -z $OUTFD ] || readlink /proc/$$/fd/$OUTFD | grep -q /tmp; then
+	if [ -z "${OUTFD}" ] || readlink "/proc/${$}/fd/${OUTFD}" | grep -q /tmp; then
 		# We will have to manually find out OUTFD
-		for FD in `ls /proc/$$/fd`; do
-			if readlink /proc/$$/fd/$FD | grep -q pipe; then
-				if ps | grep -v grep | grep -q " 3 $FD "; then
-					OUTFD=$FD
+		for FD in `ls "/proc/${$}/fd"`; do
+			if readlink "/proc/${$}/fd/${FD}" | grep -q pipe; then
+				if ps | grep -v grep | grep -q " 3 ${FD} "; then
+					OUTFD="${FD}"
 					break
 				fi
 			fi
@@ -137,12 +135,12 @@ detect_outfd () {
 
 check_space () {
 	space_required=524288
-	space_available=$(df /dev 2>/dev/null | awk '/tmpfs/{print $4}')
+	space_available="$(df /dev 2>/dev/null | awk '/tmpfs/{print $4}')"
 
 	decho "  required space : ${space_required}"
 	decho "  available space: ${space_available}"
 
-	if [ ${space_available} -lt ${space_required} ]; then
+	if [ "${space_available}" -lt "${space_required}" ]; then
 		error "Less than 512 MB free space availabe from TWRP!"
 	fi
 }
@@ -152,9 +150,9 @@ check_space () {
 ##########################################################################################
 
 detect_bootmode () {
-	[ -z ${BOOTMODE} ] && ps | grep zygote | grep -qv grep && BOOTMODE=true
-	[ -z ${BOOTMODE} ] && ps -A 2>/dev/null | grep zygote | grep -qv grep && BOOTMODE=true
-	[ -z ${BOOTMODE} ] && BOOTMODE=false
+	[ -z "${BOOTMODE}" ] && ps | grep zygote | grep -qv grep && BOOTMODE=true
+	[ -z "${BOOTMODE}" ] && ps -A 2>/dev/null | grep zygote | grep -qv grep && BOOTMODE=true
+	[ -z "${BOOTMODE}" ] && BOOTMODE=false
 }
 
 ##########################################################################################
@@ -162,7 +160,7 @@ detect_bootmode () {
 ##########################################################################################
 
 grep_prop () {
-	sed -n "s/^${1}=//p" /system/build.prop ${2} | head -n 1
+	sed -n "s/^${1}=//p" /system/build.prop "${2}" | head -n 1
 }
 
 grep_cmdline () {
@@ -176,41 +174,41 @@ grep_cmdline () {
 ##########################################################################################
 
 set_perm () {
-	chown ${2}:${3} ${1} || error "failed change owner for ${1}"
-	chmod ${4} ${1} || error "failed to change mode for ${1}"
+	chown "${2}:${3}" "${1}" || error "failed change owner for ${1}"
+	chmod "${4}" "${1}" || error "failed to change mode for ${1}"
 
 	if [ -n "${5}" ]; then
-		chcon ${5} ${1} 2>/dev/null
-	else	chcon 'u:object_r:system_file:s0' ${1} 2>/dev/null
+		chcon "${5}" "${1}" 2>/dev/null
+	else	chcon 'u:object_r:system_file:s0' "${1}" 2>/dev/null
 	fi
 }
 
 set_perm_recursive () {
-	find ${1} -type d 2>/dev/null | while read dir; do
-		set_perm ${dir} ${2} ${3} ${4} ${6}
+	find "${1}" -type d 2>/dev/null | while read dir; do
+		set_perm "${dir}" "${2}" "${3}" "${4}" "${6}"
 	done
-	find ${1} -type f 2>/dev/null | while read file; do
-		set_perm ${file} ${2} ${3} ${5} ${6}
+	find "${1}" -type f 2>/dev/null | while read file; do
+		set_perm "${file}" "${2}" "${3}" "${5}" "${6}"
 	done
 }
 
 set_perm_data () {
 	if [ "${1}" = "-r" ]; then
 		decho "    perm: data [recursive] {${2}}"
-		set_perm_recursive ${2} 0 0 0755 0644
+		set_perm_recursive "${2}" 0 0 0755 0644
 	else
 		decho "    perm: data [single] {${1}}"
-		set_perm ${1} 0 0 0644
+		set_perm "${1}" 0 0 0644
 	fi
 }
 
 set_perm_bin () {
 	if [ "${1}" = "-r" ]; then
 		decho "    perm: exec [recursive] {${2}}"
-		set_perm_recursive ${2} 0 0 0755 0755
+		set_perm_recursive "${2}" 0 0 0755 0755
 	else
 		decho "    perm: exec [single] {${1}}"
-		set_perm ${1} 0 0 0755
+		set_perm "${1}" 0 0 0755
 	fi
 }
 
@@ -220,8 +218,8 @@ set_perm_bin () {
 ##########################################################################################
 
 is_mounted () {
-	grep -q " $(readlink -f ${1}) " /proc/mounts 2>/dev/null
-	return $?
+	grep -q " $(readlink -f "${1}") " /proc/mounts 2>/dev/null
+	return "${?}"
 }
 
 ##########################################################################################
@@ -230,39 +228,39 @@ is_mounted () {
 ##########################################################################################
 
 toupper() {
-	echo "$@" | tr '[:lower:]' '[:upper:]'
+	echo "${@}" | tr '[:lower:]' '[:upper:]'
 }
 
 find_block () {
 	local block partname devname device
 
 	for block in "${@}"; do
-		block=${block}${SLOT}
-		device=$(find /dev/block \( -type b -o -type c -o -type l \) -name ${block} | head -n 1)
+		block="${block}${SLOT}"
+		device="$(find /dev/block \( -type b -o -type c -o -type l \) -name "${block}" | head -n 1)"
 
-		if [ -n "$device" ]; then
-			readlink -f "$device"
+		if [ -n "${device}" ]; then
+			readlink -f "${device}"
 			return 0
 		fi
 	done
 
 	for block in "${@}"; do
-		block=${block}${SLOT}
+		block="${block}${SLOT}"
 		for uevent in /sys/dev/block/*/uevent; do
-			partname=$(awk -F= '/PARTNAME/{print $2}' ${uevent})
-			devname=$(awk -F= '/DEVNAME/{print $2}' ${uevent})
-			if [ "$(toupper ${block})" = "$(toupper ${partname})" ]; then
-				echo /dev/block/${devname}
+			partname="$(awk -F= '/PARTNAME/{print $2}' "${uevent}")"
+			devname="$(awk -F= '/DEVNAME/{print $2}' "${uevent}")"
+			if [ "$(toupper "${block}")" = "$(toupper "${partname}")" ]; then
+				echo "/dev/block/${devname}"
 				return 0
 			fi
 		done
 	done
 
 	for block in "${@}"; do
-		block=${block}${SLOT}
-		device=$(find /dev \( -type b -o -type c -o -type l \) -maxdepth 1 -iname ${block} | head -n 1)
-		if [ -n "$device" ]; then
-			readlink -f "$device"
+		block="${block}${SLOT}"
+		device="$(find /dev \( -type b -o -type c -o -type l \) -maxdepth 1 -iname "${block}" | head -n 1)"
+		if [ -n "${device}" ]; then
+			readlink -f "${device}"
 			return 0
 		fi
 	done
@@ -271,34 +269,34 @@ find_block () {
 }
 
 mount_partitions () {
-	if ! ${BOOTMODE}; then
+	if ! "${BOOTMODE}"; then
 		VENDOR_COMPAT=FALSE
 		SYSTEM_AS_ROOT=FALSE
 
-		SLOT=$(grep_cmdline androidboot.slot_suffix)
-		if [ -z ${SLOT} ]; then
-			SLOT=$(grep_cmdline androidboot.slot)
-			[ -z ${SLOT} ] || SLOT=_${SLOT}
+		SLOT="$(grep_cmdline androidboot.slot_suffix)"
+		if [ -z "${SLOT}" ]; then
+			SLOT="$(grep_cmdline androidboot.slot)"
+			[ -z "${SLOT}" ] || SLOT="_${SLOT}"
 		fi
-		[ -z ${SLOT} ] && DEVICE_AB=FALSE || DEVICE_AB=TRUE
+		[ -z "${SLOT}" ] && DEVICE_AB=FALSE || DEVICE_AB=TRUE
 		decho " INFO: #1 [SLOT] ${SLOT}"
 
 		is_mounted /data || mount /data || decho "failed to mount /data!"
 
 		mount -o bind /dev/urandom /dev/random
 
-		SYSTEM_BLOCK=$(find_block system app)
+		SYSTEM_BLOCK="$(find_block system app)"
 		decho " INFO: #5 [SYSTEM_BLOCK] ${SYSTEM_BLOCK}"
 
 		[ -z "${SYSTEM_BLOCK}" ] && error "failed to detect block device for /system"
 
 		if is_mounted /system_root; then
-			umount /system 2&>/dev/null
-			umount /system_root 2&>/dev/null
+			umount /system &>/dev/null
+			umount /system_root &>/dev/null
 		fi
 
 		mkdir -p /system /system_root
-		mount -o rw ${SYSTEM_BLOCK} /system
+		mount -o rw "${SYSTEM_BLOCK}" /system
 
 		if [ -f /system/build.prop ]; then
 			SYSTEM=/system
@@ -308,20 +306,20 @@ mount_partitions () {
 			if ! mount --move /system /system_root; then
 				umount /system
 				umount -l /system
-				mount -o rw ${SYSTEM_BLOCK} /system_root
+				mount -o rw "${SYSTEM_BLOCK}" /system_root
 			fi
 			mount -o bind /system_root/system /system
 		fi
 
-		VENDOR_BLOCK=$(find_block vendor vnr)
+		VENDOR_BLOCK="$(find_block vendor vnr)"
 		decho " INFO: #7 [VENDOR_BLOCK] ${VENDOR_BLOCK}"
 
 		[ -z "${VENDOR_BLOCK}" ] && error "failed to detect block device for /vendor"
 
 		! is_mounted /vendor && mount -o ro /vendor
-		! is_mounted /vendor && mount -o ro ${VENDOR_BLOCK} /vendor
+		! is_mounted /vendor && mount -o ro "${VENDOR_BLOCK}" /vendor
 
-		if [[ ! $(is_mounted /vendor) && -d /system/vendor ]]; then
+		if [[ ! "$(is_mounted /vendor)" && -d /system/vendor ]]; then
 			### XXX work-around required for some devices
 			VENDOR_COMPAT=TRUE
 			ln -sf /system/vendor /vendor >/dev/null
@@ -352,21 +350,21 @@ mount_apex () {
 	mount -t tmpfs tmpfs /apex -o mode=755
 
 	for apex in /system/apex/*; do
-		apex_loop="/dev/loop_apex_$(basename ${apex} .apex)"
+		apex_loop="/dev/loop_apex_$(basename "${apex}" .apex)"
 
 		if [ -f "${apex}" ]; then
 			unzip -oq "${apex}" apex_payload.img -d /apex
-			apex_mount=$(unzip -qp ${apex} apex_manifest.pb | strings | head -n 1)
-			[ -z ${apex_mount} ] && apex_mount=$(unzip -qp ${apex} apex_manifest.json | sed -n ${pattern})
-			[ -z ${apex_mount} ] && continue
+			apex_mount="$(unzip -qp "${apex}" apex_manifest.pb | strings | head -n 1)"
+			[ -z "${apex_mount}" ] && apex_mount="$(unzip -qp "${apex}" apex_manifest.json | sed -n "${pattern}")"
+			[ -z "${apex_mount}" ] && continue
 
 			mkdir -p "${apex_mount}"
 			mount_apex_loop "${apex_mount}" || error "APEX loop setup failed!"
 		elif [ -d "${apex}" ]; then
-			if [ -f ${apex}/apex_manifest.json ]; then
-				apex_mount=/apex/$(sed -n ${pattern} ${apex}/apex_manifest.json)
-			elif [ -f ${apex}/apex_manifest.pb ]; then
-				apex_mount=/apex/$(strings ${apex}/apex_manifest.pb | head -n 1)
+			if [ -f "${apex}/apex_manifest.json" ]; then
+				apex_mount="/apex/$(sed -n "${pattern}" "${apex}/apex_manifest.json")"
+			elif [ -f "${apex}/apex_manifest.pb" ]; then
+				apex_mount="/apex/$(strings "${apex}/apex_manifest.pb" | head -n 1)"
 			else
 				continue
 			fi
@@ -388,15 +386,15 @@ mount_apex_loop () {
 	local minorx=1
 	local loop
 
-	[ -e /dev/block/loop1 ] && minorx=$(stat -Lc '%T' /dev/block/loop1)
+	[ -e /dev/block/loop1 ] && minorx="$(stat -Lc '%T' /dev/block/loop1)"
 
 	apex_mount="${1}"
 
 	decho " *** mount_apex_loop [apex_mount]: ${apex_mount}"
 
-	while [ ${number} -lt 64 ]; do
+	while [ "${number}" -lt 64 ]; do
 		loop=/dev/block/loop${number}
-		[ -e ${loop} ] || mknod ${loop} b 7 $((number * minorx))
+		[ -e "${loop}" ] || mknod "${loop}" b 7 "$((number * minorx))"
 
 		if losetup "${loop}" /apex/apex_payload.img 2>/dev/null; then
 			decho " *** mount_apex_loop [loop]: ${loop}"
@@ -406,7 +404,7 @@ mount_apex_loop () {
 			fi
 		fi
 
-		number=$((number + 1))
+		number="$((number + 1))"
 	done
 }
 
@@ -442,15 +440,15 @@ detect_migrate_apk () {
 	local app_id="${1}"
 	local app_name="${2}"
 
-	USER_PATH=$(find /data/app -type d -name "${app_id}-*" &>/dev/null)
+	USER_PATH="$(find /data/app -type d -name "${app_id}-*" &>/dev/null)"
 
-	if [ -n ${USER_PATH} ]; then
-		if ${UNZIP} -l "${MODPATH}/system/priv-app/${app_name}/${app_name}.apk" | grep META-INF/NANOLX.RSA &>/dev/null; then
+	if [ -n "${USER_PATH}" ]; then
+		if "${UNZIP}" -l "${MODPATH}/system/priv-app/${app_name}/${app_name}.apk" | grep META-INF/NANOLX.RSA &>/dev/null; then
 			BUILD_INST=Nanolx
 		else	BUILD_INST=Official
 		fi
 
-		if ${UNZIP} -l "${USER_PATH}/base.apk" | grep META-INF/NANOLX.RSA &>/dev/null; then
+		if "${UNZIP}" -l "${USER_PATH}/base.apk" | grep META-INF/NANOLX.RSA &>/dev/null; then
 			BUILD_USER=Nanolx
 		else	BUILD_USER=Official
 		fi
@@ -474,12 +472,12 @@ detect_migrate_apk () {
 
 check_fake_package_signature () {
 	PERMISSION=android.permission.FAKE_PACKAGE_SIGNATURE
-	PERMISSION_OD=$(echo -n "${PERMISSION}" | od -A n -t x1 | tr -d '\n' | sed -e 's/^ //g;s/ /00/g')
+	PERMISSION_OD="$(echo -n "${PERMISSION}" | od -A n -t x1 | tr -d '\n' | sed -e 's/^ //g;s/ /00/g')"
 	PATCH_TYPE=""
 	FRAMEWORKRES_PATCH=false
 	SERVICESJAR_PATCH=false
 
-	mkdir -p ${TMPDIR}/sigcheck
+	mkdir -p "${TMPDIR}/sigcheck"
 
 	# natively patched ROM: only framework-res.apk patched (old)
 	# natively patched ROM: both framework-res.apk and services.jar patched (new)
@@ -501,11 +499,11 @@ check_fake_package_signature () {
 
 	# we don't use this anywhere (except in SysTest log),
 	# but may still come in hand in the future
-	if ${FRAMEWORKRES_PATCH} && ! ${SERVICESJAR_PATCH}; then
+	if "${FRAMEWORKRES_PATCH}" && ! "${SERVICESJAR_PATCH}"; then
 		PATCH_TYPE="native_old"
-	elif ${FRAMEWORKRES_PATCH} && ${SERVICESJAR_PATCH}; then
+	elif "${FRAMEWORKRES_PATCH}" && "${SERVICESJAR_PATCH}"; then
 		PATCH_TYPE="native_new"
-	elif ! ${FRAMEWORKRES_PATCH} && ${SERVICESJAR_PATCH}; then
+	elif ! "${FRAMEWORKRES_PATCH}" && "${SERVICESJAR_PATCH}"; then
 		PATCH_TYPE="self_patched"
 	fi
 
@@ -791,7 +789,7 @@ reset_runtime_permissions () {
 	# required on Android 10, else all apps bundled with NanoDroid will not
 	# show a permission prompt for android.permission.WRITE_EXTERNAL_STORAGE
 	if [ "${SDK_VERSION}" -ge 29 ]; then
-		if ${BOOTMODE}; then
+		if "${BOOTMODE}"; then
 			pm reset-permissions
 		else
 			find /data/system/users -type f -name 'runtime-permissions.xml' 2>/dev/null | while read file; do
@@ -808,21 +806,21 @@ reset_runtime_permissions () {
 
 unpack_zip () {
 	TMPDIR=/dev/tmp
-	TMP_LIBDIR=${TMPDIR}/nanodroid-lib
-	INSTALLER=${TMPDIR}/install
+	TMP_LIBDIR="${TMPDIR}/nanodroid-lib"
+	INSTALLER="${TMPDIR}/install"
 
-	rm -rf ${INSTALLER}
-	mkdir -p ${INSTALLER} || error "failed to prepare environment!"
+	rm -rf "${INSTALLER}"
+	mkdir -p "${INSTALLER}" || error "failed to prepare environment!"
 
 	print_info " > prepare installation"
 	unzip -oq "${ZIP}" -d "${INSTALLER}" || \
 		error "failed to prepare environment!"
 
-	rm -rf ${TMPDIR}/framework-res
-	rm -f ${TMPDIR}/*.xml
-	rm -f ${TMPDIR}/*.list
+	rm -rf "${TMPDIR}/framework-res"
+	rm -f "${TMPDIR}/"*.xml
+	rm -f "${TMPDIR}/"*.list
 
-	chmod 0755 ${INSTALLER}/*.*
+	chmod 0755 "${INSTALLER}/"*.*
 }
 
 ##########################################################################################
@@ -833,7 +831,7 @@ show_banner () {
 	print_info " "
 	print_info "*****************************"
 	print_info " NanoDroid                   "
-	case ${MODID} in
+	case "${MODID}" in
 		NanoDroid )
 			print_info " > Full package              "
 		;;
@@ -869,20 +867,20 @@ show_banner () {
 ##########################################################################################
 
 detect_arch () {
-	SDK_VERSION=$(grep_prop ro.build.version.sdk)
+	SDK_VERSION="$(grep_prop ro.build.version.sdk)"
 
-	ABI=$(grep_prop ro.product.cpu.abi | cut -c-3)
-	ABI2=$(grep_prop ro.product.cpu.abi2 | cut -c-3)
-	ABILONG=$(grep_prop ro.product.cpu.abi)
+	ABI="$(grep_prop ro.product.cpu.abi | cut -c-3)"
+	ABI2="$(grep_prop ro.product.cpu.abi2 | cut -c-3)"
+	ABILONG="$(grep_prop ro.product.cpu.abi)"
 
 	ARCH=arm
 
-	[ "$ABI" = "x86" ] && ARCH=x86
-	[ "$ABI2" = "x86" ] && ARCH=x86
-	[ "$ABILONG" = "arm64-v8a" ] && ARCH=arm64
-	[ "$ABILONG" = "x86_64" ] && ARCH=x86_64
+	[ "${ABI}" = "x86" ] && ARCH=x86
+	[ "${ABI2}" = "x86" ] && ARCH=x86
+	[ "${ABILONG}" = "arm64-v8a" ] && ARCH=arm64
+	[ "${ABILONG}" = "x86_64" ] && ARCH=x86_64
 
-	case ${ARCH} in
+	case "${ARCH}" in
 		arm )		BIN_ARCH="arm"
 				LIB_ARCHES="armeabi-v7a armeabi"
 				SWIPE_LIBDIR=lib ;;
@@ -905,7 +903,7 @@ detect_arch () {
 	ZIPALIGN="${INSTALLER}/zipalign.${BIN_ARCH}"
 	chmod +x "${UNZIP}" "${AAPT}" "${ZSTD}"
 
-	case ${SDK_VERSION} in
+	case "${SDK_VERSION}" in
 		19 )		GSYNC_VER=K	;;
 		21 | 22 )	GSYNC_VER=L	;;
 		23 )		GSYNC_VER=M	;;
@@ -917,9 +915,9 @@ detect_arch () {
 		* )	GSYNC_UNSUPPORTED=1	;;
 	esac
 
-	case ${ARCH} in
+	case "${ARCH}" in
 		arm )
-			case ${SDK_VERSION} in
+			case "${SDK_VERSION}" in
 				29 | 30 )
 					LIBJNI_IME=libjni_latinimegoogle.so_28
 				;;
@@ -936,7 +934,7 @@ detect_arch () {
 		;;
 
 		arm64 )
-			case ${SDK_VERSION} in
+			case "${SDK_VERSION}" in
 				29 | 30 )
 					LIBJNI_IME=libjni_latinimegoogle.so_28
 				;;
@@ -953,7 +951,7 @@ detect_arch () {
 		;;
 
 		x86 | x86_64 )
-			case ${SDK_VERSION} in
+			case "${SDK_VERSION}" in
 				19 | 21 | 22 )
 					SWIPE_UNSUPPORTED=1
 				;;
@@ -991,7 +989,7 @@ detect_mode () {
 
 	case "${nanodroid_forcesystem}" in
 		1 )
-			if ${BOOTMODE}; then
+			if "${BOOTMODE}"; then
 				print_info "nanodroid_forcesystem set to true"
 				error "can't install to /system from Magisk Manager"
 			fi
@@ -1011,7 +1009,7 @@ detect_mode () {
 					. /data/magisk/util_functions.sh
 				fi
 
-				if [ ${MAGISK_VER_CODE} -ge 19000 ]; then
+				if [ "${MAGISK_VER_CODE}" -ge 19000 ]; then
 					MODE=MAGISK
 				else
 					MODE=SYSTEM
@@ -1023,7 +1021,7 @@ detect_mode () {
 	print_info " > Mode   | ${MODE}            | ${MODE_DETECT}"
 	print_info " "
 
-	case ${MODE} in
+	case "${MODE}" in
 		SYSTEM )
 			installer_setup_env
 			unset MODPATH
@@ -1035,7 +1033,7 @@ detect_mode () {
 		MAGISK )
 			magisk_install_setup
 
-			case ${MODID} in
+			case "${MODID}" in
 				NanoDroid | NanoDroid_microG )
 					magisk_install_preinst
 				;;
@@ -1051,11 +1049,11 @@ detect_mode () {
 ##########################################################################################
 
 nanodroid_finalize () {
-	case ${MODID} in
+	case "${MODID}" in
 		NanoDroid | NanoDroid_microG )
 			if [ "${nanodroid_overlay}" -eq 1 ]; then
 				print_info " << with /system applications overlays"
-				${NANODROID_BINDIR}/nanodroid-overlay --create
+				"${NANODROID_BINDIR}/nanodroid-overlay" --create
 			else
 				print_info " << without /system applications overlays"
 			fi
@@ -1069,8 +1067,8 @@ nanodroid_finalize () {
 		sync
 		nanodroid_storelogs
 
-		sort ${NANODROID_LIST} | uniq > /tmp/nanodroid-list
-		mv /tmp/nanodroid-list ${NANODROID_LIST}
+		sort "${NANODROID_LIST}" | uniq > /tmp/nanodroid-list
+		mv /tmp/nanodroid-list "${NANODROID_LIST}"
 
 		installer_cleanup_env
 	fi
@@ -1081,9 +1079,9 @@ nanodroid_finalize () {
 	print_info " Thanks for using NanoDroid "
 	print_info " "
 
-	${BOOTMODE} || umount_partitions
+	"${BOOTMODE}" || umount_partitions
 
-	rm -rf ${INSTALLER}
+	rm -rf "${INSTALLER}"
 }
 
 ##########################################################################################
@@ -1095,31 +1093,31 @@ nanodroid_finalize () {
 ##########################################################################################
 
 setup_busybox () {
-	case $(uname -m) in
+	case "$(uname -m)" in
 		arm* | aarch* )	local bb_arch=arm ;;
 		x86* )	local bb_arch=x86 ;;
 		*    ) error "arch \"$(uname -m)\" is not supported"
 	esac
 
-	mkdir -p ${INSTALLER}/busybox
-	ln -s ${INSTALLER}/busybox.${bb_arch} ${INSTALLER}/busybox/busybox
+	mkdir -p "${INSTALLER}/busybox"
+	ln -s "${INSTALLER}/busybox.${bb_arch}" "${INSTALLER}/busybox/busybox"
 
-	chmod 0755 ${INSTALLER}/busybox.${bb_arch}
-	${INSTALLER}/busybox.${bb_arch} --install -s ${INSTALLER}/busybox/
+	chmod 0755 "${INSTALLER}/busybox.${bb_arch}"
+	"${INSTALLER}/busybox.${bb_arch}" --install -s "${INSTALLER}/busybox/"
 
-	OLD_PATH=${PATH}
-	export PATH=${INSTALLER}/busybox:/system/bin:/vendor/bin
+	OLD_PATH="${PATH}"
+	export PATH="${INSTALLER}/busybox:/system/bin:/vendor/bin"
 }
 
 ##########################################################################################
 # Move envvars out of the way
 ##########################################################################################
 installer_setup_env () {
-	if ! ${BOOTMODE}; then
-		OLD_PATH=${PATH}
-		OLD_LD_LIB=${LD_LIBRARY_PATH}
-		OLD_LD_PRE=${LD_PRELOAD}
-		OLD_LD_CFG=${LD_CONFIG_FILE}
+	if ! "${BOOTMODE}"; then
+		OLD_PATH="${PATH}"
+		OLD_LD_LIB="${LD_LIBRARY_PATH}"
+		OLD_LD_PRE="${LD_PRELOAD}"
+		OLD_LD_CFG="${LD_CONFIG_FILE}"
 		unset LD_LIBRARY_PATH
 		unset LD_PRELOAD
 		unset LD_CONFIG_FILE
@@ -1130,13 +1128,13 @@ installer_setup_env () {
 # Restore envvars
 ##########################################################################################
 installer_cleanup_env () {
-	if ${BOOTMODE}; then
-		[ -n ${OLD_PATH} ] && PATH=${OLD_PATH}
+	if "${BOOTMODE}"; then
+		[ -n "${OLD_PATH}" ] && PATH="${OLD_PATH}"
 	else
-		[ -n ${OLD_PATH} ] && PATH=${OLD_PATH}
-		[ -n ${OLD_LD_LIB} ] && LD_LIBRARY_PATH=${OLD_LD_LIB}
-		[ -n ${OLD_LD_PRE} ] && LD_PRELOAD=${OLD_LD_PRE}
-		[ -n ${OLD_LD_CFG} ] && LD_CONFIG_FILE=${OLD_LD_CFG}
+		[ -n "${OLD_PATH}" ] && PATH="${OLD_PATH}"
+		[ -n "${OLD_LD_LIB}" ] && LD_LIBRARY_PATH="${OLD_LD_LIB}"
+		[ -n "${OLD_LD_PRE}" ] && LD_PRELOAD="${OLD_LD_PRE}"
+		[ -n "${OLD_LD_CFG}" ] && LD_CONFIG_FILE="${OLD_LD_CFG}"
 	fi
 }
 
@@ -1159,27 +1157,25 @@ magisk_install_setup () {
 	MAGISKBASE=/data/adb
 	installer_setup_env
 
-	case ${MODID} in
+	case "${MODID}" in
 		NanoDroid )
 			# check for sub-modules  which are not
 			# supposed to be installed alongside
 			for dir in NanoDroid_microG NanoDroid_FDroid; do
-				if [ -d ${MAGISKBASE}/modules/${dir} ]; then
-					print_info " !! ${dir} module detected - uninstalling!"
-					rm -rf ${MAGISKBASE}/modules/${dir}
-					NANODROID_UPGRADE=1
-				fi
-
-				if [ -d ${MAGISKBASE}/modules_update/${dir} ]; then
-					print_info " !! ${dir} module detected - uninstalling!"
-					rm -rf ${MAGISKBASE}/modules_update/${dir}
+				[ -d "${MAGISKBASE}/modules/${dir}" ] && NANODROID_UPGRADE=1
+				for mod_dir in modules modules_update; do
+					if [ -d "${MAGISKBASE}/${mod_dir}/${dir}" ]; then
+						print_info " !! ${dir} module detected - uninstalling!"
+						rm -rf "${MAGISKBASE}/${mod_dir}/${dir}"
+					fi
+				done
 				fi
 			done
 		;;
 
 		NanoDroid_microG | NanoDroid_FDroid )
 			# check for Full package and abort if found
-			[ -d ${MAGISKBASE}/modules/NanoDroid -o -d ${MAGISKBASE}/modules_update/NanoDroid ] && \
+			[ -d "${MAGISKBASE}/modules/NanoDroid" -o -d "${MAGISKBASE}/modules_update/NanoDroid" ] && \
 				error "${MODID} can't be installed along side the Full package"
 		;;
 
@@ -1192,14 +1188,9 @@ magisk_install_setup () {
 		;;
 	esac
 
-	[ -d ${MODPATH} ] && NANODROID_UPGRADE=1
+	[ -d "${MODPATH}" ] && NANODROID_UPGRADE=1
 
-	if [ "${NANODROID_UPGRADE}" -eq 1 ]; then
-		MODPATH=${MAGISKBASE}/modules_update/${MODID}
-		rm -rf ${MODPATH}
-	else
-		MODPATH=${MAGISKBASE}/modules/${MODID}
-	fi
+	[ "${NANODROID_UPGRADE}" -eq 1 ] && MODPATH="${MAGISKBASE}/modules_update/${MODID}" && rm -rf "${MODPATH}" || MODPATH="${MAGISKBASE}/modules/${MODID}"
 }
 
 ##########################################################################################
@@ -1207,19 +1198,19 @@ magisk_install_setup () {
 ##########################################################################################
 
 magisk_install_preinst () {
-	if [ -f ${MODPATH}/system.prop ]; then
+	if [ -f "${MODPATH}/system.prop" ]; then
 		print_info " << backing up module's system.prop"
-		cp ${MODPATH}/system.prop ${TMPDIR}/system.prop
+		cp "${MODPATH}/system.prop" "${TMPDIR}/system.prop"
 	fi
 
-	if [ -d ${MODPATH}/logs ]; then
+	if [ -d "${MODPATH}/logs" ]; then
 		print_info " << backing up init.d script logs"
-		cp -r ${MODPATH}/logs ${TMPDIR}/logs
+		cp -r "${MODPATH}/logs" "${TMPDIR}/logs"
 	fi
 
-	if [ -d ${MODPATH}/logcats ]; then
+	if [ -d "${MODPATH}/logcats" ]; then
 		print_info " << backing up logcats"
-		cp -r ${MODPATH}/logcats ${TMPDIR}/logcats
+		cp -r "${MODPATH}/logcats" "${TMPDIR}/logcats"
 	fi
 }
 
@@ -1228,25 +1219,25 @@ magisk_install_preinst () {
 ##########################################################################################
 
 magisk_install_postinst () {
-	if [ -f ${TMPDIR}/system.prop ]; then
+	if [ -f "${TMPDIR}/system.prop" ]; then
 		print_info " << restoring system.prop"
-		cp ${TMPDIR}/system.prop ${MODPATH}/system.prop
+		cp "${TMPDIR}/system.prop" "${MODPATH}/system.prop"
 	fi
 
 	if [ "${nanodroid_microg}" -ne 0 -o "${MODID}" = "NanoDroid_microG" ]; then
-		if [ -n $(grep_prop ro.setupwizard.mode) ]; then
-			echo "ro.setupwizard.mode=DISABLED" >> ${MODPATH}/system.prop
+		if [ -n "$(grep_prop ro.setupwizard.mode)" ]; then
+			echo "ro.setupwizard.mode=DISABLED" >> "${MODPATH}/system.prop"
 		fi
 	fi
 
-	if [ -d ${TMPDIR}/logs ]; then
+	if [ -d "${TMPDIR}/logs" ]; then
 		print_info " << restoring init.d script logs"
-		cp -r ${TMPDIR}/logs ${MODPATH}/logs
+		cp -r "${TMPDIR}/logs" "${MODPATH}/logs"
 	fi
 
-	if [ -d ${TMPDIR}/logcats ]; then
+	if [ -d "${TMPDIR}/logcats" ]; then
 		print_info " << restoring logcats"
-		cp -r ${TMPDIR}/logcats ${MODPATH}/logcats
+		cp -r "${TMPDIR}/logcats" "${MODPATH}/logcats"
 	fi
 }
 
@@ -1256,20 +1247,20 @@ magisk_install_postinst () {
 
 magisk_install_finish () {
 	# Magisk Module files
-	cp -af ${INSTALLER}/module.prop ${MODPATH}/module.prop
+	cp -af "${INSTALLER}/module.prop" "${MODPATH}/module.prop"
 
-	if [ -f ${INSTALLER}/service.sh ]; then
-		cp -af ${INSTALLER}/service.sh ${MODPATH}/service.sh
-		chmod +x ${MODPATH}/service.sh
+	if [ -f "${INSTALLER}/service.sh" ]; then
+		cp -af "${INSTALLER}/service.sh" "${MODPATH}/service.sh"
+		chmod +x "${MODPATH}/service.sh"
 	fi
 
-	case ${MODID} in
+	case "${MODID}" in
 		NanoDroid | NanoDroid_microG )
 			magisk_install_postinst
 		;;
 	esac
 
-	if ${BOOTMODE}; then
+	if "${BOOTMODE}"; then
 		touch "${MAGISKBASE}/modules/${MODID}/update" 2>/dev/null
 		cp -af "${INSTALLER}/module.prop" "${MAGISKBASE}/modules/${MODID}/module.prop" 2>/dev/null
 	fi
@@ -1304,21 +1295,21 @@ install_microg () {
 
 		NLPBACKEND="nlpBackendNominatim"
 		print_info "   ++ Nominatim geocoder backend"
-		${NANODROID_BINDIR}/nanodroid-overlay --add NominatimGeocoderBackend
-		${NANODROID_BINDIR}/nanodroid-overlay --add NominatimNlpBackend
+		"${NANODROID_BINDIR}/nanodroid-overlay" --add NominatimGeocoderBackend
+		"${NANODROID_BINDIR}/nanodroid-overlay" --add NominatimNlpBackend
 
 		if [ "${nanodroid_nlpbackend:0:1}" -eq 1 ]; then
 			NLPBACKEND="${NLPBACKEND} nlpBackendDejavu"
 			print_info "   ++ Déjà Vu location backend"
-			${NANODROID_BINDIR}/nanodroid-overlay --add DejaVuNlpBackend
-			${NANODROID_BINDIR}/nanodroid-overlay --add DejaVuBackend
+			"${NANODROID_BINDIR}/nanodroid-overlay" --add DejaVuNlpBackend
+			"${NANODROID_BINDIR}/nanodroid-overlay" --add DejaVuBackend
 		fi
 
 		if [ "${nanodroid_nlpbackend:1:1}" -eq 1 ]; then
 			NLPBACKEND="${NLPBACKEND} nlpBackendIchnaea"
 			print_info "   ++ Ichnaea location backend"
-			${NANODROID_BINDIR}/nanodroid-overlay --add IchnaeaNlpBackend
-			${NANODROID_BINDIR}/nanodroid-overlay --add MozillaNlpBackend
+			"${NANODROID_BINDIR}/nanodroid-overlay" --add IchnaeaNlpBackend
+			"${NANODROID_BINDIR}/nanodroid-overlay" --add MozillaNlpBackend
 		fi
 
 		if [ "${nanodroid_nlpbackend:2:1}" -eq 1 ]; then
@@ -1332,7 +1323,7 @@ install_microg () {
 		fi
 
 		for app in ${NLPBACKEND}; do
-			nanodroid_install_apk ${app}
+			nanodroid_install_apk "${app}"
 		done
 
 		nanodroid_install_file etc/sysconfig/microg-a5k.xml
@@ -1386,7 +1377,7 @@ install_fdroid_fdroid () {
 	nanodroid_install_apk FDroid
 	nanodroid_install_apk FDroidPrivileged
 
-	${NANODROID_BINDIR}/nanodroid-overlay --add FDroidPriv
+	"${NANODROID_BINDIR}/nanodroid-overlay" --add FDroidPriv
 
 	nanodroid_install_file etc/org.fdroid.fdroid/additional_repos.xml
 }
@@ -1396,17 +1387,19 @@ install_fdroid_fdroid () {
 ##########################################################################################
 
 install_apps () {
+	local i
 	# install apps if requested
 	if [ "${nanodroid_apps}" -eq 1 ]; then
 		print_info " << with applications"
 		APP_STRING=" <<>"
 
 		grep -E -v '^(#|[[:space:]]*$)' "${cfg_apps}" | while read app; do
-			if [ -d "${INSTALLER}/system/app/${app}" ]; then
-				print_info "   ++ ${app}"
-				nanodroid_install_apk ${app}
-			else	print_info "   ++ app: ${app} missing"
-			fi
+			for i in app priv-app; do
+				if [ -d "${INSTALLER}/system/${i}/${app}" ]; then
+					print_info "   ++ ${app}"
+					nanodroid_install_apk "${app}"
+				fi
+			done
 		done
 	else	print_info " << without applications"
 	fi
@@ -1417,8 +1410,8 @@ install_apps () {
 ##########################################################################################
 
 install_store () {
-	STORE_CHOICE=${nanodroid_play:0:1}
-	FAKE_STORE=${nanodroid_play:1:1}
+	STORE_CHOICE="${nanodroid_play:0:1}"
+	FAKE_STORE="${nanodroid_play:1:1}"
 
 	[ "${FAKE_STORE}" -eq 1 ] && STORE_CONFLICT="Phonesky" || STORE_CONFLICT=""
 
@@ -1449,7 +1442,7 @@ install_store () {
 	else 	print_info " << without Fake Store"
 	fi
 
-	[ -n "${STORE_CONFLICT}" ] && ${NANODROID_BINDIR}/nanodroid-overlay --add ${STORE_CONFLICT}
+	[ -n "${STORE_CONFLICT}" ] && "${NANODROID_BINDIR}/nanodroid-overlay" --add "${STORE_CONFLICT}"
 
 	if [ "${NANODROID_UPGRADE}" -eq 0 ]; then
 		rm -rf /data/data/com.android.vending
@@ -1465,7 +1458,7 @@ install_store_play () {
 	FAKE_STORE=0
 
 	print_info " << with Play Store"
-	${NANODROID_BINDIR}/nanodroid-overlay --remove Phonesky
+	"${NANODROID_BINDIR}/nanodroid-overlay" --remove Phonesky
 	nanodroid_install_apk Phonesky
 
 	nanodroid_install_file etc/default-permissions/phonesky-permissions.xml
@@ -1485,13 +1478,13 @@ install_bash () {
 	if [ "${nanodroid_bash}" -eq 1 ]; then
 		print_info " << with GNU Bash Shell and Less Pager"
 		for file in etc/bash_logout etc/bashrc; do
-			nanodroid_install_file ${file}
+			nanodroid_install_file "${file}"
 		done
 
-		for file in  bin/bash bin/bash.bin.${BIN_ARCH} \
-			bin/bashbug.${BIN_ARCH} bin/less bin/less.bin.${BIN_ARCH} \
-			bin/lessecho.${BIN_ARCH} bin/lesskey.${BIN_ARCH}; do
-			nanodroid_install_file ${file} bin
+		for file in bin/bash "bin/bash.bin.${BIN_ARCH}" \
+			"bin/bashbug.${BIN_ARCH}" bin/less "bin/less.bin.${BIN_ARCH}" \
+			"bin/lessecho.${BIN_ARCH}" "bin/lesskey.${BIN_ARCH}"; do
+			nanodroid_install_file "${file}" bin
 		done
 	else	print_info " << without GNU Bash Shell"
 	fi
@@ -1514,7 +1507,7 @@ install_nanodroidscripts () {
 
 	if [ "${MODE}" = "MAGISK" ]; then
 		for script in nprp nanodroid-prop; do
-			nanodroid_install_file bin/${script} bin
+			nanodroid_install_file "bin/${script}" bin
 		done
 
 		nanodroid_substitute bin/nanodroid-prop
@@ -1562,7 +1555,7 @@ install_bromite_webview () {
 			[ -d "/system/${i}" ] && overlaydir="${i}" && break
 		done
 		mkdir -p "${TMPDIR}/bromite/res/xml" "${INSTALLER}/system/${overlaydir}"
-		${AAPT} dump xmltree /system/framework/framework-res.apk res/xml/config_webview_packages.xml | \
+		"${AAPT}" dump xmltree /system/framework/framework-res.apk res/xml/config_webview_packages.xml | \
 			parse_aapt_dump_xmltree | sed "s|</webviewproviders>|<webviewprovider availableByDefault=\"true\" description=\"${WEBVIEW_DESC:-Bromite Webview}\" packageName=\"${WEBVIEW_PKG:-org.bromite.webview}\"><signature>${WEBVIEW_SIG:-MIIDbTCCAlWgAwIBAgIEHcsmjjANBgkqhkiG9w0BAQsFADBmMQswCQYDVQQGEwJERTEQMA4GA1UECBMHVW5rbm93bjEPMA0GA1UEBxMGQmVybGluMRAwDgYDVQQKEwdCcm9taXRlMRAwDgYDVQQLEwdCcm9taXRlMRAwDgYDVQQDEwdjc2FnYW41MCAXDTE4MDExOTA3MjE1N1oYDzIwNjgwMTA3MDcyMTU3WjBmMQswCQYDVQQGEwJERTEQMA4GA1UECBMHVW5rbm93bjEPMA0GA1UEBxMGQmVybGluMRAwDgYDVQQKEwdCcm9taXRlMRAwDgYDVQQLEwdCcm9taXRlMRAwDgYDVQQDEwdjc2FnYW41MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtakjGj0eTavbBB2vWXj8KBixWn4zgXAKc+yGFu3SLEGF1VB5aJWwcMHxVI55yH/8M2eNnJP0BkSidfKgPVcm1sk/GrNEs9uk5sWod9byO5M5QWQmGP2REeTd6J0BVVVaMp2MZnqeR3Su3pwFzrSwTqIGyf8dkPSEz7ifj792+EeRNrov4oRQK7lIfqInzwc4d34wU069Lrw6m7J7HM0KbRYISsWMiYj025Qg+dTrtdWt7jbdcj7htW0eYyJoLd90+s43RWnOpENmWpcWv1EVPxUD4mCdV9idYwoHRIESpSu9IWvqDZp1VoRc43nLgsNfNBwmYdTkIaPiz1m7TBcr7QIDAQABoyEwHzAdBgNVHQ4EFgQUuWoGd7W7wMyQ1pOdjiMv10YHTR0wDQYJKoZIhvcNAQELBQADggEBAA7iw6eKz+T8HIpKDoDcX1Ywjn9JUzuCFu20LnsLzreO/Pog1xErYjdLAS7LTZokfbAnitBskO9QhV9BYkDiM0Qr5v2/HsJTtxa1mz9ywCcI36jblMyuXFj8tuwQI9/t9i+Fc3+bOFBV3t7djPo9qX1dIK0lZ6s8HcIhaCNdqm65fH+nWhC/H9djqC6qOtrkTiACKEcHQ4a/5dfROU0q0M4bS4YuiaAQWgjiGbik4LrZ8wZX1aqJCLt0Hs7MzXyyf0cRSO11FIOViHwzh6WTZGufq2J3YBFXPond8kLxkKL3LNezbi5yTcecxsbKQ6OS46CnIKcy/M8asSreLpoCDvw=}</signature></webviewprovider></webviewproviders>|g" > "${TMPDIR}/bromite/res/xml/config_webview_packages.xml"
 		mkdir -p "${INSTALLER}/system/${overlaydir}"
 		${AAPT} package -f -M "${INSTALLER}/AndroidManifest.xml" -I /system/framework/framework-res.apk -S "${TMPDIR}/bromite/res" -F "${TMPDIR}/BromiteOverlay.apk" --target-sdk-version "$(grep_prop ro.system.build.version.sdk)"
@@ -1571,8 +1564,8 @@ install_bromite_webview () {
 		apk_sign "${INSTALLER}/system/${overlaydir}/BromiteOverlay.apk"
 		print_info " << with Bromite WebView"
 
-		case ${ARCH} in
-			arm | arm64 | x86 ) BROMITE_ARCH=${ARCH} ;;
+		case "${ARCH}" in
+			arm | arm64 | x86 ) BROMITE_ARCH="${ARCH}" ;;
 			x86_64 ) BROMITE_ARCH=x86 ;;
 		esac
 
@@ -1615,7 +1608,7 @@ install_gsync () {
 			print_info " << with Google Sync Adapters (${GSYNC_VER})"
 
 			for app in GoogleCalendarSync GoogleContactsSync GoogleBackupTransport; do
-				nanodroid_install_apk ${app}
+				nanodroid_install_apk "${app}"
 			done
 
 			nanodroid_install_file etc/default-permissions/google-sync-permissions.xml
@@ -1662,7 +1655,7 @@ install_swipe () {
 }
 
 link_swipe_libs () {
-	DEST_IME=${1}
+	DEST_IME="${1}"
 	if [ -f "${DEST_IME}/libjni_latinime.so" ]; then
 		decho " swipe: symlinking libjni_latinimegoogle as libjni_latinime in ${DEST_IME}"
 
@@ -1708,7 +1701,7 @@ install_addond () {
 installinfo_add () {
 	if [ "${MODE}" = "SYSTEM" ]; then
 		for file in "${@}"; do
-			echo "${file}" >> ${NANODROID_LIST}
+			echo "${file}" >> "${NANODROID_LIST}"
 		done
 	fi
 }
@@ -1732,7 +1725,7 @@ nanodroid_install_file () {
 	[ -z "${source}" ] && error "file: ${file} not found"
 
 	# strip off .${BIN_ARCH} from final filename (if any)
-	xfile=$(basename "${file}" .${BIN_ARCH})
+	xfile="$(basename "${file}" .${BIN_ARCH})"
 
 	decho "    installing file: ${xfile}"
 
@@ -1740,7 +1733,7 @@ nanodroid_install_file () {
 	cp "${source}" "${MODPATH}/system/${dir}/${xfile}" || \
 		error "failed to install ${xfile}"
 
-	case ${2} in
+	case "${2}" in
 		bin ) set_perm_bin "${MODPATH}/system/${dir}/${xfile}" ;;
 		*   ) set_perm_data "${MODPATH}/system/${dir}/${xfile}" ;;
 	esac
@@ -1765,7 +1758,7 @@ nanodroid_install_dir () {
 	cp -r "${INSTALLER}/system/${dir}"/* "${MODPATH}${dest}/" || \
 		error "failed to install ${dir}"
 
-	case ${2} in
+	case "${2}" in
 		bin ) set_perm_bin -r "${MODPATH}${dest}" ;;
 		*   ) set_perm_data -r "${MODPATH}${dest}" ;;
 	esac
@@ -1780,18 +1773,18 @@ nanodroid_install_dir () {
 ##########################################################################################
 
 nanodroid_install_apk () {
-	app=${1}
-	multilib=${2}
-	alias=${3}
+	app="${1}"
+	multilib="${2}"
+	alias="${3}"
 
 	unset prefix
 	unset source
 
 	for sdir in system/app system/priv-app \
-		gsync/${GSYNC_VER}/app gsync/${GSYNC_VER}/priv-app; do
+		"gsync/${GSYNC_VER}/app" "gsync/${GSYNC_VER}/priv-app"; do
 		if [ -f "${INSTALLER}/${sdir}/${app}/${app}.apk.zst" ]; then
 			source="${INSTALLER}/${sdir}/${app}/${app}.apk"
-			dir=system/$(basename ${sdir})
+			dir="system/$(basename "${sdir}")"
 			break
 		fi
 	done
@@ -1808,8 +1801,8 @@ nanodroid_install_apk () {
 	fi
 
 	if [ -n "${alias}" ]; then
-		dest_apk=${alias}.apk
-	else	dest_apk=${app}.apk
+		dest_apk="${alias}.apk"
+	else	dest_apk="${app}.apk"
 	fi
 
 	mkdir -p "${dest}"
@@ -1820,14 +1813,14 @@ nanodroid_install_apk () {
 	cp "${source}.zst" "${dest}/${dest_apk}.zst" || \
 		error "failed to install ${source} to ${dest}"
 
-	${ZSTD} -fd --rm "${dest}/${dest_apk}.zst" || \
+	"${ZSTD}" -fd --rm "${dest}/${dest_apk}.zst" || \
 		error "failed to decompress ${dest}/${dest_apk}.zst"
 
 	installinfo_add "${dest}/${dest_apk}"
 
 	nanodroid_install_lib "${dest}/${dest_apk}" "${2}"
 
-	[ "${dir}" = "system/priv-app" ] && create_privapp_permissions_whitelist "$app"
+	[ "${dir}" = "system/priv-app" ] && create_privapp_permissions_whitelist "${app}"
 
 	set_perm_data -r "${dest}"
 }
@@ -1844,36 +1837,36 @@ nanodroid_install_lib () {
 	unset libd
 
 	if [ "${UNFOLD_APP_DIR}" -eq 1 ]; then
-		case ${ARCH} in
-			arm | x86 )      libd=${MODPATH}/system/lib   ;;
-			arm64 | x86_64 ) libd=${MODPATH}/system/lib64 ;;
+		case "${ARCH}" in
+			arm | x86 )      libd="${MODPATH}/system/lib"   ;;
+			arm64 | x86_64 ) libd="${MODPATH}/system/lib64" ;;
 		esac
 	else
-		libd=${dest}/lib
+		libd="${dest}/lib"
 	fi
 
-	rm -rf ${TMP_LIBDIR}
-	mkdir -p ${TMP_LIBDIR}
+	rm -rf "${TMP_LIBDIR}"
+	mkdir -p "${TMP_LIBDIR}"
 
 	unset srcdir
 
 	"${UNZIP}" -oq "${apk}" "lib/*" -d "${TMP_LIBDIR}" \
 		2>/dev/null
-	unzip_return=$?
+	unzip_return="${?}"
 
-	case ${unzip_return} in
+	case "${unzip_return}" in
 		0  ) decho "      ${app} does have libs" ;;
 		11 ) decho "      ${app} does not have any libs" ;;
 		50 ) error "  not enough space available!" ;;
 		*  ) error "  unpacking libs for ${app} failed [${unzip_return}]" ;;
 	esac
 
-	if [ -d ${TMP_LIBDIR}/lib ]; then
+	if [ -d "${TMP_LIBDIR}/lib" ]; then
 		for ARCHLIB in ${LIB_ARCHES}; do
-			if [ -d ${TMP_LIBDIR}/lib/${ARCHLIB} ]; then
-				srcdir=${TMP_LIBDIR}/lib/${ARCHLIB}
+			if [ -d "${TMP_LIBDIR}/lib/${ARCHLIB}" ]; then
+				srcdir="${TMP_LIBDIR}/lib/${ARCHLIB}"
 
-				case ${srcdir} in
+				case "${srcdir}" in
 					*arm64*  ) decho "      ${app}: installing arm64 libs"
 						   lib_arch=arm64 ;;
 					*arm*	 ) decho "      ${app}: installing arm libs"
@@ -1888,12 +1881,12 @@ nanodroid_install_lib () {
 				decho "        into: ${libd}/${lib_arch}"
 				mkdir -p "${libd}/${lib_arch}"
 
-				for lib in ${srcdir}/*; do
-					decho "        library: $(basename ${lib})"
-					cp ${lib} "${libd}/${lib_arch}/" || \
+				for lib in "${srcdir}/"*; do
+					decho "        library: $(basename "${lib}")"
+					cp "${lib}" "${libd}/${lib_arch}/" || \
 						error "  installing libs for ${app} failed"
 
-					installinfo_add "${libd}/${lib_arch}/$(basename ${lib})"
+					installinfo_add "${libd}/${lib_arch}/$(basename "${lib}")"
 				done
 
 				[ -z "${multilib}" ] && break
@@ -1914,18 +1907,18 @@ nanodroid_substitute () {
 
 	[ ! -f "${target}" ] && error "file: ${file} not found"
 
-	if grep -q @MODPATH@ ${target}; then
-		sed -e "s|@MODPATH@|${MODPATH}|g" -i ${target}
+	if grep -q @MODPATH@ "${target}"; then
+		sed -e "s|@MODPATH@|${MODPATH}|g" -i "${target}"
 		decho "    substitute: adjust @MODPATH@ in ${target}"
 	fi
 
-	if grep -q @MODID@ ${target}; then
-		sed -e "s|@MODID@|${MODID}|g" -i ${target}
+	if grep -q @MODID@ "${target}"; then
+		sed -e "s|@MODID@|${MODID}|g" -i "${target}"
 		decho "    substitute: adjust @MODID@ in ${target}"
 	fi
 
-	if grep -q @MODE@ ${target}; then
-		sed -e "s|@MODE@|${MODE}|g" -i ${target}
+	if grep -q @MODE@ "${target}"; then
+		sed -e "s|@MODE@|${MODE}|g" -i "${target}"
 		decho "    substitute: adjust @MODE@ in ${target}"
 	fi
 }
@@ -1959,10 +1952,10 @@ NANODROID_BINDIR=${NANODROID_BINDIR}
 HAS_FAKESIGN=${HAS_FAKESIGN}
 
 ### MOUNTED PARTITIONS ###
-" >> ${nanodroid_logfile}
+" >> "${nanodroid_logfile}"
 
 mount | awk '{print $1 " on " $3 " params: " $6}' \
-	>> ${nanodroid_logfile}
+	>> "${nanodroid_logfile}"
 
 echo "
 ### PARTITION INFORMATION ###
@@ -1974,9 +1967,9 @@ SYSTEM_BLOCK=${SYSTEM_BLOCK}
 VENDOR_BLOCK=${VENDOR_BLOCK}
 
 ### DISK USAGE ###
-" >> ${nanodroid_logfile}
+" >> "${nanodroid_logfile}"
 
-df 2>/dev/null | sed '/^\//d' >> ${nanodroid_logfile}
+df 2>/dev/null | sed '/^\//d' >> "${nanodroid_logfile}"
 
 if [ -n "${cfg_setup}" ]; then
 
@@ -1984,9 +1977,9 @@ echo "
 ### SETUP ###
 
 configuration: ${cfg_setup}
-" >> ${nanodroid_logfile}
+" >> "${nanodroid_logfile}"
 
-cat "${cfg_setup}" >> ${nanodroid_logfile}
+cat "${cfg_setup}" >> "${nanodroid_logfile}"
 
 fi
 
@@ -1996,9 +1989,9 @@ echo "
 ### APPS ###
 
 configuration: ${cfg_apps}
-" >> ${nanodroid_logfile}
+" >> "${nanodroid_logfile}"
 
-cat "${cfg_apps}" >> ${nanodroid_logfile}
+cat "${cfg_apps}" >> "${nanodroid_logfile}"
 
 fi
 
@@ -2008,29 +2001,29 @@ echo "
 ### OVERLAY ###
 
 configuration: ${cfg_overlay}
-" >> ${nanodroid_logfile}
+" >> "${nanodroid_logfile}"
 
-cat "${cfg_overlay}" >> ${nanodroid_logfile}
+cat "${cfg_overlay}" >> "${nanodroid_logfile}"
 
 fi
 
-chown root:sdcard_rw ${nanodroid_logfile}
-chmod 0644 ${nanodroid_logfile}
+chown root:sdcard_rw "${nanodroid_logfile}"
+chmod 0644 "${nanodroid_logfile}"
 
 print_info " | storing installation logs in ${STORAGE}/nanodroid_logs/"
 print_info " | NanoDroid log:"
-print_info " || ""$(basename ${nanodroid_logfile})"
+print_info " || ""$(basename "${nanodroid_logfile}")"
 
 	if [ -d /twres ]; then
 		nanodroid_twrplog="${STORAGE}/nanodroid_logs/${MODID}_${VERSION}_twrp_${curdate}.log"
 
-		cat /tmp/recovery.log > ${nanodroid_twrplog}
+		cat /tmp/recovery.log > "${nanodroid_twrplog}"
 
-		chown root:sdcard_rw ${nanodroid_twrplog}
-		chmod 0644 ${nanodroid_twrplog}
+		chown root:sdcard_rw "${nanodroid_twrplog}"
+		chmod 0644 "${nanodroid_twrplog}"
 
 		print_info " | TWRP log:"
-		print_info " || $(basename ${nanodroid_twrplog})"
+		print_info " || $(basename "${nanodroid_twrplog}")"
 		print_info " "
 	fi
 
@@ -2062,10 +2055,10 @@ set_prop () {
 
 get_cfg_setup () {
 	get_config setup
-	if [ "$config_exists" -eq 1 ]; then
+	if [ "${config_exists}" -eq 1 ]; then
 		cfg_setup="${config}"
 		check_cfg_setup
-		print_info " > Config | nanodroid-setup   | $(dirname ${cfg_setup})"
+		print_info " > Config | nanodroid-setup   | $(dirname "${cfg_setup}")"
 	else
 		cfg_setup="${INSTALLER}/.nanodroid-setup"
 		source "${cfg_setup}"
@@ -2171,10 +2164,10 @@ check_cfg_setup () {
 
 get_cfg_overlay () {
 	get_config overlay
-	if [ "$config_exists" -eq 1 ]; then
+	if [ "${config_exists}" -eq 1 ]; then
 		cfg_overlay="${config}"
 		check_cfg_overlay
-		print_info " > Config | nanodroid-overlay | $(dirname ${cfg_overlay})"
+		print_info " > Config | nanodroid-overlay | $(dirname "${cfg_overlay}")"
 	else
 		cfg_overlay="${INSTALLER}/.nanodroid-overlay"
 		print_info " > Config | nanodroid-overlay | fallback"
@@ -2198,10 +2191,10 @@ check_cfg_overlay () {
 
 get_cfg_apps () {
 	get_config apps
-	if [ "$config_exists" -eq 1 ]; then
+	if [ "${config_exists}" -eq 1 ]; then
 		cfg_apps="${config}"
 		check_cfg_apps
-		print_info " > Config | nanodroid-apps    | $(dirname ${cfg_apps})"
+		print_info " > Config | nanodroid-apps    | $(dirname "${cfg_apps}")"
 	else
 		cfg_apps="${INSTALLER}/.nanodroid-apps"
 		print_info " > Config | nanodroid-apps    | fallback"
@@ -2271,7 +2264,7 @@ gapps_solve_conflicts () {
 	# first get rid of conflicting packages
 	print_google_apps | while read app; do
 		decho " ++ removing app: ${app} [google_apps]"
-		${NANODROID_BINDIR}/nanodroid-overlay --add ${app}
+		"${NANODROID_BINDIR}/nanodroid-overlay" --add "${app}"
 
 		rm -rf /data/dalvik-cache/*/system"@priv-app@${app}"[@\.]*@classes.*
 		rm -rf /data/dalvik-cache/*/system"@app@${app}"[@\.]*@classes.*
@@ -2279,12 +2272,12 @@ gapps_solve_conflicts () {
 
 	print_google_data | while read app; do
 		decho " ++ removing data for: ${app} [google_data]"
-		rm -rf /data/data/${app}
-		rm -rf /data/user/*/${app}
-		rm -rf /data/user_de/*/${app}
-		rm -rf /data/app/${app}-*
-		rm -rf /mnt/asec/${app}-*
-		rm -rf ${STORAGE}/Android/data/${app}
+		rm -rf "/data/data/${app}"
+		rm -rf /data/user/*"/${app}"
+		rm -rf /data/user_de/*"/${app}"
+		rm -rf "/data/app/${app}"-*
+		rm -rf "/mnt/asec/${app}"-*
+		rm -rf "${STORAGE}/Android/data/${app}"
 	done
 }
 
@@ -2296,17 +2289,17 @@ gapps_destroy_artifacts () {
 
 		print_google_data_dirty | while read app; do
 			decho " ++ removing data for: ${app} [google_data_dirty]"
-			rm -rf /data/data/${app}
-			rm -rf /data/user/*/${app}
-			rm -rf /data/user_de/*/${app}
-			rm -rf /data/app/${app}-*
-			rm -rf /mnt/asec/${app}-*
-			rm -rf ${STORAGE}/Android/data/${app}
+			rm -rf "/data/data/${app}"
+			rm -rf /data/user/*"/${app}"
+			rm -rf /data/user_de/*"/${app}"
+			rm -rf "/data/app/${app}-"*
+			rm -rf "/mnt/asec/${app}-"*
+			rm -rf "${STORAGE}/Android/data/${app}"
 		done
 
 		find /data/system* -type f -name 'accounts*db' 2>/dev/null | while read database; do
 			decho "  ++ deleting Google Accounts from ${database} (if any)"
-			${INSTALLER}/sqlite3.${BIN_ARCH} ${database} \
+			"${INSTALLER}/sqlite3.${BIN_ARCH}" "${database}" \
 				"DELETE FROM accounts WHERE type='com.google';"
 		done
 

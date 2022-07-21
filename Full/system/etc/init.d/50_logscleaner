@@ -1,7 +1,7 @@
 #!/system/bin/sh
 
 # be sure init.rc post-fs-data completed
-until [ `getprop vold.post_fs_data_done`. = 1. ]; do sleep 1; done
+until [ "`getprop vold.post_fs_data_done`." = "1." ]; do sleep 1; done
 
 echo "logscleaner init script"
 echo "Starting Automatic Cleaning at $(date +%Y%m%d-%H.%M.%S)"
@@ -11,32 +11,32 @@ echo "Starting Automatic Cleaning at $(date +%Y%m%d-%H.%M.%S)"
 # filemask: *
 for logpath in /data/log /data/slog /data/tombstones \
 	/data/system/usagestats/0; do
-	find ${logpath} -mtime +8 -type f -print \
+	find "${logpath}" -mtime +8 -type f -print \
 		-exec rm -f {} \; 2>/dev/null
 done
 
 # filemask: *.tmp
 for logpath in /data/data/*/*/* /data/data/*/*/*/* \
 	/data/backup/pending/; do
-	find ${logpath} -mtime +8 -type f -name '*.tmp' \
+	find "${logpath}" -mtime +8 -type f -name '*.tmp' \
 		-print -exec rm -f {} \; 2>/dev/null
 done
 
 # filemask: *.apk
 for logpath in /data/local/ /data/local/tmp; do
-	find ${logpath} -mtime +8 -type f -name '*.apk' \
+	find "${logpath}" -mtime +8 -type f -name '*.apk' \
 		-print -exec rm -f {} \; 2>/dev/null
 done
 
 # filemask: *.*
 for logpath in /cache /cache/recovery /data/system/dropbox; do
-	find ${logpath} -mtime +8 -type f -name '*.*' \
+	find "${logpath}" -mtime +8 -type f -name '*.*' \
 		-print -exec rm -f {} \; 2>/dev/null
 done
 
 # NanoDroid init.d logs
 for logpath in /data/adb/modules/NanoDroid/logs /data/adb/logcats; do
-	find ${logpath} -mtime +8 -type f \
+	find "${logpath}" -mtime +8 -type f \
 		-print -exec rm -f {} \; 2>/dev/null
 done
 

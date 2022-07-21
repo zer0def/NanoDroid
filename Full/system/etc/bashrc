@@ -1,9 +1,9 @@
 # /system/etc/bashrc
 
-export SHELL=${BASH}
+export SHELL="${BASH}"
 
 # select storage path
-if [ -n ${EXTERNAL_STORAGE} ]; then
+if [ -n "${EXTERNAL_STORAGE}" ]; then
 	export HOME="${EXTERNAL_STORAGE}"
 else
 	if [ -w /sdcard ]; then
@@ -15,15 +15,15 @@ else
 	fi
 fi
 
-export TMPDIR=${HOME}/.bash_tmp
-export HISTFILE=${HOME}/.bash_history
+export TMPDIR="${HOME}/.bash_tmp"
+export HISTFILE="${HOME}/.bash_history"
 
-mkdir -p ${TMPDIR}
+mkdir -p "${TMPDIR}"
 
 export TERM=xterm
 export PAGER=less.bin
 
-[[ $- != *i* ]] && return
+[[ "${-}" != *i* ]] && return
 
 shopt -s checkwinsize
 shopt -s histappend
@@ -37,10 +37,10 @@ gre="\[\033[01;38;5;2m\]"
 blu="\[\033[01;38;5;4m\]"
 whi="\[\033[01;38;5;7m\]"
 
-export HOSTNAME=$(getprop ro.product.device)
+export HOSTNAME="$(getprop ro.product.device)"
 export PS1="${whi}[ ${blu}\$(whoami) ${whi}@ ${red}${HOSTNAME} ${whi}: ${gre}\w ${whi}] "
 
 resize &>/dev/null
 clear
 
-cd ${HOME}
+cd "${HOME}"

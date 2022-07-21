@@ -35,25 +35,25 @@ check_package () {
 }
 
 check_permission () {
-	perm="$(dumpsys package ${1} | grep "^ *${2}: granted=")"
-	echo "$perm" | grep -q "granted=false" && return 1
-	echo "$perm" | grep -q "granted=true" && return 0
+	perm="$(dumpsys package "${1}" | grep "^ *${2}: granted=")"
+	echo "${perm}" | grep -q "granted=false" && return 1
+	echo "${perm}" | grep -q "granted=true" && return 0
 	return 1
 }
 
 grant_permission () {
 	if [ -n "${3}" ]; then
-		pm grant --user ${3} ${1} ${2} 2>/dev/null
+		pm grant --user "${3}" "${1}" "${2}" 2>/dev/null
 	else
-		pm grant ${1} ${2} 2>/dev/null
+		pm grant "${1}" "${2}" 2>/dev/null
 	fi
 }
 
 permissions () {
-	if check_package ${1}; then
+	if check_package "${1}"; then
 		echo "package ${1} found"
-		if ! check_permission ${1} ${2}; then
-			grant_permission ${1} ${2} ${3} && \
+		if ! check_permission "${1}" "${2}"; then
+			grant_permission "${1}" "${2}" "${3}" && \
 				echo "permission ${2} granted" || \
 				echo "failed to grant permission ${2}"
 		else	echo "already has permission ${2}"
@@ -62,24 +62,24 @@ permissions () {
 }
 
 get_uid () {
-	dumpsys package ${1} | awk -F= '/userId/{print $2; exit}'
+	dumpsys package "${1}" | awk -F= '/userId/{print $2; exit}'
 }
 
 get_app_location () {
-	pm list packages -f ${1} | sed 's|package:\(.*\)=[^=]*|\1|g'
+	pm list packages -f "${1}" | sed 's|package:\(.*\)=[^=]*|\1|g'
 }
 
 user_install_app () {
-	pm install -r ${1}
+	pm install -r "${1}"
 }
 
 user_install () {
-	check_package ${1} || return
-	loc=$(get_app_location ${1})
-	case ${loc} in
+	check_package "${1}" || return
+	loc="$(get_app_location "${1}")"
+	case "${loc}" in
 		/data/* ) echo "package ${1} already is user app" ;;
 		* )
-			user_install_app ${loc} && \
+			user_install_app "${loc}" && \
 			echo "package ${1} installed as user app" || \
 			echo "failed to install package ${1} as user app"
 		;;
@@ -100,54 +100,54 @@ allow_networking () {
 	echo "package ${1} added to LOS networking allowlist"
 }
 
-[[ $(whoami) = "root" ]] || [[ $(whoami) = "shell" ]] || error "not running as either ADB or root"
+[[ "$(whoami)" = "root" ]] || [[ "$(whoami)" = "shell" ]] || error "not running as either ADB or root"
 
-gms_uid=$(get_uid ${microG})
-play_uid=$(get_uid ${PlayStore})
+gms_uid="$(get_uid "${microG}")"
+play_uid="$(get_uid "${PlayStore}")"
 
 if [ "$(getprop ro.build.version.sdk)" -ge 29 ]; then
 	# microG GmsCore needs to be installed as user app for all permissions to be granted
 	# see https://github.com/microg/android_packages_apps_GmsCore/issues/1100#issuecomment-711088518
-	user_install ${microG}
+	user_install "${microG}"
 	if settings list global | grep -q "^uids_allowed_on_restricted_networks="; then
 		# both need this on LOS-based ROMs in some situations like it restricting their internet for no reason
-		allow_networking ${microG} ${gms_uid}
-		allow_networking ${PlayStore} ${play_uid}
+		allow_networking "${microG}" "${gms_uid}"
+		allow_networking "${PlayStore}" "${play_uid}"
 	fi;
 fi
 
 # Fake Package Signature
-permissions ${microG} ${perm_fake}
-permissions ${PlayStore} ${perm_fake}
+permissions "${microG}" "${perm_fake}"
+permissions "${PlayStore}" "${perm_fake}"
 
 # Location
-for app in ${nlpIchnaea} ${nlpDejavu} ${nlpApple} ${nlpBmap}; do
-	user_install ${app}
+for app in "${nlpIchnaea}" "${nlpDejavu}" "${nlpApple}" "${nlpBmap}"; do
+	user_install "${app}"
 done
 
-for app in ${microG} ${nlpIchnaea} ${nlpDejavu} ${nlpApple} ${nlpBmap}; do
-	permissions ${app} ${perm_cloc}
+for app in "${microG}" "${nlpIchnaea}" "${nlpDejavu}" "${nlpApple}" "${nlpBmap}"; do
+	permissions "${app}" "${perm_cloc}"
 done
 
-for app in ${microG} ${nlpIchnaea} ${nlpDejavu} ${nlpApple}; do
-	permissions ${app} ${perm_floc}
+for app in "${microG}" "${nlpIchnaea}" "${nlpDejavu}" "${nlpApple}"; do
+	permissions "${app}" "${perm_floc}"
 done
 
 # Restricted permissions
-permissions ${microG} ${perm_bloc} ${gms_uid}
-permissions ${microG} ${perm_rsms} ${gms_uid}
+permissions "${microG}" "${perm_bloc}" "${gms_uid}"
+permissions "${microG}" "${perm_rsms}" "${gms_uid}"
 
 # Misc. permissions
-permissions ${microG} ${perm_gacc}
-permissions ${microG} ${perm_phon}
-permissions ${microG} ${perm_rext}
-permissions ${microG} ${perm_wext}
+permissions "${microG}" "${perm_gacc}"
+permissions "${microG}" "${perm_phon}"
+permissions "${microG}" "${perm_rext}"
+permissions "${microG}" "${perm_wext}"
 
 # Google Calendar Sync
-permissions ${GCalSync} ${perm_calr}
-permissions ${GCalSync} ${perm_calw}
+permissions "${GCalSync}" "${perm_calr}"
+permissions "${GCalSync}" "${perm_calw}"
 
 # Google Contacts Sync
-permissions ${GConSync} ${perm_conr}
-permissions ${GConSync} ${perm_conw}
-permissions ${GConSync} ${perm_gacc}
+permissions "${GConSync}" "${perm_conr}"
+permissions "${GConSync}" "${perm_conw}"
+permissions "${GConSync}" "${perm_gacc}"

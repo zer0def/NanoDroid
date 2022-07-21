@@ -20,11 +20,11 @@ BASEDIR=/system/addon.d/nanodroid_patcher
 detect_outfd () {
 	# taken from Magisk
 	# update-binary|updater <RECOVERY_API_VERSION> <OUTFD> <ZIPFILE>
-	OUTFD=$(ps | grep -v 'grep' | grep -oE 'update(.*) 3 [0-9]+' | cut -d" " -f3)
-	[ -z $OUTFD ] && OUTFD=$(ps -Af | grep -v 'grep' | grep -oE 'update(.*) 3 [0-9]+' | cut -d" " -f3)
+	OUTFD="$(ps | grep -v 'grep' | grep -oE 'update(.*) 3 [0-9]+' | cut -d" " -f3)"
+	[ -z "${OUTFD}" ] && OUTFD="$(ps -Af | grep -v 'grep' | grep -oE 'update(.*) 3 [0-9]+' | cut -d" " -f3)"
 	# update_engine_sideload --payload=file://<ZIPFILE> --offset=<OFFSET> --headers=<HEADERS> --status_fd=<OUTFD>
-	[ -z $OUTFD ] && OUTFD=$(ps | grep -v 'grep' | grep -oE 'status_fd=[0-9]+' | cut -d= -f2)
-	[ -z $OUTFD ] && OUTFD=$(ps -Af | grep -v 'grep' | grep -oE 'status_fd=[0-9]+' | cut -d= -f2)
+	[ -z "${OUTFD}" ] && OUTFD="$(ps | grep -v 'grep' | grep -oE 'status_fd=[0-9]+' | cut -d= -f2)"
+	[ -z "${OUTFD}" ] && OUTFD="$(ps -Af | grep -v 'grep' | grep -oE 'status_fd=[0-9]+' | cut -d= -f2)"
 }
 
 NanoDroidPatcher () {
@@ -46,7 +46,7 @@ NanoDroidPatcher () {
 
 	for artifact in classes.dex oat dalvik-cache \
 		services.jar services.jar-mod; do
-		rm -rf ${BASEDIR}/${artifact}
+		rm -rf "${BASEDIR}/${artifact}"
 	done
 
 	ui_print " "

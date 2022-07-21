@@ -1,23 +1,23 @@
 #!/sbin/sh
 
-OUTFD=$2
-ZIP=$3
+OUTFD="${2}"
+ZIP="${3}"
 BACKUP_DIR="/data/media/0/nanodroid_backups"
 VERSION=23.2.99999999
 
 detect_bootmode () {
-	[ -z ${BOOTMODE} ] && ps | grep zygote | grep -qv grep && BOOTMODE=true
-	[ -z ${BOOTMODE} ] && ps -A 2>/dev/null | grep zygote | grep -qv grep && BOOTMODE=true
-	[ -z ${BOOTMODE} ] && BOOTMODE=false
+	[ -z "${BOOTMODE}" ] && ps | grep zygote | grep -qv grep && BOOTMODE=true
+	[ -z "${BOOTMODE}" ] && ps -A 2>/dev/null | grep zygote | grep -qv grep && BOOTMODE=true
+	[ -z "${BOOTMODE}" ] && BOOTMODE=false
 }
 
 ui_print() {
-	echo -e "ui_print $1" >> /proc/self/fd/$OUTFD
-	echo -e "ui_print" >> /proc/self/fd/$OUTFD
+	echo -e "ui_print $1" >> "/proc/self/fd/${OUTFD}"
+	echo -e "ui_print" >> "/proc/self/fd/${OUTFD}"
 }
 
 grep_prop() {
-	sed -n "s/^${1}=//p" /system/build.prop ${2} | head -n 1
+	sed -n "s/^${1}=//p" /system/build.prop "${2}" | head -n 1
 }
 
 grep_cmdline() {
@@ -28,35 +28,35 @@ grep_cmdline() {
 
 is_mounted () {
 	grep -q " $(readlink -f ${1}) " /proc/mounts 2>/dev/null
-	return $?
+	return "${?}"
 }
 
 set_perm () {
-	chown ${2}:${3} ${1} || error "failed change owner for ${1}"
-	chmod ${4} ${1} || error "failed to change mode for ${1}"
+	chown "${2}:${3}" "${1}" || error "failed change owner for ${1}"
+	chmod "${4}" "${1}" || error "failed to change mode for ${1}"
 
 	if [ -n "${5}" ]; then
-		chcon ${5} ${1} 2>/dev/null
-	else	chcon 'u:object_r:system_file:s0' ${1} 2>/dev/null
+		chcon "${5}" "${1}" 2>/dev/null
+	else	chcon 'u:object_r:system_file:s0' "${1}" 2>/dev/null
 	fi
 }
 
 set_perm_recursive() {
-	find ${1} -type d 2>/dev/null | while read dir; do
-		set_perm ${dir} ${2} ${3} ${4} ${6}
+	find "${1}" -type d 2>/dev/null | while read dir; do
+		set_perm "${dir}" "${2}" "${3}" "${4}" "${6}"
 	done
-	find ${1} -type f 2>/dev/null | while read file; do
-		set_perm ${file} ${2} ${3} ${5} ${6}
+	find "${1}" -type f 2>/dev/null | while read file; do
+		set_perm "${file}" "${2}" "${3}" "${5}" "${6}"
 	done
 }
 
 set_perm_data () {
 	if [ "${1}" = "-r" ]; then
 		echo "    perm: data [recursive] {${2}}"
-		set_perm_recursive ${2} 0 0 0755 0644
+		set_perm_recursive "${2}" 0 0 0755 0644
 	else
 		echo "    perm: data [single] {${1}}"
-		set_perm ${1} 0 0 0644
+		set_perm "${1}" 0 0 0644
 	fi
 }
 
@@ -65,19 +65,19 @@ setup_busybox () {
 	unzip -oq "${ZIP}" busybox.arm -d "/dev/tmp"
 	unzip -oq "${ZIP}" busybox.x86 -d "/dev/tmp"
 
-	case $(uname -m) in
+	case "$(uname -m)" in
 		arm* | aarch* )	local bb_arch=arm ;;
 		x86* )	local bb_arch=x86 ;;
 		*    ) error "arch \"$(uname -m)\" is not supported"
 	esac
 
 	mkdir -p /dev/tmp/busybox
-	ln -s /dev/tmp/busybox.${bb_arch} /dev/tmp/busybox/busybox
+	ln -s "/dev/tmp/busybox.${bb_arch}" /dev/tmp/busybox/busybox
 
-	chmod 0755 /dev/tmp/busybox.${bb_arch}
-	/dev/tmp/busybox.${bb_arch} --install -s /dev/tmp/busybox/
+	chmod 0755 "/dev/tmp/busybox.${bb_arch}"
+	"/dev/tmp/busybox.${bb_arch}" --install -s /dev/tmp/busybox/
 
-	OLD_PATH=${PATH}
+	OLD_PATH="${PATH}"
 	export PATH=/dev/tmp/busybox:/system/bin:/vendor/bin
 }
 
@@ -86,7 +86,7 @@ error () {
 	ui_print " !! ${@}"
 	ui_print " !!"
 
-	${BOOTMODE} || umount_partitions
+	"${BOOTMODE}" || umount_partitions
 
 	exit 1
 }
@@ -98,39 +98,39 @@ error () {
 ##########################################################################################
 
 toupper() {
-	echo "$@" | tr '[:lower:]' '[:upper:]'
+	echo "${@}" | tr '[:lower:]' '[:upper:]'
 }
 
 find_block () {
 	local block partname devname device
 
 	for block in "${@}"; do
-		block=${block}${SLOT}
-		device=$(find /dev/block \( -type b -o -type c -o -type l \) -name ${block} | head -n 1)
+		block="${block}${SLOT}"
+		device="$(find /dev/block \( -type b -o -type c -o -type l \) -name "${block}" | head -n 1)"
 
-		if [ -n "$device" ]; then
-			readlink -f "$device"
+		if [ -n "${device}" ]; then
+			readlink -f "${device}"
 			return 0
 		fi
 	done
 
 	for block in "${@}"; do
-		block=${block}${SLOT}
+		block="${block}${SLOT}"
 		for uevent in /sys/dev/block/*/uevent; do
-			partname=$(awk -F= '/PARTNAME/{print $2}' ${uevent})
-			devname=$(awk -F= '/DEVNAME/{print $2}' ${uevent})
-			if [ "$(toupper ${block})" = "$(toupper ${partname})" ]; then
-				echo /dev/block/${devname}
+			partname="$(awk -F= '/PARTNAME/{print $2}' "${uevent}")"
+			devname="$(awk -F= '/DEVNAME/{print $2}' "${uevent}")"
+			if [ "$(toupper "${block}")" = "$(toupper "${partname}")" ]; then
+				echo "/dev/block/${devname}"
 				return 0
 			fi
 		done
 	done
 
 	for block in "${@}"; do
-		block=${block}${SLOT}
-		device=$(find /dev \( -type b -o -type c -o -type l \) -maxdepth 1 -iname ${block} | head -n 1)
-		if [ -n "$device" ]; then
-			readlink -f "$device"
+		block="${block}${SLOT}"
+		device="$(find /dev \( -type b -o -type c -o -type l \) -maxdepth 1 -iname "${block}" | head -n 1)"
+		if [ -n "${device}" ]; then
+			readlink -f "${device}"
 			return 0
 		fi
 	done
@@ -139,23 +139,23 @@ find_block () {
 }
 
 mount_partitions () {
-	if ! ${BOOTMODE}; then
+	if ! "${BOOTMODE}"; then
 		VENDOR_COMPAT=FALSE
 		SYSTEM_AS_ROOT=FALSE
 
-		SLOT=$(grep_cmdline androidboot.slot_suffix)
-		if [ -z ${SLOT} ]; then
-			SLOT=$(grep_cmdline androidboot.slot)
-			[ -z ${SLOT} ] || SLOT=_${SLOT}
+		SLOT="$(grep_cmdline androidboot.slot_suffix)"
+		if [ -z "${SLOT}" ]; then
+			SLOT="$(grep_cmdline androidboot.slot)"
+			[ -z "${SLOT}" ] || SLOT=_${SLOT}
 		fi
-		[ -z ${SLOT} ] && DEVICE_AB=FALSE || DEVICE_AB=TRUE
+		[ -z "${SLOT}" ] && DEVICE_AB=FALSE || DEVICE_AB=TRUE
 		echo " INFO: #1 [SLOT] ${SLOT}"
 
 		is_mounted /data || mount /data || echo "failed to mount /data!"
 
 		mount -o bind /dev/urandom /dev/random
 
-		SYSTEM_BLOCK=$(find_block system app)
+		SYSTEM_BLOCK="$(find_block system app)"
 		echo " INFO: #5 [SYSTEM_BLOCK] ${SYSTEM_BLOCK}"
 
 		if is_mounted /system_root; then
@@ -164,7 +164,7 @@ mount_partitions () {
 		fi
 
 		mkdir -p /system /system_root
-		mount -o rw ${SYSTEM_BLOCK} /system
+		mount -o rw "${SYSTEM_BLOCK}" /system
 
 		if [ -f /system/build.prop ]; then
 			SYSTEM=/system
@@ -174,18 +174,18 @@ mount_partitions () {
 			if ! mount --move /system /system_root; then
 				umount /system
 				umount -l /system
-				mount -o rw ${SYSTEM_BLOCK} /system_root
+				mount -o rw "${SYSTEM_BLOCK}" /system_root
 			fi
 			mount -o bind /system_root/system /system
 		fi
 
-		VENDOR_BLOCK=$(find_block vendor vnr)
+		VENDOR_BLOCK="$(find_block vendor vnr)"
 		echo " INFO: #7 [VENDOR_BLOCK] ${VENDOR_BLOCK}"
 
 		! is_mounted /vendor && mount -o ro /vendor
-		! is_mounted /vendor && mount -o ro ${VENDOR_BLOCK} /vendor
+		! is_mounted /vendor && mount -o ro "${VENDOR_BLOCK}" /vendor
 
-		if [[ ! $(is_mounted /vendor) && -d /system/vendor ]]; then
+		if [[ ! "$(is_mounted /vendor)" && -d /system/vendor ]]; then
 			### XXX work-around required for some devices
 			VENDOR_COMPAT=TRUE
 			ln -sf /system/vendor /vendor >/dev/null
@@ -220,21 +220,21 @@ mount_apex () {
 	mount -t tmpfs tmpfs /apex -o mode=755
 
 	for apex in /system/apex/*; do
-		apex_loop="/dev/loop_apex_$(basename ${apex} .apex)"
+		apex_loop="/dev/loop_apex_$(basename "${apex}" .apex)"
 
 		if [ -f "${apex}" ]; then
 			unzip -oq "${apex}" apex_payload.img -d /apex
-			apex_mount=$(unzip -qp ${apex} apex_manifest.pb | strings | head -n 1)
-			[ -z ${apex_mount} ] && apex_mount=$(unzip -qp ${apex} apex_manifest.json | sed -n ${pattern})
-			[ -z ${apex_mount} ] && continue
+			apex_mount="$(unzip -qp "${apex}" apex_manifest.pb | strings | head -n 1)"
+			[ -z "${apex_mount}" ] && apex_mount="$(unzip -qp "${apex}" apex_manifest.json | sed -n "${pattern}")"
+			[ -z "${apex_mount}" ] && continue
 
 			mkdir -p "${apex_mount}"
 			mount_apex_loop "${apex_mount}" || error "APEX loop setup failed!"
 		elif [ -d "${apex}" ]; then
-			if [ -f ${apex}/apex_manifest.json ]; then
-				apex_mount=/apex/$(sed -n ${pattern} ${apex}/apex_manifest.json)
-			elif [ -f ${apex}/apex_manifest.pb ]; then
-				apex_mount=/apex/$(strings ${apex}/apex_manifest.pb | head -n 1)
+			if [ -f "${apex}/apex_manifest.json" ]; then
+				apex_mount="/apex/$(sed -n "${pattern}" "${apex}/apex_manifest.json")"
+			elif [ -f "${apex}/apex_manifest.pb" ]; then
+				apex_mount="/apex/$(strings "${apex}/apex_manifest.pb" | head -n 1)"
 			else
 				continue
 			fi
@@ -256,15 +256,15 @@ mount_apex_loop () {
 	local minorx=1
 	local loop
 
-	[ -e /dev/block/loop1 ] && minorx=$(stat -Lc '%T' /dev/block/loop1)
+	[ -e /dev/block/loop1 ] && minorx="$(stat -Lc '%T' /dev/block/loop1)"
 
 	apex_mount="${1}"
 
 	echo " *** mount_apex_loop [apex_mount]: ${apex_mount}"
 
-	while [ ${number} -lt 64 ]; do
-		loop=/dev/block/loop${number}
-		[ -e ${loop} ] || mknod ${loop} b 7 $((number * minorx))
+	while [ "${number}" -lt 64 ]; do
+		loop="/dev/block/loop${number}"
+		[ -e "${loop}" ] || mknod "${loop}" b 7 "$((number * minorx))"
 
 		if losetup "${loop}" /apex/apex_payload.img 2>/dev/null; then
 			echo " *** mount_apex_loop [loop]: ${loop}"
@@ -274,7 +274,7 @@ mount_apex_loop () {
 			fi
 		fi
 
-		number=$((number + 1))
+		number="$((number + 1))"
 	done
 }
 
@@ -303,15 +303,15 @@ umount_partitions () {
 }
 
 # check for configuration files
-config_locations="/data/media/0 /external_sd /sdcard1 /data $(dirname ${ZIP})) /system/addon.d /tmp"
+config_locations="/data/media/0 /external_sd /sdcard1 /data $(dirname "${ZIP}")) /system/addon.d /tmp"
 config_files=".nanodroid-setup .nanodroid-apps .nanodroid-overlay"
 
 system_mode_uninstall () {
 	ui_print " << uninstalling: NanoDroid (System)"
 	ui_print " << using: ${1}"
-	system_list=${1}
+	system_list="${1}"
 
-	xargs rm < ${system_list} || error "failed to remove files"
+	xargs rm < "${system_list}" || error "failed to remove files"
 
 	rm -f "${system_list}"
 }
@@ -345,15 +345,15 @@ rm -f /data/adb/NanoDroid_Patched
 for module in NanoDroid NanoDroid_microG NanoDroid_FDroid \
 	NanoDroid_BromiteWebView NanoDroid_OsmAnd \
 	NanoDroid_Google NanoDroid_Pather; do
-	if [ -d /data/adb/modules/${module} ]; then
+	if [ -d "/data/adb/modules/${module}" ]; then
 		ui_print " << uninstalling: ${module}"
-		rm -rf /data/adb/modules/${module}
+		rm -rf "/data/adb/modules/${module}"
 	fi
 done
 
 ui_print " >> clean up"
 
-${BOOTMODE} || umount_partitions
+"${BOOTMODE}" || umount_partitions
 
 ui_print " "
 ui_print " > Done!"

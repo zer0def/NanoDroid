@@ -5,9 +5,9 @@ export MODE=@MODE@
 
 OVERLAY_PATH=""
 
-[ -f /dev/tmp/install/CommonInstaller ] && MODE=${MODE}_INSTALL
-[ -f /tmp/backuptool.functions ] && MODE=${MODE}_INSTALL
-[ -f /postinstall/tmp/backuptool.functions ] && MODE=${MODE}_INSTALL
+[ -f /dev/tmp/install/CommonInstaller ] && MODE="${MODE}_INSTALL"
+[ -f /tmp/backuptool.functions ] && MODE="${MODE}_INSTALL"
+[ -f /postinstall/tmp/backuptool.functions ] && MODE="${MODE}_INSTALL"
 
 # detect whether we need to remount /system or / in system mode
 if grep -q " $(readlink -f /system) " /proc/mounts 2>/dev/null; then
@@ -82,8 +82,8 @@ get_config () {
 }
 
 overrides_add_intern () {
-	sysdir=${1}
-	app=${2}
+	sysdir="${1}"
+	app="${2}"
 
 	if [ "${MODE}" = "MAGISK" -o "${MODE}" = "MAGISK_INSTALL" ]; then
 		echo "  creating overlay: ${app}"
@@ -98,20 +98,20 @@ overrides_add_intern () {
 }
 
 overrides_add () {
-	[ "${MODE}" = "SYSTEM" ] && mount -orw,remount ${remount_point}
+	[ "${MODE}" = "SYSTEM" ] && mount -orw,remount "${remount_point}"
 
 	for app in ${@}; do
 		for path in ${app_locations}; do
-			[ -d ${path}/${app} ] && overrides_add_intern ${path} ${app}
+			[ -d "${path}/${app}" ] && overrides_add_intern "${path}" "${app}"
 		done
 	done
 
-	[ "${MODE}" = "SYSTEM" ] && mount -oro,remount ${remount_point}
+	[ "${MODE}" = "SYSTEM" ] && mount -oro,remount "${remount_point}"
 }
 
 overrides_remove_intern () {
-	sysdir=${1}
-	app=${2}
+	sysdir="${1}"
+	app="${2}"
 
 	if [ "${MODE}" = "MAGISK" -o "${MODE}" = "MAGISK_INSTALL" ]; then
 		echo "  removing overlay: ${app}"
@@ -127,11 +127,11 @@ overrides_remove () {
 	for app in ${@}; do
 		if [ "${MODE}" = "MAGISK" -o "${MODE}" = "MAGISK_INSTALL" ]; then
 			for path in ${app_locations}; do
-				[ -f ${OVERLAY_PATH}/${path}/${app}/.replace ] && overrides_remove_intern ${path} ${app}
+				[ -f "${OVERLAY_PATH}/${path}/${app}/.replace" ] && overrides_remove_intern "${path}" "${app}"
 			done
 		else
 			# only remove entry from config file (if it exists)
-			overrides_remove_intern app ${app}
+			overrides_remove_intern app "${app}"
 		fi
 	done
 
@@ -140,7 +140,7 @@ overrides_remove () {
 overrides_list () {
 	if [ "${MODE}" = "MAGISK" -o "${MODE}" = "MAGISK_INSTALL" ]; then
 		for path in ${app_locations}; do
-			if [ -d ${OVERLAY_PATH}/${path} ]; then
+			if [ -d "${OVERLAY_PATH}/${path}" ]; then
 				app_int=""
 				echo -e "\n ** Overrides for ${path}:"
 				for app in $(find "${OVERLAY_PATH}/${path}" -name "*.replace"); do
@@ -157,21 +157,21 @@ overrides_list () {
 overrides_list_non () {
 	if [ "${MODE}" = "MAGISK" -o "${MODE}" = "MAGISK_INSTALL" ]; then
 		for path in ${app_locations}; do
-			if [ -d ${path} ]; then
+			if [ -d "${path}" ]; then
 				app_int=""
 				echo -e "\n ** Non-Overriden apps for ${path}:"
 				for app in $(find "${path}" -mindepth 1 -maxdepth 1 -type d); do
-					[ ! -d ${OVERLAY_PATH}/${app} ] &&  app_int="\n  * $(basename ${app})${app_int}"
+					[ ! -d "${OVERLAY_PATH}/${app}" ] &&  app_int="\n  * $(basename "${app}")${app_int}"
 				done
 				echo -e "${app_int}" | sort
 			fi
 		done
 	else
 		for path in ${app_locations}; do
-			if [ -d ${path} ]; then
+			if [ -d "${path}" ]; then
 				echo -e "\n ** Non-Overriden apps for ${path}:"
 				for app in $(find "${path}" -mindepth 1 -maxdepth 1 -type d); do
-					app_int="\n  * $(basename ${app})${app_int}"
+					app_int="\n  * $(basename "${app}")${app_int}"
 				done
 				echo -e "${app_int}" | sort
 			fi
@@ -185,7 +185,7 @@ overrides_clear () {
 		echo "  removing Overlays from ${OVERLAY_PATH}"
 		for path in ${app_locations}; do
 			for app in $(find "${OVERLAY_PATH}/${path}" -name "*.replace" 2>/dev/null); do
-				echo "  removing override: $(basename $(dirname ${app}))"
+				echo "  removing override: $(basename "$(dirname "${app}")")"
 				rm -rf "$(dirname "${app}")"
 			done
 		done
@@ -196,12 +196,12 @@ overrides_clear () {
 
 overrides_genconfig () {
 	if [ "${MODE}" = "MAGISK" -o "${MODE}" = "MAGISK_INSTALL" ]; then
-		rm -f ${config}
-		touch ${config}
+		rm -f "${config}"
+		touch "${config}"
 
 		for path in ${app_locations}; do
 			for app in $(find "${OVERLAY_PATH}/${path}" -name "*.replace" 2>/dev/null); do
-				xapp=$(basename $(dirname ${app}))
+				xapp="$(basename "$(dirname "${app}")")"
 				echo "  adding ${xapp} to configuration"
 				grep -q "^${xapp}$" "${config}" 2>/dev/null || echo "${xapp}" >> "${config}"
 			done
@@ -213,9 +213,9 @@ overrides_genconfig () {
 
 # check for configuration files
 config_locations="/data/media/0 /external_sd /sdcard1 /data /system/addon.d /tmp"
-media_rw=$(grep "^/dev/block.*/mnt/media_rw" /proc/mounts \
+media_rw="$(grep "^/dev/block.*/mnt/media_rw" /proc/mounts \
 	| cut -d " " -f 2 \
-	| cut -d "/" -f 4)
+	| cut -d "/" -f 4)"
 ext_storage="/storage/${media_rw}"
 
 [ -r "${ext_storage}" ] && config_locations="${ext_storage} ${config_locations}"
@@ -224,12 +224,12 @@ get_config .nanodroid-overlay
 
 app_locations="/system/app /system/priv-app /system/reserve /system/product/app /system/product/priv-app /system/system_ext/app /system/system_ext/priv-app"
 
-[[ -f ${config} ]] && export config || config=/data/media/0/.nanodroid-overlay
+[[ -f "${config}" ]] && export config || config=/data/media/0/.nanodroid-overlay
 
-opt=${1}
-[[ -z ${opt} ]] && show_help || shift
+opt="${1}"
+[[ -z "${opt}" ]] && show_help || shift
 
-case ${opt} in
+case "${opt}" in
 	-l | --list )		overrides_list ;;
 	-a | --add )		overrides_add "${@}" ;;
 	-r | --remove )		overrides_remove "${@}" ;;

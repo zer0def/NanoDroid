@@ -24,13 +24,13 @@ show_banner () {
 }
 
 ui_print() {
-	${BOOTMODE} && echo "${1}" || \
-		echo -e "ui_print ${1}\nui_print" >> /proc/self/fd/${OUTFD}
+	"${BOOTMODE}" && echo "${1}" || \
+		echo -e "ui_print ${1}\nui_print" >> "/proc/self/fd/${OUTFD}"
 }
 
 is_mounted () {
-	grep -q " $(readlink -f ${1}) " /proc/mounts 2>/dev/null
-	return $?
+	grep -q " $(readlink -f "${1}") " /proc/mounts 2>/dev/null
+	return "${?}"
 }
 
 # taken from Magisk, with modifications for NanoDroid
@@ -39,13 +39,13 @@ mount_apex_loop () {
 	local minorx=1
 	local loop
 
-	[ -e /dev/block/loop1 ] && minorx=$(stat -Lc '%T' /dev/block/loop1)
+	[ -e /dev/block/loop1 ] && minorx="$(stat -Lc '%T' /dev/block/loop1)"
 
 	apex_mount="${1}"
 
-	while [ ${number} -lt 64 ]; do
-		loop=/dev/block/loop${number}
-		[ -e ${loop} ] || mknod ${loop} b 7 $((number * minorx))
+	while [ "${number}" -lt 64 ]; do
+		loop="/dev/block/loop${number}"
+		[ -e "${loop}" ] || mknod "${loop}" b 7 "$((number * minorx))"
 
 		if losetup "${loop}" /apex/apex_payload.img 2>/dev/null; then
 			if mount -text4 -oro,noatime "${loop}" "${apex_mount}"; then
@@ -54,7 +54,7 @@ mount_apex_loop () {
 			fi
 		fi
 
-		number=$((number + 1))
+		number="$((number + 1))"
 	done
 }
 
@@ -63,8 +63,8 @@ mount_apex () {
 	mkdir -p /apex
 
 	for apex in /system/apex/*; do
-		apex_mount="/apex/$(basename ${apex} .apex)"
-		apex_loop="/dev/loop_apex_$(basename ${apex} .apex)"
+		apex_mount="/apex/$(basename "${apex}" .apex)"
+		apex_loop="/dev/loop_apex_$(basename "${apex}" .apex)"
 
 		[ "${apex_mount}" == /apex/com.android.runtime.release ] && apex_mount=/apex/com.android.runtime
 		[ "${apex_mount}" == /apex/com.android.runtime.debug ] && apex_mount=/apex/com.android.runtime
@@ -87,28 +87,28 @@ mount_apex () {
 
 # taken from Magisk, with modifications for NanoDroid
 toupper() {
-	echo "$@" | tr '[:lower:]' '[:upper:]'
+	echo "${@}" | tr '[:lower:]' '[:upper:]'
 }
 
 find_block () {
 	local block partname devname device
 
 	for block in "${@}"; do
-		block=${block}${SLOT}
-		device=$(find /dev/block \( -type b -o -type c -o -type l \) -name ${block} | head -n 1)
+		block="${block}${SLOT}"
+		device="$(find /dev/block \( -type b -o -type c -o -type l \) -name "${block}" | head -n 1)"
 
-		if [ -n "$device" ]; then
-			readlink -f "$device"
+		if [ -n "${device}" ]; then
+			readlink -f "${device}"
 			return 0
 		fi
 	done
 
 	for block in "${@}"; do
-		block=${block}${SLOT}
+		block="${block}${SLOT}"
 		for uevent in /sys/dev/block/*/uevent; do
-			partname=$(awk -F= '/PARTNAME/{print $2}' ${uevent})
-			devname=$(awk -F= '/DEVNAME/{print $2}' ${uevent})
-			if [ "$(toupper ${block})" = "$(toupper ${partname})" ]; then
+			partname="$(awk -F= '/PARTNAME/{print $2}' "${uevent}")"
+			devname="$(awk -F= '/DEVNAME/{print $2}' "${uevent}")"
+			if [ "$(toupper "${block}")" = "$(toupper "${partname}")" ]; then
 				echo /dev/block/${devname}
 				return 0
 			fi
@@ -116,10 +116,10 @@ find_block () {
 	done
 
 	for block in "${@}"; do
-		block=${block}${SLOT}
-		device=$(find /dev \( -type b -o -type c -o -type l \) -maxdepth 1 -iname ${block} | head -n 1)
-		if [ -n "$device" ]; then
-			readlink -f "$device"
+		block="${block}${SLOT}"
+		device="$(find /dev \( -type b -o -type c -o -type l \) -maxdepth 1 -iname "${block}" | head -n 1)"
+		if [ -n "${device}" ]; then
+			readlink -f "${device}"
 			return 0
 		fi
 	done
@@ -132,22 +132,22 @@ mount_partitions () {
 	VENDOR_COMPAT=FALSE
 	SYSTEM_AS_ROOT=FALSE
 
-	SLOT=$(grep_cmdline androidboot.slot_suffix)
-	if [ -z ${SLOT} ]; then
-		SLOT=$(grep_cmdline androidboot.slot)
-		[ -z ${SLOT} ] || SLOT=_${SLOT}
+	SLOT="$(grep_cmdline androidboot.slot_suffix)"
+	if [ -z "${SLOT}" ]; then
+		SLOT="$(grep_cmdline androidboot.slot)"
+		[ -z "${SLOT}" ] || SLOT="_${SLOT}"
 	fi
-	[ -z ${SLOT} ] && DEVICE_AB=FALSE || DEVICE_AB=TR
+	[ -z "${SLOT}" ] && DEVICE_AB=FALSE || DEVICE_AB=TR
 
-	SYSTEM_BLOCK=$(find_block system app)
-	VENDOR_BLOCK=$(find_block vendor vnr)
+	SYSTEM_BLOCK="$(find_block system app)"
+	VENDOR_BLOCK="$(find_block vendor vnr)"
 
-	if ${BOOTMODE}; then
-		if [[ ! $(is_mounted /vendor) && -a /system/vendor ]]; then
+	if "${BOOTMODE}"; then
+		if [[ ! "$(is_mounted /vendor)" && -a /system/vendor ]]; then
 			VENDOR_COMPAT=TRUE
 		fi
 
-		SYSTEM_AS_ROOT=$(grep_prop ro.build.system_root_image)
+		SYSTEM_AS_ROOT="$(grep_prop ro.build.system_root_image)"
 	else
 		is_mounted /data || mount /data || echo "failed to mount /data!"
 
@@ -159,7 +159,7 @@ mount_partitions () {
 		fi
 
 		mkdir -p /system /system_root
-		mount -o rw ${SYSTEM_BLOCK} /system
+		mount -o rw "${SYSTEM_BLOCK}" /system
 
 		if [ -f /system/build.prop ]; then
 			SYSTEM=/system
@@ -169,15 +169,15 @@ mount_partitions () {
 			if ! mount --move /system /system_root; then
 				umount /system
 				umount -l /system
-				mount -o rw ${SYSTEM_BLOCK} /system_root
+				mount -o rw "${SYSTEM_BLOCK}" /system_root
 			fi
 			mount -o bind /system_root/system /system
 		fi
 
 		! is_mounted /vendor && mount -o ro /vendor
-		! is_mounted /vendor && mount -o ro ${VENDOR_BLOCK} /vendor
+		! is_mounted /vendor && mount -o ro "${VENDOR_BLOCK}" /vendor
 
-		if [[ ! $(is_mounted /vendor) && -d /system/vendor ]]; then
+		if [[ ! "$(is_mounted /vendor)" && -d /system/vendor ]]; then
 			### XXX work-around required for some devices
 			VENDOR_COMPAT=TRUE
 			ln -sf /system/vendor /vendor >/dev/null
@@ -218,7 +218,7 @@ error () {
 	ui_print " !! ${@}"
 	ui_print " "
 
-	${BOOTMODE} || umount_partitions
+	"${BOOTMODE}" || umount_partitions
 
 	exit 1
 }
@@ -230,12 +230,12 @@ error () {
 
 check_fake_package_signature () {
 	PERMISSION=android.permission.FAKE_PACKAGE_SIGNATURE
-	PERMISSION_OD=$(echo -n "${PERMISSION}" | od -A n -t x1 | tr -d '\n' | sed -e 's/^ //g;s/ /00/g')
+	PERMISSION_OD="$(echo -n "${PERMISSION}" | od -A n -t x1 | tr -d '\n' | sed -e 's/^ //g;s/ /00/g')"
 	PATCH_TYPE=""
 	FRAMEWORKRES_PATCH=false
 	SERVICESJAR_PATCH=false
 
-	mkdir -p ${TMPDIR}/sigcheck
+	mkdir -p "${TMPDIR}/sigcheck"
 
 	# natively patched ROM: only framework-res.apk patched (old)
 	# natively patched ROM: both framework-res.apk and services.jar patched (new)
@@ -257,11 +257,11 @@ check_fake_package_signature () {
 
 	# we don't use this anywhere (except in SysTest log),
 	# but may still come in hand in the future
-	if ${FRAMEWORKRES_PATCH} && ! ${SERVICESJAR_PATCH}; then
+	if "${FRAMEWORKRES_PATCH}" && ! "${SERVICESJAR_PATCH}"; then
 		PATCH_TYPE="native_old"
-	elif ${FRAMEWORKRES_PATCH} && ${SERVICESJAR_PATCH}; then
+	elif "${FRAMEWORKRES_PATCH}" && "${SERVICESJAR_PATCH}"; then
 		PATCH_TYPE="native_new"
-	elif ! ${FRAMEWORKRES_PATCH} && ${SERVICESJAR_PATCH}; then
+	elif ! "${FRAMEWORKRES_PATCH}" && "${SERVICESJAR_PATCH}"; then
 		PATCH_TYPE="self_patched"
 	fi
 
@@ -273,12 +273,12 @@ check_fake_package_signature () {
 ##########################################################################################
 
 detect_outfd () {
-	if [ -z $OUTFD ] || readlink /proc/$$/fd/$OUTFD | grep -q /tmp; then
+	if [ -z "${OUTFD}" ] || readlink "/proc/${$}/fd/${OUTFD}" | grep -q /tmp; then
 		# We will have to manually find out OUTFD
-		for FD in `ls /proc/$$/fd`; do
-			if readlink /proc/$$/fd/$FD | grep -q pipe; then
-				if ps | grep -v grep | grep -q " 3 $FD "; then
-					OUTFD=$FD
+		for FD in `ls "/proc/${$}/fd"`; do
+			if readlink "/proc/${$}/fd/${FD}" | grep -q pipe; then
+				if ps | grep -v grep | grep -q " 3 ${FD} "; then
+					OUTFD="${FD}"
 					break
 				fi
 			fi
@@ -287,13 +287,13 @@ detect_outfd () {
 }
 
 detect_bootmode () {
-	[ -z ${BOOTMODE} ] && BOOTMODE=false
-	${BOOTMODE} || ps | grep zygote | grep -qv grep && BOOTMODE=true
-	${BOOTMODE} || ps -A | grep zygote | grep -qv grep && BOOTMODE=true
+	[ -z "${BOOTMODE}" ] && BOOTMODE=false
+	"${BOOTMODE}" || ps | grep zygote | grep -qv grep && BOOTMODE=true
+	"${BOOTMODE}" || ps -A | grep zygote | grep -qv grep && BOOTMODE=true
 }
 
 grep_prop () {
-	sed -n "s/^${1}=//p" /system/build.prop ${2} | head -n 1
+	sed -n "s/^${1}=//p" /system/build.prop "${2}" | head -n 1
 }
 
 grep_cmdline() {
@@ -303,50 +303,50 @@ grep_cmdline() {
 }
 
 setup_busybox () {
-	case $(uname -m) in
+	case "$(uname -m)" in
 		arm* | aarch* )	local bb_arch=arm ;;
 		x86* )	local bb_arch=x86 ;;
 		*    ) error "arch \"$(uname -m)\" is not supported"
 	esac
 
-	mkdir -p ${TMPDIR}/busybox
-	ln -s ${TMPDIR}/busybox.${bb_arch} ${TMPDIR}/busybox/busybox
+	mkdir -p "${TMPDIR}/busybox"
+	ln -s "${TMPDIR}/busybox.${bb_arch}" "${TMPDIR}/busybox/busybox"
 
-	chmod 0755 ${TMPDIR}/busybox.${bb_arch}
-	${TMPDIR}/busybox.${bb_arch} --install -s ${TMPDIR}/busybox/
+	chmod 0755 "${TMPDIR}/busybox.${bb_arch}"
+	"${TMPDIR}/busybox.${bb_arch}" --install -s "${TMPDIR}/busybox/"
 
-	OLD_PATH=${PATH}
-	export PATH=${TMPDIR}/busybox:/system/bin:/vendor/bin
+	OLD_PATH="${PATH}"
+	export PATH="${TMPDIR}/busybox:/system/bin:/vendor/bin"
 }
 
 system_test () {
-	ABI=$(grep_prop ro.product.cpu.abi | cut -c-3)
-	ABI2=$(grep_prop ro.product.cpu.abi2 | cut -c-3)
-	ABILONG=$(grep_prop ro.product.cpu.abi)
+	ABI="$(grep_prop ro.product.cpu.abi | cut -c-3)"
+	ABI2="$(grep_prop ro.product.cpu.abi2 | cut -c-3)"
+	ABILONG="$(grep_prop ro.product.cpu.abi)"
 
 	ARCH=arm
 
-	[ "$ABI" = "x86" ] && ARCH=x86
-	[ "$ABI2" = "x86" ] && ARCH=x86
-	[ "$ABILONG" = "arm64-v8a" ] && ARCH=arm64
-	[ "$ABILONG" = "x86_64" ] && ARCH=x86_64
+	[ "${ABI}" = "x86" ] && ARCH=x86
+	[ "${ABI2}" = "x86" ] && ARCH=x86
+	[ "${ABILONG}" = "arm64-v8a" ] && ARCH=arm64
+	[ "${ABILONG}" = "x86_64" ] && ARCH=x86_64
 
-	case ${ARCH} in
+	case "${ARCH}" in
 		arm | arm64 )
-				FILE=${TMPDIR}/file.arm
-				AAPT=${TMPDIR}/aapt.arm
+				FILE="${TMPDIR}/file.arm"
+				AAPT="${TMPDIR}/aapt.arm"
 		;;
 		x86 | x86_64 )
-				FILE=${TMPDIR}/file.x86
-				AAPT=${TMPDIR}/aapt.x86
+				FILE="${TMPDIR}/file.x86"
+				AAPT="${TMPDIR}/aapt.x86"
 		;;
 	esac
 
 	chmod 0755 "${FILE}" "${AAPT}"
 
-	DALVIKVM_ARCH=$("${FILE}" -m "${BASEDIR}/magic.mgc" -L /system/bin/dalvikvm)
+	DALVIKVM_ARCH="$("${FILE}" -m "${BASEDIR}/magic.mgc" -L /system/bin/dalvikvm)"
 
-	case ${DALVIKVM_ARCH} in
+	case "${DALVIKVM_ARCH}" in
 		*32-bit* )
 			export LD_LIBRARY_PATH="/system/lib:/vendor/lib:/system/vendor/lib:/product/lib:/system/product/lib:${APEX_LD}"
 		;;
@@ -356,13 +356,13 @@ system_test () {
 		;;
 	esac
 
-	if [ -f ${ANDROID_RUNTIME_ROOT}/etc/ld.config.txt ]; then
+	if [ -f "${ANDROID_RUNTIME_ROOT}/etc/ld.config.txt" ]; then
 		export LD_CONFIG_FILE="${ANDROID_RUNTIME_ROOT}/etc/ld.config.txt"
-	elif [ -f ${ANDROID_RUNTIME_ROOT}/etc/ld.config.${SDK_VERSION}.txt ]; then
+	elif [ -f "${ANDROID_RUNTIME_ROOT}/etc/ld.config.${SDK_VERSION}.txt" ]; then
 		export LD_CONFIG_FILE="${ANDROID_RUNTIME_ROOT}/etc/ld.config.${SDK_VERSION}.txt"
 	fi
 
-	SERVICES_JAR_DEX=$(unzip -lq /system/framework/services.jar | grep classes.dex)
+	SERVICES_JAR_DEX="$(unzip -lq /system/framework/services.jar | grep classes.dex)"
 
 	if [ -n "$(find '/system/framework/' -name 'services.vdex')" ]; then
 		ROM_DEX_STATUS=VDEX
@@ -375,7 +375,7 @@ system_test () {
 }
 
 add_log () {
-	echo "${@}"  >> ${LOGFILE}
+	echo "${@}"  >> "${LOGFILE}"
 }
 
 store_results () {
@@ -404,14 +404,14 @@ store_results () {
 	add_log "VENDOR_BLOCK=${VENDOR_BLOCK}"
 	add_log "SLOT=${SLOT}"
 	add_log ""
-	mount | sed '/magisk/d' | awk '{print $1 " on " $3 " params: " $6}' >> ${LOGFILE}
+	mount | sed '/magisk/d' | awk '{print $1 " on " $3 " params: " $6}' >> "${LOGFILE}"
 
-	if [ ! ${BOOTMODE} ]; then
+	if [ ! "${BOOTMODE}" ]; then
 		add_log ""
 		add_log "TWRP usuable space for Installer"
 		add_log "================================"
 		add_log ""
-		add_log $(df /dev 2>/dev/null | awk '/tmpfs/{print $4}')
+		add_log "$(df /dev 2>/dev/null | awk '/tmpfs/{print $4}')"
 	fi
 
 	add_log ""
@@ -433,8 +433,8 @@ store_results () {
 		i=0
 
 		for apex in /system/apex/*; do
-			i=$((i + 1))
-			add_log "[${i}] $(basename ${apex} .apex)"
+			i="$((i + 1))"
+			add_log "[${i}] $(basename "${apex}" .apex)"
 		done
 	fi
 
@@ -447,7 +447,7 @@ store_results () {
 
 	i=0
 	for prop in $(find /system /system_root /vendor -type f -name build.prop); do
-		i=$((i + 1))
+		i="$((i + 1))"
 		add_log "[${i}] ${prop}"
 	done
 
@@ -460,8 +460,8 @@ store_results () {
 		ro.build.tags ro.build.type ro.build.version.sdk ro.build.version.security_patch \
 		ro.product.cpu.abi ro.product.cpu.abilist ro.product.cpu.abilist32 \
 		ro.product.cpu.abilist64 ro.product.model ro.product.vendor.device; do
-		i=$((i + 1))
-		add_log "[${i}] ${prop}=$(grep_prop ${prop})"
+		i="$((i + 1))"
+		add_log "[${i}] ${prop}=$(grep_prop "${prop}")"
 	done
 
 	add_log ""
@@ -485,7 +485,7 @@ store_results () {
 		. /data/adb/magisk/util_functions.sh
 		add_log "MAGISK_VERSION=${MAGISK_VER_CODE}"
 
-		if [ ${MAGISK_VER_CODE} -gt 18100 ]; then
+		if [ "${MAGISK_VER_CODE}" -gt 18100 ]; then
 			add_log "MAGISK_IMAGELESS=TRUE"
 		else	add_log "MAGISK_IMAGELESS=FALSE"
 		fi
@@ -499,28 +499,28 @@ store_results () {
 	add_log "Installed Google packages"
 	add_log "=== packages.list ======="
 	add_log ""
-	grep google /data/system/packages.list | sort >> ${LOGFILE}
+	grep google /data/system/packages.list | sort >> "${LOGFILE}"
 
 	add_log ""
 	add_log "=== packages.xml ========"
 	add_log ""
-	grep 'package .*google' /data/system/packages.xml | sort >> ${LOGFILE}
+	grep 'package .*google' /data/system/packages.xml | sort >> "${LOGFILE}"
 
 	add_log ""
 	add_log "Content of /system/app"
 	add_log "======================"
 	add_log ""
-	find /system/app -type f -name '*.apk' | sort >> ${LOGFILE}
+	find /system/app -type f -name '*.apk' | sort >> "${LOGFILE}"
 
 	add_log ""
 	add_log "Content of /system/priv-app"
 	add_log "==========================="
 	add_log ""
-	find /system/priv-app -type f -name '*.apk' | sort >> ${LOGFILE}
+	find /system/priv-app -type f -name '*.apk' | sort >> "${LOGFILE}"
 
-	chown root:sdcard_rw ${LOGFILE}
-	chmod 0644 ${LOGFILE}
+	chown root:sdcard_rw "${LOGFILE}"
+	chmod 0644 "${LOGFILE}"
 
-	export PATH=${OLD_PATH}
+	export PATH="${OLD_PATH}"
 }
 

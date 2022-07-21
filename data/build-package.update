@@ -37,17 +37,17 @@ nanodroid_pull () {
 
 grab_swipe () {
 	for arch in arm arm64 x86 x86_64; do
-		grab_lib_from_ogapps libjni_keyboarddecoder.so 23 ${arch} false
+		grab_lib_from_ogapps libjni_keyboarddecoder.so 23 "${arch}" false
 	done
 
 	for arch in arm arm64; do
 		for sdk in 19 21 22 23 27 28; do
-			grab_lib_from_ogapps libjni_latinimegoogle.so ${sdk} ${arch} true
+			grab_lib_from_ogapps libjni_latinimegoogle.so "${sdk}" "${arch}" true
 		done
 	done
 
 	for arch in x86 x86_64; do
-		grab_lib_from_ogapps libjni_latinimegoogle.so 23 ${arch} false
+		grab_lib_from_ogapps libjni_latinimegoogle.so 23 "${arch}" false
 	done
 }
 
@@ -77,9 +77,9 @@ update_microg () {
 grab_gsync () {
 	#          KK LL M  N  O  P  Q
 	for API in 19 21 23 24 26 28 29 30; do
-		grab_apk_from_ogapps ${og_CALSYNC[@]} ${API}
-		grab_apk_from_ogapps ${og_CONSYNC[@]} ${API}
-		grab_apk_from_ogapps ${og_BTRANSP[@]} ${API}
+		grab_apk_from_ogapps ${og_CALSYNC[@]} "${API}"
+		grab_apk_from_ogapps ${og_CONSYNC[@]} "${API}"
+		grab_apk_from_ogapps ${og_BTRANSP[@]} "${API}"
 	done
 }
 

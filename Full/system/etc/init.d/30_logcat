@@ -1,19 +1,19 @@
 #!/system/bin/sh
 
 # be sure init.rc post-fs-data completed
-until [ `getprop vold.post_fs_data_done`. = 1. ]; do sleep 1; done
+until [ "`getprop vold.post_fs_data_done`." = "1." ]; do sleep 1; done
 
 LOGDIR="/data/adb/logcats"
 
 echo "logcat init script"
 echo "Starting Automatic Cleaning at $(date +%Y%m%d-%H.%M.%S)"
 
-[[ ! -d ${LOGDIR} ]] && mkdir -p ${LOGDIR}
+[[ ! -d "${LOGDIR}" ]] && mkdir -p "${LOGDIR}"
 
 echo "Automatic Cleaning finished at $(date +%Y%m%d-%H.%M.%S)"
 
 # Set current date in 20170607-12.07.25 format
-CURDATE=$(date +%Y%m%d-%H.%M.%S)
+CURDATE="$(date +%Y%m%d-%H.%M.%S)"
 
 echo "Recording logcat to: ${LOGDIR}/${CURDATE}"
 

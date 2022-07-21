@@ -1,6 +1,6 @@
 #!/bin/sh
 
-OPENSSL_VERSION="${OPENSSL_VERSION:-1.1.1o}"
+OPENSSL_VERSION="${OPENSSL_VERSION:-1.1.1q}"
 curl -sSL "https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz" | tar xz
 cd "openssl-${OPENSSL_VERSION}"
 sed -i 's/-mandroid//' Configurations/15-android.conf

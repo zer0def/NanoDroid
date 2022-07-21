@@ -3,14 +3,14 @@
 version_code=23.2
 version_date=99999999
 
-build_date=$(LANG='en_US' date +"%Y%m%d")
+build_date="$(LANG='en_US' date +"%Y%m%d")"
 
-VERSION=${version_code}.${build_date}
+VERSION="${version_code}.${build_date}"
 version_p="${version_code}.${version_date} [build ${build_date}]"
-CWD=$(readlink -fn "${BASH_SOURCE[0]}")
-CWD=$(dirname "${CWD}")
+CWD="$(readlink -fn "${BASH_SOURCE[0]}")"
+CWD="$(dirname "${CWD}")"
 
-case $(uname -s) in
+case "$(uname -s)" in
 	*Darwin* | *BSD* )
 		export sumsha256="shasum -a 256"
 		export statx="stat -f %Z"
@@ -23,7 +23,7 @@ esac
 
 # DIRS
 datafolder="${CWD}/data"
-repofolder="$datafolder/repo"
+repofolder="${datafolder}/repo"
 
 # AppsFolder
 appsfolder[0]="Full"
@@ -42,13 +42,13 @@ appsfolder[12]="${CWD}/${appsfolder[11]}"
 
 
 for funcfile in pkg update common download database report; do
-	source "$datafolder/build-package.${funcfile}" || exit 1
+	source "${datafolder}/build-package.${funcfile}" || exit 1
 done
 
-[[ -z ${1} ]] && show_help
+[[ -z "${1}" ]] && show_help
 
-for opt in "$@"; do
-	case ${opt} in
+for opt in "${@}"; do
+	case "${opt}" in
 		full)
 			check_nanodroid || error "run 'build-package pull' first!"
 			mk_pkg_full
@@ -107,17 +107,17 @@ for opt in "$@"; do
 
 		ver )
 			increase_version_number "${2}" "${3}"
-			exit $?
+			exit "${?}"
 		;;
 
 		bump )
 			increase_module_version
-			exit $?
+			exit "${?}"
 		;;
 
 		dalvik )
 			dalvikize_jar "${2}" "${3}"
-			exit $?
+			exit "${?}"
 		;;
 
 		pull )

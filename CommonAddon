@@ -53,42 +53,42 @@ EOF
 }
 
 ui_print () {
-	echo -e "ui_print ${1}" >> /proc/self/fd/${OUTFD}
-	echo -e "ui_print" >> /proc/self/fd/${OUTFD}
+	echo -e "ui_print ${1}" >> "/proc/self/fd/${OUTFD}"
+	echo -e "ui_print" >> "/proc/self/fd/${OUTFD}"
 }
 
 detect_outfd () {
 	# taken from Magisk
 	# update-binary|updater <RECOVERY_API_VERSION> <OUTFD> <ZIPFILE>
-	OUTFD=$(ps | grep -v 'grep' | grep -oE 'update(.*) 3 [0-9]+' | cut -d" " -f3)
-	[ -z $OUTFD ] && OUTFD=$(ps -Af | grep -v 'grep' | grep -oE 'update(.*) 3 [0-9]+' | cut -d" " -f3)
+	OUTFD="$(ps | grep -v 'grep' | grep -oE 'update(.*) 3 [0-9]+' | cut -d" " -f3)"
+	[ -z "${OUTFD}" ] && OUTFD="$(ps -Af | grep -v 'grep' | grep -oE 'update(.*) 3 [0-9]+' | cut -d" " -f3)"
 	# update_engine_sideload --payload=file://<ZIPFILE> --offset=<OFFSET> --headers=<HEADERS> --status_fd=<OUTFD>
-	[ -z $OUTFD ] && OUTFD=$(ps | grep -v 'grep' | grep -oE 'status_fd=[0-9]+' | cut -d= -f2)
-	[ -z $OUTFD ] && OUTFD=$(ps -Af | grep -v 'grep' | grep -oE 'status_fd=[0-9]+' | cut -d= -f2)
+	[ -z "${OUTFD}" ] && OUTFD="$(ps | grep -v 'grep' | grep -oE 'status_fd=[0-9]+' | cut -d= -f2)"
+	[ -z "${OUTFD}" ] && OUTFD="$(ps -Af | grep -v 'grep' | grep -oE 'status_fd=[0-9]+' | cut -d= -f2)"
 }
 
 backup_action () {
 	ui_print " ++ ${MODID} ${VERSION} addon.d: backup"
-	cat ${NANODROID_LIST} | while read FILE; do
+	cat "${NANODROID_LIST}" | while read FILE; do
 		echo " + backup: ${FILE}"
 		backup_file "${FILE}"
 	done
 
 	for file in .nanodroid-apps .nanodroid-overlay .nanodroid-setup; do
-		[ -f /system/addon.d/${file} ] && backup_file /system/addon.d/${file}
+		[ -f "/system/addon.d/${file}" ] && backup_file "/system/addon.d/${file}"
 	done
 	ui_print " ++ ${MODID} ${VERSION} addon.d: backup done"
 }
 
 restore_action () {
 	ui_print " ++ ${MODID} ${VERSION} addon.d: restore"
-	cat ${NANODROID_LIST} | while read FILE; do
+	cat "${NANODROID_LIST}" | while read FILE; do
 		echo " + restore: ${FILE}"
 		restore_file "${FILE}"
 	done
 
 	for file in .nanodroid-apps .nanodroid-overlay .nanodroid-setup; do
-		restore_file /system/addon.d/${file}
+		restore_file "/system/addon.d/${file}"
 	done
 	ui_print " ++ ${MODID} ${VERSION} addon.d: restore done"
 }
@@ -96,7 +96,7 @@ restore_action () {
 postrestore_action () {
 	ui_print " ++ ${MODID} ${VERSION} addon.d: GApps removal"
 	print_google_apps | while read app; do
-		/system/bin/nanodroid-overlay --add ${app}
+		/system/bin/nanodroid-overlay --add "${app}"
 	done
 
 	ui_print " ++ ${MODID} ${VERSION} addon.d: GApps removal done"
@@ -110,7 +110,7 @@ postrestore_action () {
 
 detect_outfd
 
-if [ ! -r ${NANODROID_LIST} ]; then
+if [ ! -r "${NANODROID_LIST}" ]; then
 	echo "No NanoDroid installer information found!"
 	exit 0
 fi

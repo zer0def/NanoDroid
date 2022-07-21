@@ -1,8 +1,8 @@
 #!/sbin/sh
 
 umask 022
-OUTFD=${2}
-ZIP=${3}
+OUTFD="${2}"
+ZIP="${3}"
 
 MODID=NanoDroid_BromiteWebView
 

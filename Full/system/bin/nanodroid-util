@@ -26,10 +26,10 @@ wimax		WiMAX"
 	read -r user_input
 
 	for field in ${user_input}; do
-		case ${field} in
+		case "${field}" in
 			wifi | cell | bluetooth | nfc | wimax )
 				disabled_radios="${field},${disabled_radios}"
-				toggable_radios=$(echo "${toggable_radios}" | sed "s/${field},//g")
+				toggable_radios="$(echo "${toggable_radios}" | sed "s/${field},//g")"
 			;;
 			* )
 				echo "${field} is unknown"
@@ -37,24 +37,24 @@ wimax		WiMAX"
 		esac
 	done
 
-	settings put global airplane_mode_radios ${disabled_radios}
-	settings put global airplane_mode_toggleable_radios ${toggable_radios}
+	settings put global airplane_mode_radios "${disabled_radios}"
+	settings put global airplane_mode_toggleable_radios "${toggable_radios}"
 }
 
 audio_focus () {
-	cmd appops set ${1} TAKE_AUDIO_FOCUS ignore
+	cmd appops set "${1}" TAKE_AUDIO_FOCUS ignore
 }
 
 read_clipboard () {
-	cmd appops set ${1} READ_CLIPBOARD ignore
+	cmd appops set "${1}" READ_CLIPBOARD ignore
 }
 
 # by ale5000
 reset_gms_data () {
-	if [ -z ${1} ]; then
+	if [ -z "${1}" ]; then
 		find /data/data/*/shared_prefs -name com.google.android.gms.*.xml -delete
 	else
-		find /data/data/${1}/shared_prefs -name com.google.android.gms.*.xml -delete
+		find "/data/data/${1}/shared_prefs" -name com.google.android.gms.*.xml -delete
 	fi
 }
 
@@ -63,9 +63,9 @@ error () {
 	exit 1
 }
 
-[[ $(whoami) != "root" ]] && error "not running as root"
+[[ "$(whoami)" != "root" ]] && error "not running as root"
 
-case ${1} in
+case "${1}" in
 	-f | --fix-update )
 		update_fix
 	;;

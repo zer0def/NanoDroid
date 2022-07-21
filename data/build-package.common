@@ -4,16 +4,16 @@ nanodroid_missing_files=0
 nanodroid_broken_files=0
 missing_database=""
 
-sideload=${CWD}/local
+sideload="${CWD}/local"
 
 debug_message () {
 	[ "${BP_DEBUG}" != '1' ] && return 0
-	case "$1" in
+	case "${1}" in
 		normal)
-			echo "$3$(tput setaf 3)$2$(tput sgr 0)"
+			echo "${3}$(tput setaf 3)${2}$(tput sgr 0)"
 		;;
 		newline)
-			echo -e "$3$(tput setaf 3)$2$(tput sgr 0)"
+			echo -e "${3}$(tput setaf 3)${2}$(tput sgr 0)"
 		;;
 	esac
 }
@@ -23,23 +23,23 @@ check_nanodroid () {
 	find Full/ -type f -name '*.apk.gz' | xargs rm -fv
 
 	for file in ${file_database[@]}; do
-		if [[ ! -f ${CWD}/${file} ]]; then
+		if [[ ! -f "${CWD}/${file}" ]]; then
 			nanodroid_missing_files=1
-			missing_database=(${missing_database[@]} ${file})
+			missing_database=(${missing_database[@]} "${file}")
 		else
-			case ${file} in
+			case "${file}" in
 				*.zst )
-					mimetype=$(file -b --mime-type ${CWD}/${file})
-					mimetype_int=$(zstd -dcf ${CWD}/${file} 2>/dev/null | file -b --mime-type - )
+					mimetype="$(file -b --mime-type "${CWD}/${file}")"
+					mimetype_int="$(zstd -dcf "${CWD}/${file}" 2>/dev/null | file -b --mime-type - )"
 				;;
 
 				*.so* )
-					mimetype=$(file -b --mime-type ${CWD}/${file})
+					mimetype="$(file -b --mime-type "${CWD}/${file}")"
 					mimetype_int=""
 				;;
 			esac
 
-			case ${mimetype} in
+			case "${mimetype}" in
 				*application/*sharedlib* )
 					# library
 				;;
@@ -51,12 +51,12 @@ check_nanodroid () {
 				* )
 					debug_message newline "${file} has non-supported mimetype ${mimetype}"
 					nanodroid_broken_files=1
-					broken_database=(${broken_database[@]} ${file})
-					[ "${BP_DEBUG}" != '1' ] && rm -f ${CWD}/${file}
+					broken_database=(${broken_database[@]} "${file}")
+					[ "${BP_DEBUG}" != '1' ] && rm -f "${CWD}/${file}"
 				;;
 			esac
 
-			case ${mimetype_int} in
+			case "${mimetype_int}" in
 				"" )
 					# library
 				;;
@@ -68,27 +68,27 @@ check_nanodroid () {
 				* )
 					debug_message newline "compressed ${file} has non-supported mimetype ${mimetype_int}"
 					nanodroid_broken_files=1
-					broken_database=(${broken_database[@]} ${file})
-					[ "${BP_DEBUG}" != '1' ] && rm -f ${CWD}/${file}
+					broken_database=(${broken_database[@]} "${file}")
+					[ "${BP_DEBUG}" != '1' ] && rm -f "${CWD}/${file}"
 				;;
 			esac
 		fi
 	done
 
-	if [[ ${nanodroid_missing_files} -ne 0 ]]; then
+	if [[ "${nanodroid_missing_files}" -ne 0 ]]; then
 		echo -e "\nThe following files are missing:\n"
 		printf '%s\n' ${missing_database[@]} | uniq | sort
 	fi
 
-	if [[ ${nanodroid_broken_files} -ne 0 && "${BP_DEBUG}" -ne 1 ]]; then
+	if [[ "${nanodroid_broken_files}" -ne 0 && "${BP_DEBUG}" -ne 1 ]]; then
 		echo -e "\nThe following files are broken (and will be removed):\n"
 		printf '%s\n' ${broken_database[@]} | uniq | sort
-	elif	[[ ${nanodroid_broken_files} -ne 0 && "${BP_DEBUG}" -eq 1 ]]; then
+	elif	[[ "${nanodroid_broken_files}" -ne 0 && "${BP_DEBUG}" -eq 1 ]]; then
 		echo -e "\nThe following files are broken (and are kept because BP_DEBUG is set):\n"
 		printf '%s\n' ${broken_database[@]} | uniq | sort
 	fi
 
-	if [[ ${nanodroid_missing_files} -eq 0 && ${nanodroid_broken_files} -eq 0 ]]; then
+	if [[ "${nanodroid_missing_files}" -eq 0 && "${nanodroid_broken_files}" -eq 0 ]]; then
 		echo -e "\nNanoDroid correctly populated\n"
 		return 0
 	else	return 1
@@ -130,9 +130,9 @@ zip_add () {
 	if [ -z "${file_mask}" ]; then
 		zip -qr "${zip_path}" . || exit 1
 	elif [ -d "${file_mask}" ]; then
-		zip -qr "${zip_path}" "${file_mask}"  || exit 1
+		zip -qr "${zip_path}" "${file_mask}" || exit 1
 	else
-		zip -q "${zip_path}" ${file_mask} || exit 1
+		zip -q "${zip_path}" "${file_mask}" || exit 1
 	fi
 
 	cd "${CWD}"
@@ -143,7 +143,7 @@ zip_add_setup () {
 
 	local zip_path="${CWD}/${ZIP}"
 
-	case ${1} in
+	case "${1}" in
 		0 )
 			sed -e 's/nanodroid_overlay=1/nanodroid_overlay=0/' -i .nanodroid-setup
 			zip -q "${zip_path}" .nanodroid-setup || exit 1
@@ -159,12 +159,12 @@ zip_add_setup () {
 }
 
 increase_version_number () {
-	if [ -z ${2} ]; then
+	if [ -z "${2}" ]; then
 		date=99999999
-	else	date=${2}
+	else	date="${2}"
 	fi
 
-	[ -z ${1} ] && error "no new version number given (current: ${version_code})"
+	[ -z "${1}" ] && error "no new version number given (current: ${version_code})"
 
 	for file in "CommonAddon" "CommonInstaller" \
 		"systest/SysTest" "patcher/CommonPatcher" \
@@ -183,8 +183,8 @@ increase_version_number () {
 
 increase_module_version () {
 	for module in Full microG FDroid BromiteWebView OsmAnd Google patcher/dexpatcher; do
-		eval $(grep versionCode "${CWD}/${module}/module.prop")
-		local versionCode=$((versionCode+1))
+		eval "$(grep versionCode "${CWD}/${module}/module.prop")"
+		local versionCode="$((versionCode+1))"
 		sed -e "s/versionCode.*/versionCode=${versionCode}/" \
 			-i "${CWD}/${module}/module.prop"
 	done
@@ -196,7 +196,7 @@ dalvikize_jar () {
 	[ -n "${2}" ] && local dx_extra_arg="--min-sdk-version=${2}"
 
 	if [ -f "${1}" ]; then
-		${ANDROID_HOME}/build-tools/29.0.3/dx --dex \
+		"${ANDROID_HOME}/build-tools/29.0.3/dx" --dex \
 			--output="$(basename "${1}" .jar).dex" \
 			${dx_extra_arg} "${1}"
 	else
@@ -272,7 +272,7 @@ error () {
 sum_sign_package () {
 	cd "${CWD}"
 	cd "$(dirname "${1}")"
-	${sumsha256} "$(basename "${1}")" > "${1}.sha256"
+	"${sumsha256}" "$(basename "${1}")" > "${1}.sha256"
 	cd "${CWD}"
 	gpg --sign --detach-sign "${1}.sha256"
 }

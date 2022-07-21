@@ -13,7 +13,7 @@ create_full_package () {
 
 mk_pkg_full () {
 	create_full_package &
-	progress $!
+	progress "${!}"
 }
 
 create_microg_package() {
@@ -29,7 +29,7 @@ create_microg_package() {
 
 mk_pkg_microg () {
 	create_microg_package &
-	progress $!
+	progress "${!}"
 }
 
 create_fdroid_package() {
@@ -45,7 +45,7 @@ create_fdroid_package() {
 
 mk_pkg_fdroid () {
 	create_fdroid_package &
-	progress $!
+	progress "${!}"
 }
 
 create_bromite_webview_package () {
@@ -61,7 +61,7 @@ create_bromite_webview_package () {
 
 mk_pkg_bromite_webview () {
 	create_bromite_webview_package &
-	progress $!
+	progress "${!}"
 }
 
 create_osmand_package() {
@@ -77,7 +77,7 @@ create_osmand_package() {
 
 mk_pkg_osmand () {
 	create_osmand_package &
-	progress $!
+	progress "${!}"
 }
 
 create_patcher_package() {
@@ -92,7 +92,7 @@ create_patcher_package() {
 
 mk_pkg_patcher () {
 	create_patcher_package &
-	progress $!
+	progress "${!}"
 }
 
 create_uninstaller_package() {
@@ -107,7 +107,7 @@ create_uninstaller_package() {
 
 mk_pkg_uninstaller () {
 	create_uninstaller_package &
-	progress $!
+	progress "${!}"
 }
 
 create_systest_package() {
@@ -122,7 +122,7 @@ create_systest_package() {
 
 mk_pkg_systest () {
 	create_systest_package &
-	progress $!
+	progress "${!}"
 }
 
 create_google_package () {
@@ -138,5 +138,5 @@ create_google_package () {
 
 mk_pkg_google () {
 	create_google_package &
-	progress $!
+	progress "${!}"
 }

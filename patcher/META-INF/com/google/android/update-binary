@@ -1,8 +1,8 @@
 #!/sbin/sh
 
 umask 022
-OUTFD=${2}
-ZIP=${3}
+OUTFD="${2}"
+ZIP="${3}"
 
 mkdir /dev/tmp
 unzip -oq "${ZIP}" CommonPatcher -d "/dev/tmp"
@@ -36,7 +36,7 @@ patch_services
 install_services
 install_addond
 
-${BOOTMODE} || umount_partitions
+"${BOOTMODE}" || umount_partitions
 
 ui_print " "
 ui_print " > Done!"
