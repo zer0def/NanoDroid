@@ -51,12 +51,15 @@ nanodroid_overlay=1
 # Empty quotes (nanodroid_init="") to not install any init scipts.
 nanodroid_init="10_sqlite 20_fstrim 30_logcat 40_external_sd 50_logscleaner"
 
-# nanodroid_forcesystem: force direct /system installation
+# nanodroid_forcesystemize: force systemized installation
 # If not set to 1, if Magisk is installed, NanoDroid will prefer Magisk Module installation)
 # Note: You should keep this setting to 0 unless you really know what you are doing. 
 # supported packages: Full, miroG, F-Droid, Bromite System WebView, OSM Android, Google
 # supported values:
 #	0 = auto detect installation mode
 #	1 = force /system installation
-nanodroid_forcesystem=0
+nanodroid_forcesystemize=0
 nanodroid_bromite_multilib=1
+nanodroid_forcepart=""
+nanodroid_forcepart_bromite=""
+nanodroid_forcepart_osmand=""

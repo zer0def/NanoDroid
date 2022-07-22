@@ -4,7 +4,7 @@ VERSION=23.2.99999999
 NANODROID_UPGRADE=0
 INSTALL_SUCCESS=TRUE
 NANODROID_LIST=/system/addon.d/NanoDroid_FileList
-NANODROID_LIST_OLD=/data/adb/NanoDroid_FileList
+INSTPART=/system
 
 STORAGE=/data/media/0
 curdate="$(date +%Y%m%d_%H.%M.%S)"
@@ -270,8 +270,12 @@ find_block () {
 
 mount_partitions () {
 	if ! "${BOOTMODE}"; then
+		sed -i 's/\([\t ,]\)ro\([\t ,]\)/\1rw\2/g' /etc/fstab
 		VENDOR_COMPAT=FALSE
 		SYSTEM_AS_ROOT=FALSE
+
+		PRODUCT_BLOCK="$(find_block product)"
+		SYSEXT_BLOCK="$(find_block system_ext)"
 
 		SLOT="$(grep_cmdline androidboot.slot_suffix)"
 		if [ -z "${SLOT}" ]; then
@@ -304,8 +308,7 @@ mount_partitions () {
 			SYSTEM_AS_ROOT=true
 			SYSTEM=/system/system
 			if ! mount --move /system /system_root; then
-				umount /system
-				umount -l /system
+				umount "${SYSTEM_BLOCK}"
 				mount -o rw "${SYSTEM_BLOCK}" /system_root
 			fi
 			mount -o bind /system_root/system /system
@@ -322,11 +325,29 @@ mount_partitions () {
 		if [[ ! "$(is_mounted /vendor)" && -d /system/vendor ]]; then
 			### XXX work-around required for some devices
 			VENDOR_COMPAT=TRUE
-			ln -sf /system/vendor /vendor >/dev/null
+			mount -o ro "${VENDOR_BLOCK}" /vendor
 		fi
 
 		decho " INFO: #8 [prop]"
 		ls -l /system/*.prop
+
+		if [ -n "${PRODUCT_BLOCK}" ]; then
+			is_mounted /product && umount /product
+			umount "${PRODUCT_BLOCK}"
+			mkdir -p /system/product
+			mount -o rw "${PRODUCT_BLOCK}" /system/product
+			mount -o bind /system/product /product
+			decho " INFO: #-1 [PRODUCT_BLOCK] ${PRODUCT_BLOCK}"
+		fi
+
+		if [ -n "${SYSEXT_BLOCK}" ]; then
+			is_mounted /system_ext && umount /system_ext
+			umount "${SYSEXT_BLOCK}"
+			mkdir -p /system/system_ext
+			mount -o rw "${SYSEXT_BLOCK}" /system/system_ext
+			mount -o bind /system/system_ext /system_ext
+			decho " INFO: #-1 [SYSEXT_BLOCK] ${SYSEXT_BLOCK}"
+		fi
 
 		[ -d /system/apex ] && mount_apex
 	fi
@@ -413,6 +434,10 @@ mount_apex_loop () {
 ##########################################################################################
 
 umount_partitions () {
+	umount -l /product 2>/dev/null
+	umount -l /system/product 2>/dev/null
+	umount -l /system_ext 2>/dev/null
+	umount -l /system/system_ext 2>/dev/null
 	umount -l /system_root 2>/dev/null
 	umount -l /system 2>/dev/null
 	umount -l /system/vendor 2>/dev/null
@@ -665,14 +690,14 @@ dump_system_privapp_permissions () {
 }
 
 create_privapp_permissions_whitelist () {
-	local apk="${MODPATH}/system/priv-app/${1}/${1}.apk"
+	local apk="${MODPATH}${INSTPART}/priv-app/${1}/${1}.apk"
 	local apk_name="$("${AAPT}" dump badging "${apk}" | awk -F \' '/^package: name/{print $2}')"
 	local apk_list="${TMPDIR}/${apk_name}.list"
 
 	local sys_list="${TMPDIR}/privapp-permissions.list"
 
 	local app_whitelist="${TMPDIR}/${apk_name}.xml"
-	local inst_whitelist="/system/etc/permissions/${apk_name}.xml"
+	local inst_whitelist="${INSTPART}/etc/permissions/${apk_name}.xml"
 
 	[ ! -f "${sys_list}" ] && dump_system_privapp_permissions
 
@@ -693,7 +718,7 @@ create_privapp_permissions_whitelist () {
 	echo '    </privapp-permissions>
 </permissions>' >> "${app_whitelist}"
 
-	mkdir -p "${MODPATH}/system/etc/permissions/"
+	mkdir -p "${MODPATH}${INSTPART}/etc/permissions/"
 	cp "${app_whitelist}" "${MODPATH}/${inst_whitelist}"
 	set_perm_data "${MODPATH}/${inst_whitelist}"
 	installinfo_add "${inst_whitelist}"
@@ -831,16 +856,28 @@ detect_arch () {
 }
 
 ##########################################################################################
+# Detect and setup partition to systemize non-essential components into
+##########################################################################################
+
+detect_capacity () {
+	[ "${MODE}" != "SYSTEM" ] && echo "/system" || case "${MODID}" in
+		NanoDroid_microG | NanoDroid_Google ) echo "/system";;
+		*) df /system_root /system /system_ext /product | grep -vE '^Filesystem|/$' | sort -nrk 4 | awk '{print $NF}' | sed 's/system_root/system/' | sort -u | head -n1;;
+	esac
+}
+
+##########################################################################################
 # Detect and setup installation mode
 ##########################################################################################
 
 detect_mode () {
-	[ -f "${NANODROID_LIST_OLD}" ] && mv "${NANODROID_LIST_OLD}" "${NANODROID_LIST}"
+	# migrate old list to new location
+	[ -f /data/adb/NanoDroid_FileList ] && mv /data/adb/NanoDroid_FileList "${NANODROID_LIST}"
 
-	case "${nanodroid_forcesystem}" in
+	case "${nanodroid_forcesystemize}" in
 		1 )
 			if "${BOOTMODE}"; then
-				print_info "nanodroid_forcesystem set to true"
+				print_info "nanodroid_forcesystemize set to true"
 				error "can't install to /system from Magisk Manager"
 			fi
 			MODE_DETECT=forced
@@ -868,7 +905,7 @@ detect_mode () {
 			unset MODPATH
 
 			mkdir -p /system/addon.d
-			[ -f "${NANODROID_LIST}" ] &&  NANODROID_UPGRADE=1
+			[ -f "${NANODROID_LIST}" ] && NANODROID_UPGRADE=1
 		;;
 
 		MAGISK )
@@ -876,6 +913,9 @@ detect_mode () {
 			[ "${MODID}" != "NanoDroid" ] || magisk_install_preinst
 		;;
 	esac
+
+	local instpart="$(detect_capacity)"
+	[ -z "${instpart}" ] || INSTPART="${instpart}"
 
 	NANODROID_BINDIR="${MODPATH}/system/bin"
 }
@@ -1104,12 +1144,17 @@ install_fdroid () {
 
 	if [ "$((${nanodroid_fdroid}%2))" -eq 1 ] || [ "${MODID}" = "NanoDroid_FDroid" ]; then
 		print_info " << with F-Droid"
+		if ! "${BOOTMODE}" && [ -n "${nanodroid_forcepart}" ]; then
+			local old_instpart="${INSTPART}"
+			INSTPART="${nanodroid_forcepart}"
+		fi
 		nanodroid_install_apk FDroid
 		nanodroid_install_apk FDroidPrivileged
 
 		"${NANODROID_BINDIR}/nanodroid-overlay" --add FDroidPriv
 
 		nanodroid_install_file etc/org.fdroid.fdroid/additional_repos.xml
+		"${BOOTMODE}" || [ -z "${nanodroid_forcepart}" ] || INSTPART="${old_instpart}"
 	else	print_info " << without F-Droid"
 	fi
 }
@@ -1125,6 +1170,10 @@ install_apps () {
 		print_info " << with applications"
 		APP_STRING=" <<>"
 
+		if ! "${BOOTMODE}" && [ -n "${nanodroid_forcepart}" ]; then
+			local old_instpart="${INSTPART}"
+			INSTPART="${nanodroid_forcepart}"
+		fi
 		grep -E -v '^(#|[[:space:]]*$)' "${cfg_apps}" | while read app; do
 			for i in app priv-app; do
 				if [ -d "${INSTALLER}/system/${i}/${app}" ]; then
@@ -1133,6 +1182,7 @@ install_apps () {
 				fi
 			done
 		done
+		"${BOOTMODE}" || [ -z "${nanodroid_forcepart}" ] || INSTPART="${old_instpart}"
 	else	print_info " << without applications"
 	fi
 }
@@ -1144,8 +1194,13 @@ install_apps () {
 install_nanodroidscripts () {
 	print_info " << with NanoDroid Scripts"
 
+	if ! "${BOOTMODE}" && [ -n "${nanodroid_forcepart}" ]; then
+		local old_instpart="${INSTPART}"
+		INSTPART="${nanodroid_forcepart}"
+	fi
 	nanodroid_install_file bin/nanodroid-overlay bin
 	nanodroid_substitute bin/nanodroid-overlay
+	"${BOOTMODE}" || [ -z "${nanodroid_forcepart}" ] || INSTPART="${old_instpart}"
 }
 
 ##########################################################################################
@@ -1212,9 +1267,19 @@ install_bromite_webview () {
 			rm -rf "${STORAGE}/Android/data/org.bromite.webview"
 		fi
 
+		if ! "${BOOTMODE}" && [ -n "${nanodroid_forcepart_bromite}" ]; then
+			local old_instpart="${INSTPART}"
+			INSTPART="${nanodroid_forcepart_bromite}"
+		fi
 		[ "${nanodroid_bromite_multilib}" -ne 1 ] || multilib="multilib"
 		nanodroid_install_apk "BromiteWebView_${BROMITE_ARCH}" BromiteWebView "${multilib}"
+		case "${INSTPART}" in
+			/system)	INSTPART=/system;;
+			/system_root)	INSTPART=/system;;
+			*)		INSTPART=/;;
+		esac
 		nanodroid_install_file "${overlaydir}/BromiteOverlay.apk"
+		"${BOOTMODE}" || [ -z "${nanodroid_forcepart_bromite}" ] || INSTPART="${old_instpart}"
 	fi
 }
 
@@ -1225,8 +1290,13 @@ install_bromite_webview () {
 install_osmand () {
 	if [ "${MODID}" = "NanoDroid_OsmAnd" ]; then
 		print_info " << with OsmAnd"
+		if ! "${BOOTMODE}" && [ -n "${nanodroid_forcepart_osmand}" ]; then
+			local old_instpart="${INSTPART}"
+			INSTPART="${nanodroid_forcepart_osmand}"
+		fi
 		nanodroid_install_apk OsmAnd
 		nanodroid_install_apk OsmAnd_ContourLines
+		"${BOOTMODE}" || [ -z "${nanodroid_forcepart_osmand}" ] || INSTPART="${old_instpart}"
 	fi
 }
 
@@ -1252,11 +1322,9 @@ install_addond () {
 ##########################################################################################
 
 installinfo_add () {
-	if [ "${MODE}" = "SYSTEM" ]; then
-		for file in "${@}"; do
-			echo "${file}" >> "${NANODROID_LIST}"
-		done
-	fi
+	[ "${MODE}" != "SYSTEM" ] || for file in "${@}"; do
+		echo "${file}" >> "${NANODROID_LIST}"
+	done
 }
 
 ##########################################################################################
@@ -1280,16 +1348,16 @@ nanodroid_install_file () {
 
 	decho "    installing file: ${xfile}"
 
-	mkdir -p "${MODPATH}/system/${dir}/"
-	cp "${source}" "${MODPATH}/system/${dir}/${xfile}" || \
+	mkdir -p "${MODPATH}${INSTPART}/${dir}/"
+	cp "${source}" "${MODPATH}${INSTPART}/${dir}/${xfile}" || \
 		error "failed to install ${xfile}"
 
 	case "${2}" in
-		bin ) set_perm_bin "${MODPATH}/system/${dir}/${xfile}" ;;
-		*   ) set_perm_data "${MODPATH}/system/${dir}/${xfile}" ;;
+		bin ) set_perm_bin "${MODPATH}${INSTPART}/${dir}/${xfile}" ;;
+		*   ) set_perm_data "${MODPATH}${INSTPART}/${dir}/${xfile}" ;;
 	esac
 
-	installinfo_add "/system/${dir}/${xfile}"
+	installinfo_add "${INSTPART}/${dir}/${xfile}"
 }
 
 ##########################################################################################
@@ -1298,7 +1366,7 @@ nanodroid_install_file () {
 
 nanodroid_install_dir () {
 	dir="${1}"
-	[ -n "${2}" ] && dest="${2}" || dest="/system/${dir}"
+	[ -n "${2}" ] && dest="${2}" || dest="${INSTPART}/${dir}"
 
 	[ ! -d "${INSTALLER}/system/${dir}" ] && \
 		error "dir: ${dir} not found"
@@ -1315,8 +1383,8 @@ nanodroid_install_dir () {
 	esac
 
 	find "${INSTALLER}/system/${dir}" -type f | \
-			sed -e "s,^${INSTALLER},,g" | \
-			installinfo_add
+		sed -e "s,^${INSTALLER}/system,${INSTPART},g" | \
+		installinfo_add
 }
 
 ##########################################################################################
@@ -1333,7 +1401,7 @@ nanodroid_install_apk () {
 	for sdir in system/app system/priv-app; do
 		if [ -f "${INSTALLER}/${sdir}/${app}/${app}.apk.zst" ]; then
 			source="${INSTALLER}/${sdir}/${app}/${app}.apk"
-			dir="system/$(basename "${sdir}")"
+			dir="${INSTPART#/}/$(basename "${sdir}")"
 			break
 		fi
 	done
@@ -1359,17 +1427,14 @@ nanodroid_install_apk () {
 	decho "    installing app: ${app}"
 	decho "      from: ${source}"
 	decho "      into: ${dest} [${dest_apk}]"
-	cp "${source}.zst" "${dest}/${dest_apk}.zst" || \
-		error "failed to install ${source} to ${dest}"
-
-	"${ZSTD}" -fd --rm "${dest}/${dest_apk}.zst" || \
-		error "failed to decompress ${dest}/${dest_apk}.zst"
+	"${ZSTD}" -fd -o "${dest}/${dest_apk}" "${source}.zst" || \
+		error "failed to install ${dest}/${dest_apk}"
 
 	installinfo_add "${dest}/${dest_apk}"
 
 	nanodroid_install_lib "${dest}/${dest_apk}" "${3}"
 
-	[ "${dir}" = "system/priv-app" ] && create_privapp_permissions_whitelist "${app}"
+	[ "${sdir}" = "system/priv-app" ] && create_privapp_permissions_whitelist "${app}"
 
 	set_perm_data -r "${dest}"
 }
@@ -1387,8 +1452,8 @@ nanodroid_install_lib () {
 
 	if [ "${UNFOLD_APP_DIR}" -eq 1 ]; then
 		case "${ARCH}" in
-			arm | x86 )      libd="${MODPATH}/system/lib"   ;;
-			arm64 | x86_64 ) libd="${MODPATH}/system/lib64" ;;
+			arm | x86 )      libd="${MODPATH}${INSTPART}/lib"   ;;
+			arm64 | x86_64 ) libd="${MODPATH}${INSTPART}/lib64" ;;
 		esac
 	else
 		libd="${dest}/lib"
@@ -1452,7 +1517,7 @@ nanodroid_substitute () {
 	dir="$(dirname "${1}")"
 	file="$(basename "${1}")"
 
-	target="${MODPATH}/system/${dir}/${file}"
+	target="${MODPATH}${INSTPART}/${dir}/${file}"
 
 	[ ! -f "${target}" ] && error "file: ${file} not found"
 
@@ -1623,7 +1688,7 @@ check_cfg_setup () {
 	[ -z "${nanodroid_fdroid}" ] && set_prop nanodroid_fdroid 1
 	[ -z "${nanodroid_apps}" ] && set_prop nanodroid_apps 1
 	[ -z "${nanodroid_overlay}" ] && set_prop nanodroid_overlay "$([ "${MODID}" != "NanoDroid" ]; echo "${?}")"
-	[ -z "${nanodroid_forcesystem}" ] && set_prop nanodroid_forcesystem 0
+	[ -z "${nanodroid_forcesystemize}" ] && set_prop nanodroid_forcesystemize 0
 	[ -z "${nanodroid_init+x}" ] && set_prop nanodroid_init "${nanodroid_all_init}"
 
 	# in NanoDroid 22.7 nanodroid_init has changed

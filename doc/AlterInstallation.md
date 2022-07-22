@@ -8,7 +8,7 @@ Table of Contents
          * [nanodroid_apps](#nanodroid_apps)
          * [nanodroid_overlay](#nanodroid_overlay)
          * [nanodroid_init](#nanodroid_init)
-         * [nanodroid_forcesystem](#nanodroid_forcesystem)
+         * [nanodroid_forcesystemize](#nanodroid_forcesystemize)
 
 Created by [gh-md-toc](https://github.com/ekalinin/github-markdown-toc)
 
@@ -55,7 +55,7 @@ see [> Applications](Applications.md) for detailed information
 
 ### nanodroid_overlay
 
-whether to utilize the NanoDroid-Overlay to pseudo-debloat `/system` applications in Magisk Mode, or force-debloat on System Mode
+whether to utilize the NanoDroid-Overlay to stub-debloat system applications in Magisk Mode, or force-debloat on System Mode
 
 **supported packages:** *Full package*
 
@@ -88,15 +88,15 @@ Leave an empty quote (`nanodroid_init=""`) to not install any init script
 
 see [init-scripts](../README.md#init-scripts) for more information
 
-### nanodroid_forcesystem
+### nanodroid_forcesystemize
 
-Force `/system` installation instrad of Magisk Module installation (if Magisk available)
+Force systemized installation instrad of Magisk Module installation (if Magisk available)
 
 **Note:** You shouldn't touch this settings unless you really know what you are doing.
 
 **supported packages:** *Full*, *F-Droid*, *Bromite System WebView*, *OSM Android*
 
-**Syntax:** `nanodroid_forcesystem=0`, value can be 0 or 1:
+**Syntax:** `nanodroid_forcesystemize=0`, value can be 0 or 1:
 
 * 0 = auto detect installation mode (default)
-* 1 = force /system installation
+* 1 = force systemized installation
