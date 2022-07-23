@@ -681,7 +681,7 @@ create_privapp_permissions_whitelist () {
 
 	echo '<?xml version="1.0" encoding="utf-8"?>
 <permissions>
-    <privapp-permissions package="'${apk_name}'">' > "${app_whitelist}"
+	<privapp-permissions package="'${apk_name}'">' > "${app_whitelist}"
 
 	cat "${apk_list}" | while read perm; do
 		if grep -q "${perm}" "${sys_list}"; then
@@ -850,20 +850,11 @@ detect_mode () {
 		0 | *)
 			MODE_DETECT=detected
 			MODE=SYSTEM
-			MAGISK_VER_CODE=0
 
-			if [ ! -f "${NANODROID_LIST}" ]; then
-				if [ -f /data/adb/magisk/util_functions.sh ]; then
-					. /data/adb/magisk/util_functions.sh
-				elif [ -f /data/magisk/util_functions.sh ]; then
-					. /data/magisk/util_functions.sh
-				fi
-
-				if [ "${MAGISK_VER_CODE}" -ge 19000 ]; then
-					MODE=MAGISK
-				else
-					MODE=SYSTEM
-				fi
+			if "${BOOTMODE}"; then
+				[ ! -f /data/adb/magisk/util_functions.sh ] || . /data/adb/magisk/util_functions.sh
+				[ ! -f /data/magisk/util_functions.sh ] || . /data/magisk/util_functions.sh
+				[ "${MAGISK_VER_CODE:-0}" -lt 19000 ] || MODE=MAGISK
 			fi
 		;;
 	esac
