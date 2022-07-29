@@ -1191,7 +1191,7 @@ install_initd () {
 
 install_bromite_webview () {
 	if [ "${MODID}" = "NanoDroid_BromiteWebView" ]; then
-		local init_base overlaydir lib_suffix i
+		local init_base overlaydir lib_suffix i multilib
 		[ "$(uname -m)" = "aarch64" ] && lib_suffix=64
 		[ "$(uname -m)" = "x86_64"  ] && lib_suffix=64
 		for i in system_ext/overlay product/overlay overlay; do
@@ -1221,7 +1221,8 @@ install_bromite_webview () {
 			rm -rf "${STORAGE}/Android/data/org.bromite.webview"
 		fi
 
-		nanodroid_install_apk BromiteWebView_${BROMITE_ARCH} multilib BromiteWebView
+		[ "${nanodroid_bromite_multilib}" -ne 1 ] || multilib="multilib"
+		nanodroid_install_apk "BromiteWebView_${BROMITE_ARCH}" BromiteWebView "${multilib}"
 		nanodroid_install_file "${overlaydir}/BromiteOverlay.apk"
 	fi
 }
@@ -1333,8 +1334,7 @@ nanodroid_install_dir () {
 
 nanodroid_install_apk () {
 	app="${1}"
-	multilib="${2}"
-	alias="${3}"
+	alias="${2}"
 
 	unset prefix
 	unset source
@@ -1376,7 +1376,7 @@ nanodroid_install_apk () {
 
 	installinfo_add "${dest}/${dest_apk}"
 
-	nanodroid_install_lib "${dest}/${dest_apk}" "${2}"
+	nanodroid_install_lib "${dest}/${dest_apk}" "${3}"
 
 	[ "${dir}" = "system/priv-app" ] && create_privapp_permissions_whitelist "${app}"
 
