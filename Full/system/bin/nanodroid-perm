@@ -86,14 +86,34 @@ user_install () {
 	esac
 }
 
+allow_networking () {
+	oldlist="$(settings get global uids_allowed_on_restricted_networks)"
+	newlist="$(echo "${oldlist}" | sed 's|;|\n|g')"
+	if echo "${newlist}" | grep -q "^${2}$"; then
+		echo "package ${1} already in LOS networking allowlist"
+		return
+	fi
+	newlist="$( { echo "${newlist}"; echo "${2}"; } | sort -nu)"
+	newlist="$(printf '%d;' ${newlist})"
+	newlist="${newlist%;}"
+	settings put global uids_allowed_on_restricted_networks "${newlist}"
+	echo "package ${1} added to LOS networking allowlist"
+}
+
 [[ $(whoami) = "root" ]] || [[ $(whoami) = "shell" ]] || error "not running as either ADB or root"
 
 gms_uid=$(get_uid ${microG})
+play_uid=$(get_uid ${PlayStore})
 
 if [ "$(getprop ro.build.version.sdk)" -ge 29 ]; then
 	# microG GmsCore needs to be installed as user app for all permissions to be granted
 	# see https://github.com/microg/android_packages_apps_GmsCore/issues/1100#issuecomment-711088518
 	user_install ${microG}
+	if settings list global | grep -q "^uids_allowed_on_restricted_networks="; then
+		# both need this on LOS-based ROMs in some situations like it restricting their internet for no reason
+		allow_networking ${microG} ${gms_uid}
+		allow_networking ${PlayStore} ${play_uid}
+	fi;
 fi
 
 # Fake Package Signature
