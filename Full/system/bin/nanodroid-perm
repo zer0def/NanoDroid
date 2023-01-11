@@ -25,9 +25,6 @@ nlpDejavu="org.fitchfamily.android.dejavu"
 nlpApple="org.microg.nlp.backend.apple"
 nlpBmap="org.openbmap.unifiedNlp"
 
-# GmsCore userId
-gms_uid=$(dumpsys package com.google.android.gms | awk -F= '/userId/{print $2; exit}')
-
 error () {
 	echo "!! ${@}"
 	exit 1
@@ -64,6 +61,10 @@ permissions () {
 	fi
 }
 
+get_uid () {
+	dumpsys package ${1} | awk -F= '/userId/{print $2; exit}'
+}
+
 get_app_location () {
 	pm list packages -f ${1} | sed 's|package:\(.*\)=[^=]*|\1|g'
 }
@@ -86,6 +87,8 @@ user_install () {
 }
 
 [[ $(whoami) = "root" ]] || [[ $(whoami) = "shell" ]] || error "not running as either ADB or root"
+
+gms_uid=$(get_uid ${microG})
 
 if [ "$(getprop ro.build.version.sdk)" -ge 29 ]; then
 	# microG GmsCore needs to be installed as user app for all permissions to be granted
