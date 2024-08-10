@@ -290,12 +290,27 @@ grab_apk_from_github () {
 	download_apk_common "${apk_dest}" "${3}" "${apk_url}" github
 }
 
+# try to download release asset ending with .apk
 grab_apk_from_gitlab () {
-	[ "${BP_DEBUG}" = '1' ] && debug_message newline "curl ${curl_opts} -s -N \"https://gitlab.com/${1}/-/tags\"" "\n"
-	local apk_tag="$(curl -A "${useragent}" -s -N "https://gitlab.com/${1}/-/tags" | grep -m1 ref-name | sed 's/.*\">//;s/<\/.*//')"
-	local apk_url="$(curl -A "${useragent}" -s -N "https://gitlab.com/${1}/-/tags/${apk_tag}" | tr '<' '\n' | gawk -F \" '/uploads.*apk/{print $2}')"
-	local apk_url="https://gitlab.com${apk_url}"
+	local namespace="$(echo $1 | cut -d "/" -f1)"
+	local repo="$(echo $1 | cut -d "/" -f2)"
+
+	[ "${BP_DEBUG}" = '1' ] && debug_message newline "curl ${curl_opts} -s -N \"https://gitlab.com/api/v4/projects/${namespace}%2F${repo}/releases/\"" "\n"
+	local apk_url="$(curl -A "${useragent}" -s -N https://gitlab.com/api/v4/projects/${namespace}%2F${repo}/releases/ | jq -r '.[0].assets.links[].url' | grep '.apk')"
 	local apk_dest="${appsfolder[2]}/${2}/${3}"
+
+	download_apk_common "${apk_dest}" "${3}" "${apk_url}" gitlab
+}
+
+# aurora devs upload the finished apk in the release description instead of the assets so they get a custom downloader function
+grab_aurora_apk_from_gitlab () {
+	local namespace="$(echo $1 | cut -d "/" -f1)"
+	local repo="$(echo $1 | cut -d "/" -f2)"
+
+	[ "${BP_DEBUG}" = '1' ] && debug_message newline "curl ${curl_opts} -s -N \"https://gitlab.com/api/v4/projects/${namespace}%2F${repo}/releases/\"" "\n"
+	local apk_path="$(curl -A "${useragent}" -s -N "https://gitlab.com/api/v4/projects/${namespace}%2F${repo}/releases/" | jq -r '.[0].description' | grep ".apk" | cut -d "(" -f2 | cut -d ")" -f1)"
+	local apk_dest="${appsfolder[2]}/${2}/${3}"
+  local apk_url="https://gitlab.com/${1}${apk_path}"
 
 	download_apk_common "${apk_dest}" "${3}" "${apk_url}" gitlab
 }
