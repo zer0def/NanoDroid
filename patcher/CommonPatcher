@@ -14,6 +14,11 @@ TMPDIR=/dev/tmp/install
 
 PATCHER_ADDOND_DATA=/system/addon.d/nanodroid_patcher
 
+dalvikvm="/system/bin/dalvikvm"
+[ ! -f "/system/bin/dalvikvm" ] \
+	&& [ -f "/apex/com.android.art/bin/dalvikvm" ] \
+	&& dalvikvm="/apex/com.android.art/bin/dalvikvm"
+
 ##########################################################################################
 # Generic Functions
 ##########################################################################################
@@ -384,7 +389,7 @@ detect_arch () {
 
 	V_EX=${BASEDIR}/vdexExtractor.${ARCH}
 
-	DALVIKVM_ARCH=$("${FILE}" -m "${BASEDIR}/magic.mgc" -L /system/bin/dalvikvm)
+	DALVIKVM_ARCH=$("${FILE}" -m "${BASEDIR}/magic.mgc" -L "$dalvikvm")
 
 	case ${DALVIKVM_ARCH} in
 		*32-bit* )
@@ -411,8 +416,8 @@ detect_arch () {
 detect_sdk () {
 	SDK_VERSION=$(grep_prop ro.build.version.sdk)
 
-	[ "${SDK_VERSION}" -gt 30 ] && \
-		error "Android versions beyond Android 11 are not yet supported"
+	[ "${SDK_VERSION}" -gt 34 ] && \
+		error "Android versions beyond Android 14 are not yet supported"
 
 	[ "${SDK_VERSION}" -lt 16 ] && \
 		error "Android versions before Jelly Bean are not supported"
@@ -430,7 +435,8 @@ detect_sdk () {
 
 	if [ "${SDK_VERSION}" -gt 25 ]; then
 		DEXPATCHER="${BASEDIR}/dexpatcher_26.dex"
-	else	DEXPATCHER="${BASEDIR}/dexpatcher_19.dex"
+	else
+		DEXPATCHER="${BASEDIR}/dexpatcher_19.dex"
 	fi
 
 	PATCH_CORE="${BASEDIR}/core_services.jar.dex"
@@ -438,9 +444,25 @@ detect_sdk () {
 	if [ "${SDK_VERSION}" -lt 24 ]; then
 		ui_print " > Android 4.1 - 6.0 (SDK ${SDK_VERSION}) detected"
 		PATCH_HOOK="${BASEDIR}/hook_4.1-6.0_services.jar.dex"
-	else
+	elif [ "${SDK_VERSION}" -lt 30 ]; then
 		ui_print " > Android 7.0 - 10.0 (SDK ${SDK_VERSION}) detected"
 		PATCH_HOOK="${BASEDIR}/hook_7.0-10.0_services.jar.dex"
+	elif [ "${SDK_VERSION}" -eq 30 ]; then
+		ui_print " > Android 11.0 (SDK ${SDK_VERSION}) detected"
+		PATCH_HOOK="${BASEDIR}/hook_11.0_services.jar.dex"
+		PATCH_CORE="${BASEDIR}/core_11.0-12.1_services.jar.dex"
+	elif [ "${SDK_VERSION}" -lt 33 ]; then
+		ui_print " > Android 12.0 - 12.1 (SDK ${SDK_VERSION}) detected"
+		PATCH_HOOK="${BASEDIR}/hook_12.0_services.jar.dex"
+		PATCH_CORE="${BASEDIR}/core_11.0-12.1_services.jar.dex"
+	elif [ "$SDK_VERSION" -lt 34 ]; then
+		ui_print " > Android 13.0 (SDK ${SDK_VERSION}) detected"
+		PATCH_HOOK="${BASEDIR}/hook_13.0_services.jar.dex"
+		PATCH_CORE="${BASEDIR}/core_13.0_services.jar.dex"
+	else
+		ui_print " > Android 14.0+ (SDK ${SDK_VERSION}) detected"
+		PATCH_HOOK="${BASEDIR}/hook_14.0_services.jar.dex"
+		PATCH_CORE="${BASEDIR}/core_14.0_services.jar.dex"
 	fi
 
 	[ "${SDK_VERSION}" -gt 21 ] && DEX_OPTS="--multi-dex-threaded"
@@ -528,7 +550,7 @@ ${frame}/voip-common.jar:${frame}/ims-common.jar:$frame}/telephony-ext.jar"
 			export BOOTCLASSPATH=${ND_BOOTCLASSPATH}
 		fi
 
-		supported_opts=$(/system/bin/dalvikvm --help 2>&1)
+		supported_opts=$("$dalvikvm" --help 2>&1)
 
 		echo "${supported_opts}" | grep -q "\[no\]image-dex2oat" && DALVIKVM_OPTS="${DALVIKVM_OPTS} -Xnoimage-dex2oat"
 		echo "${supported_opts}" | grep -q "verbose:.*gc" && DALVIKVM_OPTS="${DALVIKVM_OPTS} -verbose:gc"
@@ -540,7 +562,7 @@ ${frame}/voip-common.jar:${frame}/ims-common.jar:$frame}/telephony-ext.jar"
 		echo " *** DALVIKVM_OPTS=${DALVIKVM_OPTS}"
 	fi
 
-	/system/bin/dalvikvm -Xnoimage-dex2oat ${DALVIKVM_OPTS} "${@}"
+	"${dalvikvm}" -Xnoimage-dex2oat ${DALVIKVM_OPTS} "${@}"
 }
 
 deodex_vdex () {
@@ -648,6 +670,24 @@ patch_services () {
 	${ZIPB} -j "${BASEDIR}/services.jar" \
 		"${BASEDIR}/services.jar-mod"/classes*.dex || \
 			error "zip failed"
+
+	dex2oat_arch="dex2oat"
+	echo "$ARCH" | grep -q "64" && dex2oat_arch="dex2oat64"
+
+	if [ "${SDK_VERSION}" -gt 30 ]; then
+		# Android 12+ requires an extra step to prevent a boot loop on subsequent boots (2nd boot and onwards)
+		# since oat_file_manager.cc now includes a check if OAT (.odex/.vdex) files are loaded from "trusted"
+		# locations. As such we generate the optimization files to be placed in the correct location during
+		# install (eg /system/framework/oat/arm64/)
+		dex2oat="/system/bin/${dex2oat_arch}"
+		[ ! -f "$dex2oat" ] && dex2oat="/apex/com.android.art/bin/${dex2oat_arch}"
+
+		"${dex2oat}" \
+			--dex-file="${BASEDIR}/services.jar" \
+			--instruction-set="${ARCH}" \
+			--oat-file="${BASEDIR}/services.odex" \
+			|| error "failed to dex2oat services.jar"
+	fi
 }
 
 install_services () {
@@ -668,6 +708,15 @@ install_services () {
 	cp ${BASEDIR}/services.jar "${install_path}/system/framework/" \
 		|| error "failed to install services.jar"
 	set_perm_data "${install_path}/system/framework/services.jar"
+
+	if [ -f "$BASEDIR/services.odex" ]; then
+		mkdir -p "${install_path}/system/framework/oat/${ARCH}"
+		for ext in odex vdex; do
+			cp "$BASEDIR/services.${ext}" "${install_path}/system/framework/oat/${ARCH}/" \
+				|| error "failed to install services.${ext}"
+			set_perm_data "${install_path}/system/framework/oat/${ARCH}/services.${ext}"
+		done
+	fi
 
 	cp "${BASEDIR}/org.spoofing.apk" "${install_path}/system/framework/"
 	set_perm_data "${install_path}/system/framework/org.spoofing.apk"
@@ -693,11 +742,26 @@ install_addond () {
 	rm -rf ${PATCHER_ADDOND_DATA}
 	mkdir -p ${PATCHER_ADDOND_DATA}
 
-	for file in core_services.jar.dex dexpatcher_19.dex dexpatcher_26.dex \
-		hook_4.1-6.0_services.jar.dex hook_7.0-10.0_services.jar.dex \
-		baksmali_19.dex baksmali_24.dex baksmali_26.dex \
-		smali_19.dex smali_24.dex smali_26.dex \
-		magic.mgc org.spoofing.apk; do
+	for file in core_services.jar.dex \
+		core_11.0-12.1_services.jar.dex \
+		core_13.0_services.jar.dex \
+		core_14.0_services.jar.dex \
+		dexpatcher_19.dex \
+		dexpatcher_26.dex \
+		hook_4.1-6.0_services.jar.dex \
+		hook_7.0-10.0_services.jar.dex \
+		hook_11.0_services.jar.dex \
+		hook_12.0_services.jar.dex \
+		hook_13.0_services.jar.dex \
+		hook_14.0_services.jar.dex \
+		baksmali_19.dex \
+		baksmali_24.dex \
+		baksmali_26.dex \
+		smali_19.dex \
+		smali_24.dex \
+		smali_26.dex \
+		magic.mgc \
+		org.spoofing.apk; do
 		cp "${BASEDIR}/${file}" ${PATCHER_ADDOND_DATA}/
 	done
 
