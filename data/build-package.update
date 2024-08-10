@@ -125,7 +125,7 @@ grab_apps () {
 	grab_apk_from_github ${gh_AMAZE[@]}
 
 	# GitLab
-	grab_apk_from_gitlab ${gl_AURORAWARDEN[@]}
+	grab_aurora_apk_from_gitlab ${gl_AURORAWARDEN[@]}
 }
 
 update_apps () {
@@ -155,7 +155,7 @@ update_master () {
 	[ "${update_act[0]}" = "1" ] && grab_microg
 	[ "${update_act[7]}" = "1" ] && grab_apk_from_repo ${fd_AURORADROID[@]}
 	[ "${update_act[8]}" = "1" ] && grab_apk_from_repo ${fd_AURORASTORE[@]}
-	[ "${update_act[9]}" = "1" ] && grab_apk_from_gitlab ${gl_AURORASERVICES[@]}
+	[ "${update_act[9]}" = "1" ] && grab_aurora_apk_from_gitlab ${gl_AURORASERVICES[@]}
 	[ "${update_act[5]}" = "1" ] && grab_apk_from_repo ${fd_FDROID[@]}
 	[ "${update_act[6]}" = "1" ] && grab_apk_from_repo ${fd_FDROID_PE[@]}
 	[ "${update_act[10]}" = "1" ] && grab_apk_from_repo ${nlx_PHONESKY[@]}
