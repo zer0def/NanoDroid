@@ -35,7 +35,7 @@ appsfolder[9]="OsmAnd/system"
 appsfolder[10]="${CWD}/${appsfolder[9]}"
 appsfolder[11]="BromiteWebView/system"
 appsfolder[12]="${CWD}/${appsfolder[11]}"
-appsfolder[13]="MulchWebView/system"
+appsfolder[13]="CromiteWebView/system"
 appsfolder[14]="${CWD}/${appsfolder[13]}"
 
 # ripped-out
@@ -67,9 +67,14 @@ for opt in "${@}"; do
 		#	mk_pkg_bromite_webview
 		#;;
 
-		mulchwebview )
+		#mulchwebview )
+		#	check_nanodroid || error "run 'build-package pull' first!"
+		#	mk_pkg_mulch_webview
+		#;;
+
+		cromitewebview )
 			check_nanodroid || error "run 'build-package pull' first!"
-			mk_pkg_mulch_webview
+			mk_pkg_cromite_webview
 		;;
 
 		systest )
@@ -81,7 +86,8 @@ for opt in "${@}"; do
 			mk_pkg_full
 			#mk_pkg_uninstaller
 			#mk_pkg_bromite_webview
-			mk_pkg_mulch_webview
+			#mk_pkg_mulch_webview
+			mk_pkg_cromite_webview
 			#mk_pkg_systest
 			#create_report
 		;;

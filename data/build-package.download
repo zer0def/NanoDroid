@@ -208,8 +208,8 @@ update_indices () {
 	echo " ++ Briar"
 	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_briar}").index-v1.jar" "${repo_briar}"
 
-	echo " ++ DivestOS"
-	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_divestos}").index-v1.jar" "${repo_divestos}"
+	#echo " ++ DivestOS"
+	#update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_divestos}").index-v1.jar" "${repo_divestos}"
 
 	#echo " ++ FrostNerd (Nebulo)"
 	#update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_frostnerd}").index-v1.jar" "${repo_frostnerd}"
@@ -275,10 +275,10 @@ grab_apk_from_repo () {
 			local repo="${repo_briar}"
 			local repo_p="Briar"
 		;;
-		divestos )
-			local repo="${repo_divestos}"
-			local repo_p="DivestOS"
-		;;
+		#divestos )
+		#	local repo="${repo_divestos}"
+		#	local repo_p="DivestOS"
+		#;;
 		#frostnerd )
 		#	local repo="${repo_frostnerd}"
 		#	local repo_p="FrostNerd"
@@ -347,6 +347,10 @@ grab_apk_from_repo () {
 			local apk_dest="${appsfolder[14]}/${3}/${4}"
 		;;
 
+		#com.android.webview )  # cromite
+		#	local apk_dest="${appsfolder[14]}/${3}/${4}"
+		#;;
+
 		* )
 			local apk_dest="${appsfolder[2]}/${3}/${4}"
 		;;
@@ -392,7 +396,8 @@ grab_apk_from_github () {
 	[ -z "${4}" ] || jq_filter=".assets[]|select(.name==\"${4}\").browser_download_url"
 	[ "${BP_DEBUG}" = '1' ] && debug_message normal "curl ${curl_opts} -s -N \"https://api.github.com/repos/${1}/releases\""
 	local apk_url="$(curl -A "${useragent}" -s "https://api.github.com/repos/${1}/releases/latest" | jq -r "${jq_filter}")"
-	local apk_dest="${appsfolder[2]}/${2}/${3}"
+	local apk_dest
+	echo "${3}" | grep -q CromiteWebView && apk_dest="${appsfolder[14]}/${2}/${3}" || apk_dest="${appsfolder[2]}/${2}/${3}"
 
 	download_apk_common "${apk_dest}" "${3}" "${apk_url}" github
 }

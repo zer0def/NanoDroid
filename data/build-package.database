@@ -15,7 +15,7 @@ fd_BINARYEYE=(fdroid de.markusfisch.android.binaryeye app BinaryEye)
 fd_BRIAR=(briar org.briarproject.briar.android app Briar)
 fd_CONVERSATIONS=(fdroid eu.siacs.conversations app Conversations)
 fd_DAVX5=(fdroid at.bitfire.davdroid app DAVx5)
-fd_EXTIRPATER=(divestos us.spotco.extirpater app Extirpater)
+fd_EXTIRPATER=(fdroid us.spotco.extirpater app Extirpater)
 fd_FAIREMAIL=(fdroid eu.faircode.email app FairEmail)
 fd_FCITX5_arm64=(fdroid org.fcitx.fcitx5.android app Fcitx5_arm64 arm64-v8a)
 fd_FCITX5ANTHY_arm64=(fdroid org.fcitx.fcitx5.android.plugin.anthy app Fcitx5Anthy_arm64 arm64-v8a)
@@ -25,10 +25,10 @@ fd_FOSSBROWSER=(fdroid de.baumann.browser app FOSSBrowser)
 fd_FREETOPP=(fdroid org.liberty.android.freeotpplus app FreeOTPPlus)
 fd_FROST=(fdroid com.pitchedapps.frost app Frost)
 fd_BREEZYWEATHER=(breezyweather org.breezyweather app BreezyWeather)
-fd_GMAPSWV=(divestos us.spotco.maps app GMapsWV)
+fd_GMAPSWV=(fdroid us.spotco.maps app GMapsWV)
 fd_GPSTEST=(fdroid com.android.gpstest.osmdroid app GPSTest)
 fd_HACKERSKEYBOARD=(fdroid org.pocketworkstation.pckeyboard app HackersKeyboard)
-fd_HYPATIA=(divestos us.spotco.malwarescanner app Hypatia)
+fd_HYPATIA=(fdroid us.spotco.malwarescanner app Hypatia)
 fd_IMAGEPIPE=(fdroid de.kaffeemitkoffein.imagepipe app Imagepipe)
 fd_INVIZIBLE=(fdroid pan.alexander.tordnscrypt.stable priv-app InviZible)
 fd_K9MAIL=(fdroid com.fsck.k9 app K9Mail)
@@ -159,6 +159,13 @@ mulch_WEBVIEW_arm64=(divestos us.spotco.mulch_wv app MulchWebView_arm64 arm64-v8
 mulch_WEBVIEW_arm=(divestos us.spotco.mulch_wv app MulchWebView_arm armeabi-v7a)
 
 ###
+# Cromite
+###
+
+gh_CROMITEWV_arm64=(uazo/cromite app CromiteWebView_arm64 arm64_SystemWebView.apk)
+gh_CROMITEWV_x64=(uazo/cromite app CromiteWebView_x64 x64_SystemWebView.apk)
+
+###
 # Files Database (for consistency check)
 ###
 
@@ -258,6 +265,8 @@ file_database=(
 
 	#"${appsfolder[3]}/MulchBrowser_arm64/MulchBrowser_arm64.apk.zst"
 	#"${appsfolder[3]}/MulchBrowser_arm/MulchBrowser_arm.apk.zst"
-	"${appsfolder[13]}/app/MulchWebView_arm/MulchWebView_arm.apk.zst"
-	"${appsfolder[13]}/app/MulchWebView_arm64/MulchWebView_arm64.apk.zst"
+	#"${appsfolder[13]}/app/MulchWebView_arm/MulchWebView_arm.apk.zst"
+	#"${appsfolder[13]}/app/MulchWebView_arm64/MulchWebView_arm64.apk.zst"
+	"${appsfolder[13]}/app/CromiteWebView_arm64/CromiteWebView_arm64.apk.zst"
+	#"${appsfolder[13]}/app/CromiteWebView_x64/CromiteWebView_x64.apk.zst"
 )
