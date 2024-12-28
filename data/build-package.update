@@ -142,8 +142,10 @@ grab_webview () {
 	#grab_apk_from_repo ${bm_WEBVIEW_arm[@]}
 	#grab_apk_from_repo ${bm_WEBVIEW_x64[@]}
 	#grab_apk_from_repo ${bm_WEBVIEW_x86[@]}
-	grab_apk_from_repo ${mulch_WEBVIEW_arm64[@]}
-	grab_apk_from_repo ${mulch_WEBVIEW_arm[@]}
+	#grab_apk_from_repo ${mulch_WEBVIEW_arm64[@]}
+	#grab_apk_from_repo ${mulch_WEBVIEW_arm[@]}
+	grab_apk_from_github ${gh_CROMITEWV_arm64[@]}
+	#grab_apk_from_github ${gh_CROMITEWV_x64[@]}
 }
 
 update_webview () {

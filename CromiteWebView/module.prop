@@ -1,0 +1,7 @@
+id=NanoDroid_CromiteWebView
+name=NanoDroid (Cromite WebView sub module)
+version=v23.2.99999999
+versionCode=24
+author=Nanolx
+description=NanoDroid (Cromite WebView sub module)
+minMagisk=1900

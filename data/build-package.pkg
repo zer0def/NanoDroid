@@ -45,6 +45,21 @@ mk_pkg_mulch_webview () {
 	create_mulch_webview_package
 }
 
+create_cromite_webview_package () {
+	ZIP="NanoDroid-CromiteWebView-${VERSION}.zip"
+
+	print_package CromiteWebView
+
+	zip_add CromiteWebView
+	zip_add_setup 0
+
+	sum_sign_package "${ZIP}"
+}
+
+mk_pkg_cromite_webview () {
+	create_cromite_webview_package
+}
+
 create_uninstaller_package() {
 	ZIP="NanoDroid-uninstaller-${VERSION}.zip"
 

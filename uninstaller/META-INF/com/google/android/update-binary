@@ -343,7 +343,7 @@ rm -f /system/addon.d/70-nanodroidpatcher.sh
 rm -f /data/adb/NanoDroid_Patched
 
 for module in NanoDroid NanoDroid_FDroid \
-	NanoDroid_BromiteWebView NanoDroid_MulchWebView NanoDroid_OsmAnd; do
+	NanoDroid_BromiteWebView NanoDroid_MulchWebView NanoDroid_CromiteWebView NanoDroid_OsmAnd; do
 	if [ -d "/data/adb/modules/${module}" ]; then
 		ui_print " << uninstalling: ${module}"
 		rm -rf "/data/adb/modules/${module}"
