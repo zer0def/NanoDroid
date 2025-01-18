@@ -1,33 +1,53 @@
 on:
-  push:
-    branches: ["personal"]
+  schedule:
+  - cron: '0 3 * * 6'
   workflow_dispatch:
 
 jobs:
   run:
-    runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ github.token }}
+    runs-on: ubuntu-22.04
     steps:
-    - run: |
-        [ "${GITHUB_TOKEN}" ] || exit 0
+    - name: run
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        #[ "${GITHUB_TOKEN}" ] || exit 0
 
         api="https://api.github.com/repos/${GITHUB_REPOSITORY}/releases"
         tag="$(date +%Y%m%d)" auth="Authorization: token ${GITHUB_TOKEN}"
-        id="$(curl -fs -H "${auth}" "${api}/tags/${tag}" | jq -r .id)"
-        [ -z "${id}" ] || [ "${id}" = "null" ] || exit 0
+        _id="$(curl -fs -H "${auth}" "${api}/tags/${tag}" | jq -r .id)"
+        [ -z "${_id}" ] || [ "${_id}" = "null" ] || exit 0
 
         git clone "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" .
+
+        for i in Full CromiteWebView; do
+          cat <<EOF >>"${i}/module.prop"
+        version=${tag}
+        versionCode=${tag}
+        EOF
+        done
+
         ./build-package pull
         #./build-package all ||:
-        ./build-package bromitewebview ||:
+        ./build-package cromitewebview ||:
 
-        id="$(echo "{\"tag_name\":\"${tag}\",\"draft\":true}" | curl -s -d@- -H "${auth}" -H "Content-Type: application/json" "${api}" | jq -r .id)"
-        [ -n "${id}" ] && [ "${id}" != "null" ] || exit 1
+        _id="$(echo "{\"tag_name\":\"${tag}\",\"name\":\"${tag}\",\"body\":\"${tag}\",\"draft\":true}" | curl -s -d@- -H "${auth}" -H "Content-Type: application/json" "${api}" | jq -r .id)"
+        [ -n "${_id}" ] && [ "${_id}" != "null" ] || exit 1
+
+        gh_release_put(){ curl -fs -H "${auth}" -H "Content-Type: application/octet-stream" -o /dev/null --data-binary "@${1}" "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/${_id}/assets?name=${2}"; }
 
         #for i in NanoDroid NanoDroid-BromiteWebView NanoDroid-MulchWebView; do
-        for i in NanoDroid-MulchWebView; do
-          curl -s --data-binary "@${i}-23.2.${tag}.zip" -o /dev/null -H "${auth}" -H "Content-Type: application/octet-stream" "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/${id}/assets?name=$(basename ${i}-23.2.${tag}.zip)"
-          curl -s --data-binary "@${i}-23.2.${tag}.zip.sha256" -o /dev/null -H "${auth}" -H "Content-Type: application/octet-stream" "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/${id}/assets?name=$(basename ${i}-23.2.${tag}.zip.sha256)"
+        for i in NanoDroid-CromiteWebView; do
+          cat <<EOF >"${i}.json"
+        {
+          "version":"${tag}",
+          "versionCode":"${tag}",
+          "zipUrl":"https://github.com/${GITHUB_REPOSITORY}/releases/download/${tag}/${i}-23.2.${tag}.zip",
+          "changelog":"https://raw.githubusercontent.com/zer0def/NanoDroid/personal/README.md"
+        }
+        EOF
+          gh_release_put "${i}.json" "${i}.json"
+          gh_release_put "${i}-23.2.${tag}.zip" "${i}-23.2.${tag}.zip"
+          gh_release_put "${i}-23.2.${tag}.zip.sha256" "${i}-23.2.${tag}.zip.sha256"
         done
-        echo '{"draft":false}' | curl -s -o /dev/null -XPATCH -d@- -H "${auth}" -H "Content-Type: application/json" "${api}/${id}"
+        echo '{"draft":false}' | curl -s -o /dev/null -XPATCH -d@- -H "${auth}" -H "Content-Type: application/json" "${api}/${_id}"
