@@ -393,7 +393,7 @@ grab_apk_from_url () {
 
 grab_apk_from_github () {
 	local jq_filter='.assets[0].browser_download_url'
-	[ -z "${4}" ] || jq_filter=".assets[]|select(.name==\"${4}\").browser_download_url"
+	[ -z "${4}" ] || jq_filter=".assets[]|select(.name|contains(\"${4}\")).browser_download_url"
 	[ "${BP_DEBUG}" = '1' ] && debug_message normal "curl ${curl_opts} -s -N \"https://api.github.com/repos/${1}/releases\""
 	local apk_url="$(curl -A "${useragent}" -s "https://api.github.com/repos/${1}/releases/latest" | jq -r "${jq_filter}")"
 	local apk_dest

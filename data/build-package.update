@@ -69,7 +69,9 @@ grab_apps () {
 	grab_apk_from_repo ${fd_PIXELKNOT[@]}
 	grab_apk_from_repo ${fd_PRIVACYBLUR[@]}
 	grab_apk_from_repo ${fd_PRIVACYBROWSER[@]}
-	grab_apk_from_repo ${fd_RCX[@]}
+	#grab_apk_from_repo ${fd_RCX[@]}
+	grab_apk_from_github ${gh_ROUNDSYNC[@]}
+	grab_apk_from_github ${gh_RSAF[@]}
 	#grab_apk_from_repo ${fd_SAGERNET[@]}
 	#grab_apk_from_repo ${fd_SCHILDICHAT[@]}
 	#grab_apk_from_repo ${fd_SCRAMBLEDEXIF[@]}

@@ -114,6 +114,8 @@ gh_OPENVPN=(schwabe/ics-openvpn app OpenVPN)
 gh_ORGANICMAPS=(organicmaps/organicmaps app OrganicMaps)
 gh_PILFERSHUSHJAMMER=(kaputnikGo/PilferShushJammer app PilferShushJammer)
 gh_PIXELKNOT=(guardianproject/PixelKnot app PixelKnot)
+gh_ROUNDSYNC=(newhinton/Round-Sync app RoundSync arm64-v8a)
+gh_RSAF=(chenxiaolong/RSAF app RSAF arm64-v8a)
 gh_SEAL=(JunkFood02/Seal app Seal)
 gh_SIGNALFOSS=(tw-hx/Signal-Android app Signal)
 gh_XPRIVACYLUA=(M66B/XPrivacyLua app XPrivacyLua)
@@ -205,7 +207,9 @@ file_database=(
 	"${appsfolder[3]}/PixelKnot/PixelKnot.apk.zst"
 	"${appsfolder[3]}/PrivacyBlur/PrivacyBlur.apk.zst"
 	"${appsfolder[3]}/PrivacyBrowser/PrivacyBrowser.apk.zst"
-	"${appsfolder[3]}/RCX/RCX.apk.zst"
+	#"${appsfolder[3]}/RCX/RCX.apk.zst"
+	"${appsfolder[3]}/RoundSync/RoundSync.apk.zst"
+	"${appsfolder[3]}/RSAF/RSAF.apk.zst"
 	#"${appsfolder[3]}/SagerNet/SagerNet.apk.zst"
 	#"${appsfolder[3]}/SchildiChat/SchildiChat.apk.zst"
 	#"${appsfolder[3]}/ScrambledExif/ScrambledExif.apk.zst"
