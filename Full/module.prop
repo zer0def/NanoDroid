@@ -1,7 +1,6 @@
 id=NanoDroid
 name=NanoDroid
-version=v23.2.99999999
-versionCode=88
-author=Nanolx
+author=originally Nanolx, forked by zer0def
 description=NanoDroid: FLOSS apps, pseudo-debloat and more.
 minMagisk=1900
+updateJson=https://github.com/zer0def/NanoDroid/releases/latest/download/NanoDroid.json
