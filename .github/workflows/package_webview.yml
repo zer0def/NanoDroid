@@ -1,0 +1,61 @@
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: run
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        git clone "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" .
+
+        version="$(curl -fs https://api.github.com/repos/uazo/cromite/releases/latest | jq -r .tag_name)" version_code=$(date +%s)
+        auth="Authorization: token ${GITHUB_TOKEN}" api="https://api.github.com/repos/${GITHUB_REPOSITORY}/releases"
+
+        # check tag's existence
+        _id="$(curl -fs -H "${auth}" "${api}/tags/${version%-*}" | jq -r .id)"
+        [ -z "${_id}" ] || [ "${_id}" = "null" ] || exit 0
+
+        # create new tag
+        _id="$(echo "{\"tag_name\":\"${version%-*}\",\"name\":\"${version%-*}\",\"body\":\"${version%-*}\",\"draft\":true}" | curl -s -d@- -H "${auth}" -H "Content-Type: application/json" "${api}" | jq -r .id)"
+        [ -n "${_id}" ] && [ "${_id}" != "null" ] || exit 0
+
+        gh_release_put(){ curl -fs -H "${auth}" -H "Content-Type: application/octet-stream" -o /dev/null --data-binary "@${1}" "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/${_id}/assets?name=${2}"; }
+
+        curl -sSLO https://github.com/uazo/cromite/releases/download/${version}/${i:-arm64}_SystemWebView.apk
+
+        cp CromiteWebView/module.prop .
+        cat <<EOF >>module.prop
+        updateJson=https://github.com/zer0def/NanoDroid/releases/latest/download/NanoDroid-CromiteWebView-${i:-arm64}.json
+        version=${version%-*}
+        versionCode=${version_code}
+        EOF
+
+        mkdir -p system/product/app/CromiteWebView/lib/arm{,64} \
+          system/product/app/webview system/product/overlay \
+          system/etc/init.d
+
+        touch system/product/app/webview/.replace
+        cp CromiteWebView/SystemWebviewOverlay.apk system/product/overlay/SystemWebviewOverlay.apk
+        #cp service.sh system/etc/init.d/10-com.android.webview
+
+        mv "${i:-arm64}_SystemWebView.apk" system/product/app/CromiteWebView/CromiteWebView.apk
+        unzip -l system/product/app/CromiteWebView/CromiteWebView.apk | awk '/-v7a\/.*\.so$/{print $NF}' | xargs -- unzip -qojd system/product/app/CromiteWebView/lib/arm system/product/app/CromiteWebView/CromiteWebView.apk
+        unzip -l system/product/app/CromiteWebView/CromiteWebView.apk | awk '/-v8a\/.*\.so$/{print $NF}' | xargs -- unzip -qojd system/product/app/CromiteWebView/lib/arm64 system/product/app/CromiteWebView/CromiteWebView.apk
+
+        zip -r "NanoDroid-CromiteWebView-${version%-*}-${i:-arm64}.zip" system/ module.prop service.sh
+        gh_release_put "NanoDroid-CromiteWebView-${version%-*}-${i:-arm64}.zip" "NanoDroid-CromiteWebView-${version%-*}-${i:-arm64}.zip"
+
+        cat <<EOF >"NanoDroid-CromiteWebView-${i:-arm64}.json"
+        {
+          "version":"${version%-*}",
+          "versionCode":"${version_code}",
+          "zipUrl":"https://github.com/${GITHUB_REPOSITORY}/releases/download/${version%-*}/NanoDroid-CromiteWebView-${version%-*}-${i:-arm64}.zip",
+          "changelog":"https://raw.githubusercontent.com/zer0def/NanoDroid/personal/README.md"
+        }
+        EOF
+        gh_release_put "NanoDroid-CromiteWebView-${i:-arm64}.json" "NanoDroid-CromiteWebView-${i:-arm64}.json"
+
+        echo "{\"draft\":false}" | curl -s -d@- -o /dev/null -XPATCH -H "${auth}" -H "Content-Type: application/json" "${api}/${_id}"
