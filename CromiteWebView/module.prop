@@ -3,4 +3,3 @@ name=NanoDroid (Cromite WebView sub module)
 author=originally Nanolx, forked by zer0def
 description=NanoDroid (Cromite WebView sub module)
 minMagisk=1900
-updateJson=https://github.com/zer0def/NanoDroid/releases/latest/download/NanoDroid-CromiteWebView.json
