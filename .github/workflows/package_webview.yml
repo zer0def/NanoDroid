@@ -27,8 +27,8 @@ jobs:
         curl -sSLO https://github.com/uazo/cromite/releases/download/${version}/${i:-arm64}_SystemWebView.apk
 
         cp CromiteWebView/module.prop .
+        #updateJson=https://github.com/zer0def/NanoDroid/releases/latest/download/NanoDroid-CromiteWebView-${i:-arm64}.json
         cat <<EOF >>module.prop
-        updateJson=https://github.com/zer0def/NanoDroid/releases/latest/download/NanoDroid-CromiteWebView-${i:-arm64}.json
         version=${version%-*}
         versionCode=${version_code}
         EOF
