@@ -1,4 +1,4 @@
-#!/sbin/sh
+#!/system/bin/sh
 
 VERSION=23.2.99999999
 NANODROID_UPGRADE=0
@@ -468,18 +468,19 @@ parse_aapt_dump_xmltree(){
 		case "${cur_type}" in
 			E:)  # entity
 				indent="$(echo "${i}" | awk -F'[^ ]' '{print length($1)}')"
-				[ -z "${prev_type}" ] || [ "${prev_type}" = "C:" ] || echo -n ">"
+				[ -z "${prev_type}" ] || [ "${prev_type}" = "C:" ] || [ "${prev_type}" = "T:" ] || echo -n ">"
 				[ -z "${prev_type}" ] || [ "$((${prev_indent:=0}-${indent}))" -lt 0 ] || for j in $(seq "$((${prev_indent:=0}-${indent}))" "-${step:=2}" "$((${indent}-${step}))"); do
-					echo -ne "\n</${entity_stack##* }>"
+					echo -ne "</${entity_stack##* }>"
 					entity_stack="${entity_stack% *}"
 				done
-				echo -ne "\n<$(echo -n "${i}" | awk '{print $2}')"
+				echo -ne "<$(echo -n "${i}" | awk '{print $2}')"
 				entity_stack="${entity_stack} $(echo "${i}" | awk '{print $2}')"
 				prev_indent="${indent}"
 				;;
 			A:)  # attribute
 				key="$(echo "${i}" | awk '{print $2}' | awk -F= '{print $1}')"
-				value="${i#*=}"
+				# kinda cheating here, should probably copy verbatim only when line has "Raw:", otherwise wrap in quotes?
+				[ "${key}" = "availableByDefault" ] && value="\"${i#*=}\"" || value="${i#*=}"
 				case "${value}" in
 					"(type 0x12)"*) [ "${value#*)}" = "0x0" ] && value='"false"' || value='"true"';;
 					"(type 0x10)"*) value="$(printf '%d' "${value#*)}")";;
@@ -493,13 +494,18 @@ parse_aapt_dump_xmltree(){
 				echo -n ">${tmp%*\"}"
 				unset tmp
 				;;
+			T:)  # content
+				tmp="${i#*T: \'}"
+				echo -n ">${tmp%*\'}"
+				unset tmp
+				;;
 		esac
 		prev_type="${cur_type}"
 	done <&0
-	[ "${prev_type}" = "C:" ] || echo -n ">"
+	[ "${prev_type}" = "C:" ] || [ "${prev_type}" = "T:" ] || echo -n ">"
 
 	until [ -z "${entity_stack}" ]; do
-		echo -ne "\n</${entity_stack##* }>"
+		echo -ne "</${entity_stack##* }>"
 		entity_stack="${entity_stack% *}"
 	done
 }
@@ -677,7 +683,8 @@ dump_system_privapp_permissions () {
 
 	rm -f "${sys_list}"
 
-	"${AAPT}" dump xmltree /system/framework/framework-res.apk AndroidManifest.xml | \
+	sh -c "[ '${SDK_VERSION}' -ge 34 ] && '${AAPT2}' dump xmltree --file AndroidManifest.xml /system/framework/framework-res.apk \
+		|| '${AAPT}' dump xmltree /system/framework/framework-res.apk AndroidManifest.xml" | \
 		tr -d '\n' | sed -e 's/E:/\n/g' > "${tmp_list}"
 
 	for pattern in	"(type 0x11)0x[1357]2" "(type 0x11)0xc212" \
@@ -691,7 +698,7 @@ dump_system_privapp_permissions () {
 
 create_privapp_permissions_whitelist () {
 	local apk="${MODPATH}${INSTPART}/priv-app/${1}/${1}.apk"
-	local apk_name="$("${AAPT}" dump badging "${apk}" | awk -F \' '/^package: name/{print $2}')"
+	local apk_name="$(sh -c "[ '${SDK_VERSION}' -ge 34 ] && '${AAPT2}' dump badging '${apk}' || '${AAPT}' dump badging '${apk}'" | awk -F \' '/^package: name/{print $2}')"
 	local apk_list="${TMPDIR}/${apk_name}.list"
 
 	local sys_list="${TMPDIR}/privapp-permissions.list"
@@ -701,7 +708,7 @@ create_privapp_permissions_whitelist () {
 
 	[ ! -f "${sys_list}" ] && dump_system_privapp_permissions
 
-	"${AAPT}" dump permissions "${apk}" | \
+	sh -c "[ '${SDK_VERSION}' -ge 34 ] && '${AAPT2}' dump permissions '${apk}' || '${AAPT}' dump permissions '${apk}'" | \
 		awk -F \' '/^uses-permission:/{print $2}' > "${apk_list}"
 
 	echo '<?xml version="1.0" encoding="utf-8"?>
@@ -828,11 +835,12 @@ detect_arch () {
 
 	UNZIP="${INSTALLER}/unzip.${BIN_ARCH}"
 	AAPT="${INSTALLER}/aapt.${BIN_ARCH}"
+	AAPT2="${INSTALLER}/aapt2.${BIN_ARCH}"
 	ZSTD="${INSTALLER}/zstd.${BIN_ARCH}"
 	OPENSSL="${INSTALLER}/openssl.${BIN_ARCH}"
 	ZIP="${INSTALLER}/zip.${BIN_ARCH}"
 	ZIPALIGN="${INSTALLER}/zipalign.${BIN_ARCH}"
-	chmod +x "${UNZIP}" "${AAPT}" "${ZSTD}"
+	chmod +x "${UNZIP}" "${AAPT}" "${AAPT2}" "${ZSTD}"
 
 	if [[ "${SDK_VERSION}" -lt 21 ]]; then
 		UNFOLD_APP_DIR=1
@@ -1212,16 +1220,21 @@ install_webview () {
 		for i in system_ext/overlay product/overlay overlay; do
 			[ -d "/system/${i}" ] && overlaydir="${i}" && break
 		done
-		:||{
 		mkdir -p "${TMPDIR}/syswebview/res/xml" "${INSTALLER}/system/${overlaydir}"
 		[ -z "${WEBVIEW_SIG}" ] || _signature="<signature>${WEBVIEW_SIG}</signature>"
-		"${AAPT}" dump xmltree /system/framework/framework-res.apk res/xml/config_webview_packages.xml | \
-			parse_aapt_dump_xmltree | sed "s|</webviewproviders>|<webviewprovider availableByDefault=\"true\" description=\"${WEBVIEW_DESC}\" packageName=\"${WEBVIEW_PKG}\">${_signature}</webviewprovider></webviewproviders>|g" > "${TMPDIR}/syswebview/res/xml/config_webview_packages.xml"
-		"${AAPT}" package -f -M "${INSTALLER}/AndroidManifest.xml" -I /system/framework/framework-res.apk -S "${TMPDIR}/syswebview/res" -F "${TMPDIR}/SystemWebviewOverlay.apk" --target-sdk-version "$(grep_prop ro.system.build.version.sdk)"
+		sh -c "[ '${SDK_VERSION}' -ge 34 ] && '${AAPT2}' dump xmltree --file res/xml/config_webview_packages.xml /system/framework/framework-res.apk || '${AAPT}' dump xmltree /system/framework/framework-res.apk res/xml/config_webview_packages.xml" | parse_aapt_dump_xmltree | 
+				sed -e 's|<webviewproviders>|<webviewproviders>\n|g' -e 's|</webviewproviders>|\n</webviewproviders>|g' | \
+				sed -e "/${WEBVIEW_PKG}/d" -e "s|</webviewproviders>|<webviewprovider availableByDefault=\"true\" description=\"${WEBVIEW_DESC}\" packageName=\"${WEBVIEW_PKG}\">${_signature}</webviewprovider></webviewproviders>|g" > "${TMPDIR}/syswebview/res/xml/config_webview_packages.xml"
+		if [ "${SDK_VERSION}" -ge 34 ]; then
+			mkdir -p "${TMPDIR}/SystemWebviewOverlay"
+			"${AAPT2}" compile --dir "${TMPDIR}/syswebview/res" -o "${TMPDIR}/SystemWebviewOverlay"
+			"${AAPT2}" link --manifest "${INSTALLER}/AndroidManifest.xml" -I /system/framework/framework-res.apk -o "${TMPDIR}/SystemWebviewOverlay.apk" "${TMPDIR}/SystemWebviewOverlay/"*
+		else
+			"${AAPT}" package -f -M "${INSTALLER}/AndroidManifest.xml" -I /system/framework/framework-res.apk -S "${TMPDIR}/syswebview/res" -F "${TMPDIR}/SystemWebviewOverlay.apk" --target-sdk-version "$(grep_prop ro.system.build.version.sdk)"
+		fi
 		"${ZIPALIGN}" 4 "${TMPDIR}/SystemWebviewOverlay.apk" "${INSTALLER}/system/${overlaydir}/SystemWebviewOverlay.apk"
 		jar_sign "${INSTALLER}/system/${overlaydir}/SystemWebviewOverlay.apk"
 		apk_sign "${INSTALLER}/system/${overlaydir}/SystemWebviewOverlay.apk"
-		}
 		print_info " << with ${MODID#*_}"
 
 		case "${ARCH}" in
@@ -1438,13 +1451,13 @@ nanodroid_install_lib () {
 
 				case "${srcdir}" in
 					*arm64*  ) decho "      ${app}: installing arm64 libs"
-						   lib_arch=arm64 ;;
+							lib_arch=arm64 ;;
 					*arm*	 ) decho "      ${app}: installing arm libs"
-						   lib_arch=arm ;;
+							lib_arch=arm ;;
 					*x86_64* ) decho "      ${app}: installing x86_64 libs"
-						   lib_arch=x86_64 ;;
+							lib_arch=x86_64 ;;
 					*x86*	 ) decho "      ${app}: installing x86 libs"
-						   lib_arch=x86 ;;
+							lib_arch=x86 ;;
 				esac
 
 				decho "        from: ${srcdir}"

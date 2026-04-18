@@ -1,4 +1,4 @@
-#!/sbin/sh
+#!/system/bin/sh
 
 OUTFD="${2}"
 ZIP="${3}"

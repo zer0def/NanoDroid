@@ -1,4 +1,4 @@
-#!/sbin/sh
+#!/system/bin/sh
 ##########################################################################################
 #
 # NanoDroid System Testing Script
@@ -335,14 +335,16 @@ system_test () {
 		arm | arm64 )
 				FILE="${TMPDIR}/file.arm"
 				AAPT="${TMPDIR}/aapt.arm"
+				AAPT2="${TMPDIR}/aapt2.arm"
 		;;
 		x86 | x86_64 )
 				FILE="${TMPDIR}/file.x86"
 				AAPT="${TMPDIR}/aapt.x86"
+				AAPT2="${TMPDIR}/aapt2.x86"
 		;;
 	esac
 
-	chmod 0755 "${FILE}" "${AAPT}"
+	chmod 0755 "${FILE}" "${AAPT}" "${AAPT2}"
 
 	DALVIKVM_ARCH="$("${FILE}" -m "${BASEDIR}/magic.mgc" -L /system/bin/dalvikvm)"
 

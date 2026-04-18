@@ -1,4 +1,4 @@
-#!/sbin/sh
+#!/system/bin/sh
 
 umask 022
 OUTFD="${2}"
