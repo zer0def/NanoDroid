@@ -37,6 +37,24 @@ install_bromitewebview () {
 	fi
 }
 
+install_cromitewebview () {
+	# wait until boot completed
+	until [ "$(getprop sys.boot_completed)." = "1." ]; do sleep 1; done
+	_app=com.android.webview
+	_entry="$(pm list packages -f --show-versioncode | grep "=${_app} ")"
+	_apk="${_entry%%=*}"
+	_aapt2="$(command -v aapt2 || "${MODDIR}/system/bin/aapt2")"
+	_aapt="$(command -v aapt || "${MODDIR}/system/bin/aapt")"
+	if [ "$(getprop ro.build.version.sdk)" -ge 34 ]; then
+		_version="$("${_aapt2}" dump xmltree --file AndroidManifest.xml "${_apk##*:}" | grep ':versionCode(')"
+		_version="${_version##*=}"
+	else
+		_version="$("${_aapt}" dump xmltree "${_apk##*:}" AndroidManifest.xml | grep ':versionCode(')"
+		_version="$(printf '%d' "${_version##*)}")"
+	fi
+	sh -ec "[ -n '${_entry}' ] && [ '${_entry##*:}' = '${_version}' ]" || pm install -r "${_apk##*:}" || sh -c "pm uninstall '${_app}'; pm install -r '${_apk##*:}'"
+}
+
 case "${MODULE}" in
 	NanoDroid )
 		run_initscripts &
@@ -44,6 +62,10 @@ case "${MODULE}" in
 
 	NanoDroid_BromiteWebView )
 		install_bromitewebview &
+	;;
+
+	NanoDroid_CromiteWebView )
+		install_cromitewebview &
 	;;
 
 	* )

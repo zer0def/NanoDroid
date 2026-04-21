@@ -1265,6 +1265,12 @@ install_webview () {
 		mkdir -p "${MODPATH}${INSTPART}/${overlaydir}/"
 		cp "${INSTALLER}/SystemWebviewOverlay.apk" "${MODPATH}${INSTPART}/${overlaydir}/SystemWebviewOverlay.apk"
 		set_perm_data "${MODPATH}${INSTPART}/${overlaydir}/SystemWebviewOverlay.apk"
+
+		mkdir -p "${MODPATH}/system/bin"
+		cp "${AAPT}"  "${MODPATH}/system/bin/aapt"
+		cp "${AAPT2}" "${MODPATH}/system/bin/aapt2"
+		chmod 0755 "${MODPATH}/system/bin"*
+
 		"${BOOTMODE}" || [ -z "${nanodroid_forcepart_webview}" ] || INSTPART="${old_instpart}"
 	fi
 }
