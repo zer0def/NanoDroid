@@ -25,6 +25,8 @@ repo_lublin="https://lublin.se/fdroid/repo"
 repo_skyjake="https://skyjake.github.io/fdroid/repo"
 repo_futo="https://app.futo.org/fdroid/repo"
 repo_kaffemitkoffein="https://kaffeemitkoffein.de/fdroid/repo"
+repo_keyguard="https://raw.githubusercontent.com/AChep/keyguard-repo-fdroid/master/repo"
+repo_ironfox="https://fdroid.ironfoxoss.org/fdroid/repo"
 
 useragent='Mozilla/5.0 (Windows NT 10.0; rv:109.0) Gecko/20100101 Firefox/115.0'
 
@@ -196,8 +198,8 @@ update_indices () {
 	echo " ++ microG"
 	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_microg}").index-v1.jar" "${repo_microg}"
 
-	echo " ++ Cromite"
-	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_cromite}").index-v1.jar" "${repo_cromite}"
+	#echo " ++ Cromite"  # intermittent availability
+	#update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_cromite}").index-v1.jar" "${repo_cromite}"
 
 	echo " ++ NewPipe"
 	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_newpipe}").index-v1.jar" "${repo_newpipe}"
@@ -241,8 +243,11 @@ update_indices () {
 	echo " ++ FUTO"
 	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_futo}").index-v1.jar" "${repo_futo}"
 
-	echo " ++ Kaffe Mit Koffein"
-	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_kaffemitkoffein}").index-v1.jar" "${repo_kaffemitkoffein}"
+	echo " ++ KeyGuard"
+	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_keyguard}").index-v1.jar" "${repo_keyguard}"
+
+	echo " ++ IronFox"
+	update_index "${repofolder}/$(awk -F/ '{print $3}' <<< "${repo_ironfox}").index-v1.jar" "${repo_ironfox}"
 }
 
 grab_apk_from_repo () {
@@ -351,6 +356,10 @@ grab_apk_from_repo () {
 		#	local apk_dest="${appsfolder[14]}/${3}/${4}"
 		#;;
 
+		org.axpos.aosmium_wv )
+			local apk_dest="${appsfolder[16]}/${3}/${4}"
+		;;
+
 		* )
 			local apk_dest="${appsfolder[2]}/${3}/${4}"
 		;;
@@ -395,10 +404,13 @@ grab_apk_from_github () {
 	local jq_filter='.assets[0].browser_download_url'
 	[ -z "${4}" ] || jq_filter=".assets[]|select(.name|contains(\"${4}\")).browser_download_url"
 	[ "${BP_DEBUG}" = '1' ] && debug_message normal "curl ${curl_opts} -s -N \"https://api.github.com/repos/${1}/releases\""
-	local apk_url="$(curl -A "${useragent}" -s "https://api.github.com/repos/${1}/releases/latest" | jq -r "${jq_filter}")"
+	local apk_url="$(curl -A "${useragent}" -s "https://api.github.com/repos/${1}/releases/latest" | jq -r "${jq_filter}" | head -n1)"
 	local apk_dest
-	echo "${3}" | grep -q CromiteWebView && apk_dest="${appsfolder[14]}/${2}/${3}" || apk_dest="${appsfolder[2]}/${2}/${3}"
-
+	case "${3}" in
+		*CromiteWebView*) apk_dest="${appsfolder[14]}/${2}/${3}";;
+		*AOSmiumWebView*) apk_dest="${appsfolder[16]}/${2}/${3}";;
+		*) apk_dest="${appsfolder[2]}/${2}/${3}";;
+	esac
 	download_apk_common "${apk_dest}" "${3}" "${apk_url}" github
 }
 

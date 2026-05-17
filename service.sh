@@ -1,5 +1,5 @@
 #!/system/bin/sh
-until [ "$(getprop sys.boot_completed)" = "1" ]; do sleep 1; done
+until [ "$(getprop sys.boot_completed)." = "1." ]; do sleep 1; done
 _app=com.android.webview  # should parameterize this somehow?
 _entry="$(pm list packages -f --show-versioncode | grep "=${_app} ")"
 _apk="${_entry%%=*}"

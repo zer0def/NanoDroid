@@ -15,49 +15,31 @@ mk_pkg_full () {
 	create_full_package
 }
 
-create_bromite_webview_package () {
-	ZIP="NanoDroid-BromiteWebView-${VERSION}.zip"
+create_webview_package () {
+	ZIP="NanoDroid-${1}-${VERSION}.zip"
 
-	print_package BromiteWebView
+	print_package "${1}"
 
-	zip_add BromiteWebView
+	zip_add "${1}"
 	zip_add_setup 0
 
 	sum_sign_package "${ZIP}"
+}
+
+mk_pkg_aosmium_webview () {
+	create_webview_package AOSmiumWebView
 }
 
 mk_pkg_bromite_webview () {
-	create_bromite_webview_package
-}
-
-create_mulch_webview_package () {
-	ZIP="NanoDroid-MulchWebView-${VERSION}.zip"
-
-	print_package MulchWebView
-
-	zip_add MulchWebView
-	zip_add_setup 0
-
-	sum_sign_package "${ZIP}"
-}
-
-mk_pkg_mulch_webview () {
-	create_mulch_webview_package
-}
-
-create_cromite_webview_package () {
-	ZIP="NanoDroid-CromiteWebView-${VERSION}.zip"
-
-	print_package CromiteWebView
-
-	zip_add CromiteWebView
-	zip_add_setup 0
-
-	sum_sign_package "${ZIP}"
+	create_webview_package BromiteWebView
 }
 
 mk_pkg_cromite_webview () {
-	create_cromite_webview_package
+	create_webview_package CromiteWebView
+}
+
+mk_pkg_mulch_webview () {
+	create_webview_package MulchWebView
 }
 
 create_uninstaller_package() {

@@ -1,0 +1,6 @@
+id=NanoDroid_AOSmiumWebView
+name=NanoDroid (AOSmium WebView sub module)
+author=originally Nanolx, forked by zer0def
+description=NanoDroid (AOSmium WebView sub module)
+minMagisk=1900
+updateJson=https://github.com/zer0def/NanoDroid/releases/latest/download/NanoDroid-AOSmiumWebView.json

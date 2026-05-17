@@ -12,6 +12,7 @@ fd_ANYSOFTKEYBOARD=(fdroid com.menny.android.anysoftkeyboard app AnysoftKeyboard
 fd_APPMANAGER=(fdroid io.github.muntashirakon.AppManager priv-app AppManager)
 fd_BARCODESCANNER=(fdroid com.google.zxing.client.android app BarcodeScanner)
 fd_BINARYEYE=(fdroid de.markusfisch.android.binaryeye app BinaryEye)
+fd_BLERADAR=(fdroid f.cking.software app BLERadar)
 fd_BRIAR=(briar org.briarproject.briar.android app Briar)
 fd_CONVERSATIONS=(fdroid eu.siacs.conversations app Conversations)
 fd_DAVX5=(fdroid at.bitfire.davdroid app DAVx5)
@@ -39,6 +40,7 @@ fd_NEBULO=(frostnerd com.frostnerd.smokescreen app Nebulo)
 fd_NEOBACKUP=(fdroid com.machiav3lli.backup app NeoBackup)
 fd_NEOSTORE=(fdroid com.machiav3lli.fdroid app NeoStore)
 fd_NETGUARD=(fdroid eu.faircode.netguard app NetGuard)
+fd_NETWORKSURVEY=(fdroid com.craxiom.networksurvey app NetworkSurvey)
 fd_OPENCAMERA=(fdroid net.sourceforge.opencamera app OpenCamera)
 fd_OPENKEYCHAIN=(fdroid org.sufficientlysecure.keychain app OpenKeyChain)
 fd_ORGANICMAPS=(fdroid app.organicmaps app OrganicMaps)
@@ -168,6 +170,15 @@ gh_CROMITEWV_arm64=(uazo/cromite app CromiteWebView_arm64 arm64_SystemWebView.ap
 gh_CROMITEWV_x64=(uazo/cromite app CromiteWebView_x64 x64_SystemWebView.apk)
 
 ###
+# AOSmium
+###
+
+gh_AOSMIUM_arm64=(axp-os/app_aosmium app AOSmiumBrowser_arm64 browser64-signed.apk)
+gh_AOSMIUM_arm=(axp-os/app_aosmium app AOSmiumBrowser_arm browser32-signed.apk)
+gh_AOSMIUMWV_arm64=(axp-os/app_aosmium app AOSmiumWebView_arm64 webview64-signed.apk)
+gh_AOSMIUMWV_arm=(axp-os/app_aosmium app AOSmiumWebView_arm webview32-signed.apk)
+
+###
 # Files Database (for consistency check)
 ###
 
@@ -181,11 +192,11 @@ file_database=(
 	"${appsfolder[3]}/DAVx5/DAVx5.apk.zst"
 	#"${appsfolder[3]}/Extirpater/Extirpater.apk.zst"
 	#"${appsfolder[3]}/FairEmail/FairEmail.apk.zst"
-	"${appsfolder[3]}/FOSSBrowser/FOSSBrowser.apk.zst"
+	#"${appsfolder[3]}/FOSSBrowser/FOSSBrowser.apk.zst"
 	"${appsfolder[3]}/BreezyWeather/BreezyWeather.apk.zst"
 	"${appsfolder[3]}/GMapsWV/GMapsWV.apk.zst"
-	"${appsfolder[3]}/GPSTest/GPSTest.apk.zst"
-	"${appsfolder[3]}/HackersKeyboard/HackersKeyboard.apk.zst"
+	#"${appsfolder[3]}/GPSTest/GPSTest.apk.zst"
+	#"${appsfolder[3]}/HackersKeyboard/HackersKeyboard.apk.zst"
 	#"${appsfolder[3]}/Hypatia/Hypatia.apk.zst"
 	"${appsfolder[3]}/Imagepipe/Imagepipe.apk.zst"
 	"${appsfolder[3]}/K9Mail/K9Mail.apk.zst"
@@ -208,8 +219,8 @@ file_database=(
 	"${appsfolder[3]}/PrivacyBlur/PrivacyBlur.apk.zst"
 	"${appsfolder[3]}/PrivacyBrowser/PrivacyBrowser.apk.zst"
 	#"${appsfolder[3]}/RCX/RCX.apk.zst"
-	"${appsfolder[3]}/RoundSync/RoundSync.apk.zst"
-	"${appsfolder[3]}/RSAF/RSAF.apk.zst"
+	#"${appsfolder[3]}/RoundSync/RoundSync.apk.zst"
+	#"${appsfolder[3]}/RSAF/RSAF.apk.zst"
 	#"${appsfolder[3]}/SagerNet/SagerNet.apk.zst"
 	#"${appsfolder[3]}/SchildiChat/SchildiChat.apk.zst"
 	#"${appsfolder[3]}/ScrambledExif/ScrambledExif.apk.zst"
@@ -245,7 +256,7 @@ file_database=(
 	"${appsfolder[3]}/MerxuryBlocker/MerxuryBlocker.apk.zst"
 	#"${appsfolder[3]}/SDMaidSE/SDMaidSE.apk.zst"
 	"${appsfolder[3]}/Shizuku/Shizuku.apk.zst"
-	"${appsfolder[3]}/SmartPackPackageManager/SmartPackPackageManager.apk.zst"
+	#"${appsfolder[3]}/SmartPackPackageManager/SmartPackPackageManager.apk.zst"
 
 	#"${appsfolder[3]}/BromiteBrowser_arm64/BromiteBrowser_arm64.apk.zst"
 	#"${appsfolder[3]}/BromiteBrowser_arm/BromiteBrowser_arm.apk.zst"
@@ -257,7 +268,7 @@ file_database=(
 	#"${appsfolder[3]}/Fcitx5_arm/Fcitx5_arm.apk.zst"
 	#"${appsfolder[3]}/Fcitx5Anthy_arm/Fcitx5Anthy_arm.apk.zst"
 
-	"${appsfolder[3]}/Seal_arm64/Seal_arm64.apk.zst"
+	#"${appsfolder[3]}/Seal_arm64/Seal_arm64.apk.zst"
 	#"${appsfolder[3]}/Seal_arm/Seal_arm.apk.zst"
 	"${appsfolder[3]}/VLC_arm64/VLC_arm64.apk.zst"
 	#"${appsfolder[3]}/VLC_arm/VLC_arm.apk.zst"
@@ -273,4 +284,8 @@ file_database=(
 	#"${appsfolder[13]}/app/MulchWebView_arm64/MulchWebView_arm64.apk.zst"
 	"${appsfolder[13]}/app/CromiteWebView_arm64/CromiteWebView_arm64.apk.zst"
 	#"${appsfolder[13]}/app/CromiteWebView_x64/CromiteWebView_x64.apk.zst"
+	#"${appsfolder[15]}/app/AOSmiumBrowser_arm64/AOSmiumBrowser_arm64.apk.zst"
+	#"${appsfolder[15]}/app/AOSmiumBrowser_arm/AOSmiumBrowser_arm.apk.zst"
+	"${appsfolder[15]}/app/AOSmiumWebView_arm64/AOSmiumWebView_arm64.apk.zst"
+	#"${appsfolder[15]}/app/AOSmiumWebView_arm/AOSmiumWebView_arm.apk.zst"
 )

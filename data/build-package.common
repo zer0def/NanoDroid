@@ -210,7 +210,9 @@ create zip files:
 	full			| create Full package zip from repo
 	fdroid			| create FDroid package zip from repo
 	uninstaller		| create uninstaller zip from repo
+	aosmiumwebview		| create AOSmium WebView zip from repo
 	bromitewebview		| create Bromite WebView zip from repo
+	cromitewebview		| create Cromite WebView zip from repo
 	mulchwebview		| create Mulch WebView zip from repo
 	osmand			| create OsmAnd package zip from repo
 	all			| create all zips from repo

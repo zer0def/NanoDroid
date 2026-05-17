@@ -2,32 +2,217 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  prepare:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: run
+      id: prepare
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        [ "$(id -u)" -eq 0 ] || SUDO=sudo;${SUDO} /bin/sh -c 'df -Th;free -m;cat /proc/cpuinfo'
+        ${SUDO} apk add --no-cache ca-certificates curl jq || { export DEBIAN_FRONTEND=noninteractive; ${SUDO} apt-get update; ${SUDO} apt-get install --no-install-recommends -y ca-certificates curl jq; }
+        upstream_aosmium_arm64_version="$(curl -fsSL https://api.github.com/repos/axp-os/app_aosmium/releases|jq -r '.[]|select(.assets[].name|endswith("webview64-signed.apk")).tag_name'|head -n1)"
+        upstream_aosmium_arm_version="$(curl -fsSL https://api.github.com/repos/axp-os/app_aosmium/releases|jq -r '.[]|select(.assets[].name|endswith("webview32-signed.apk")).tag_name'|head -n1)"
+        upstream_cromite_version="$(curl -fs https://api.github.com/repos/uazo/cromite/releases|jq -r '.[]|select(.assets[].name|contains("SystemWebView")).tag_name'|head -n1)"
+
+        curl -fsSL "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases"|jq -r '[.[]|select(.draft==false)][0].assets[]' >our_latest.json
+        our_cromite_version="$(jq -r 'select(.name|contains("CromiteWebView-v")).name' our_latest.json|awk -F- '{print $(NF-1)}')"
+        our_aosmium_arm64_version="$(jq -r 'select(.name|contains("AOSmiumWebView-v"))|select(.name|endswith("-arm64.zip")).name' our_latest.json|awk -F- '{print $(NF-1)}')"
+        our_aosmium_arm_version="$(jq -r 'select(.name|contains("AOSmiumWebView-v"))|select(.name|endswith("-arm.zip")).name' our_latest.json|awk -F- '{print $(NF-1)}')"
+
+        set -x
+        [ "v${our_cromite_version}" = "v${upstream_cromite_version%-*}" ] || CROMITE_SKIP=0
+        [ "v${our_aosmium_arm64_version}" = "v${upstream_aosmium_arm64_version}" ] || AOSMIUM_ARM64_SKIP=0
+        [ "v${our_aosmium_arm_version}" = "v${upstream_aosmium_arm_version}" ] || AOSMIUM_ARM_SKIP=0
+        [ "${CROMITE_SKIP:-1}" -ne 0 ] && [ "${AOSMIUM_ARM64_SKIP:-1}" -ne 0 ] && [ "${AOSMIUM_ARM_SKIP:-1}" -ne 0 ] || VERSION_CODE="$(date +%s)"
+        [ "${CROMITE_SKIP:-1}" -ne 0 ] && [ "${AOSMIUM_ARM64_SKIP:-1}" -ne 0 ] && [ "${AOSMIUM_ARM_SKIP:-1}" -ne 0 ] || {
+          api="https://api.github.com/repos/${GITHUB_REPOSITORY}/releases"
+          set +x;auth="Authorization: token ${GITHUB_TOKEN}"
+
+          _id="$(curl -fs -H "${auth}" "${api}/tags/${VERSION_CODE}" | jq -r .id)"
+          #set -x
+          [ -z "${_id}" ] || [ "${_id}" = "null" ] || exit 0;set +x
+
+          _id="$(echo "{\"tag_name\":\"${VERSION_CODE}\",\"name\":\"${VERSION_CODE}\",\"body\":\"${VERSION_CODE}\",\"draft\":true}" | curl -s -d@- -H "${auth}" -H "Content-Type: application/json" "${api}" | jq -r .id)"
+          #set -x
+          [ -n "${_id}" ] && [ "${_id}" != "null" ] || exit 0;set +x
+
+          gh_release_put(){ curl -fs -H "${auth}" -H "Content-Type: application/octet-stream" -o /dev/null --data-binary "@${1}" "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/${_id}/assets?name=${2}"; }
+
+          [ "${CROMITE_SKIP:-1}" -eq 0 ] || {
+            _url="$(curl -fs "${api}/latest" | jq -r '.assets[]|select(.name|contains("CromiteWebView-v")).browser_download_url')"
+            curl -fsSLO "${_url}";set +x;gh_release_put "${_url##*/}" "${_url##*/}"
+            _url="$(curl -fs "${api}/latest" | jq -r '.assets[]|select(.name|endswith("CromiteWebView-arm64.json")).browser_download_url')"
+            curl -fsSL "${_url}" | sed -e "s/\(versionCode\":\"\)[^\"]*\(\"\)/\1${VERSION_CODE}\2/" -e "s#\(download/\)[^/]*\(/\)#\1${VERSION_CODE}\2#" >NanoDroid-CromiteWebView-arm64.json
+            set +x;gh_release_put NanoDroid-CromiteWebView-arm64.json NanoDroid-CromiteWebView-arm64.json
+          }
+          [ "${AOSMIUM_ARM64_SKIP:-1}" -eq 0 ] || {
+            _url="$(curl -fs "${api}/latest" | jq -r '.assets[]|select(.name|contains("AOSmiumWebView-v"))|select(.name|endswith("-arm64.zip")).browser_download_url')"
+            curl -fsSLO "${_url}";set +x;gh_release_put "${_url##*/}" "${_url##*/}"
+            _url="$(curl -fs "${api}/latest" | jq -r '.assets[]|select(.name|endswith("AOSmiumWebView-arm64.json")).browser_download_url')"
+            curl -fsSL "${_url}" | sed -e "s/\(versionCode\":\"\)[^\"]*\(\"\)/\1${VERSION_CODE}\2/" -e "s#\(download/\)[^/]*\(/\)#\1${VERSION_CODE}\2#" >NanoDroid-AOSmiumWebView-arm64.json
+            set +x;gh_release_put NanoDroid-AOSmiumWebView-arm64.json NanoDroid-AOSmiumWebView-arm64.json
+          }
+          [ "${AOSMIUM_ARM_SKIP:-1}" -eq 0 ] || {
+            _url="$(curl -fs "${api}/latest" | jq -r '.assets[]|select(.name|contains("AOSmiumWebView-v"))|select(.name|endswith("-arm.zip")).browser_download_url')"
+            curl -fsSLO "${_url}";set +x;gh_release_put "${_url##*/}" "${_url##*/}"
+            _url="$(curl -fs "${api}/latest" | jq -r '.assets[]|select(.name|endswith("AOSmiumWebView-arm.json")).browser_download_url')"
+            curl -fsSL "${_url}" | sed -e "s/\(versionCode\":\"\)[^\"]*\(\"\)/\1${VERSION_CODE}\2/" -e "s#\(download/\)[^/]*\(/\)#\1${VERSION_CODE}\2#" >NanoDroid-AOSmiumWebView-arm.json
+            set +x;gh_release_put NanoDroid-AOSmiumWebView-arm.json NanoDroid-AOSmiumWebView-arm.json
+          }
+          echo "RELEASE_ID=${_id:-0}" >>"${GITHUB_OUTPUT}"
+        }
+        cat <<EOF >>"${GITHUB_OUTPUT}"
+        VERSION_CODE=${VERSION_CODE:-0}
+        CROMITE_SKIP=${CROMITE_SKIP:-1}
+        AOSMIUM_ARM64_SKIP=${AOSMIUM_ARM64_SKIP:-1}
+        AOSMIUM_ARM_SKIP=${AOSMIUM_ARM_SKIP:-1}
+        EOF
+    outputs:
+      RELEASE_ID: ${{ steps.prepare.outputs.RELEASE_ID }}
+      VERSION_CODE: ${{ steps.prepare.outputs.VERSION_CODE }}
+      CROMITE_SKIP: ${{ steps.prepare.outputs.CROMITE_SKIP }}
+      AOSMIUM_ARM64_SKIP: ${{ steps.prepare.outputs.AOSMIUM_ARM64_SKIP }}
+      AOSMIUM_ARM_SKIP: ${{ steps.prepare.outputs.AOSMIUM_ARM_SKIP }}
+  aosmium-arm:
+    runs-on: ubuntu-24.04
+    needs:
+    - prepare
+    #if: needs.prepare.outputs.AOSMIUM_ARM_SKIP == '0'
+    if: needs.prepare.outputs.RELEASE_ID != '0'
     steps:
     - name: run
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        git clone "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" .
+        [ "${{ needs.prepare.outputs.AOSMIUM_ARM_SKIP }}" -eq 0 ] || exit 0
+        [ "$(id -u)" -eq 0 ] || SUDO=sudo
+        ${SUDO} apk add --no-cache ca-certificates curl git jq unzip zip || { export DEBIAN_FRONTEND=noninteractive; ${SUDO} apt-get update; ${SUDO} apt-get install --no-install-recommends -y ca-certificates curl git jq unzip zip; }
+        git clone --depth=1 "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" .
 
-        version="$(curl -fs https://api.github.com/repos/uazo/cromite/releases|jq -r '.[]|select(.assets[].name|contains("SystemWebView")).tag_name'|head -n1)" version_code=$(date +%s)
-        auth="Authorization: token ${GITHUB_TOKEN}" api="https://api.github.com/repos/${GITHUB_REPOSITORY}/releases"
+        version="$(curl -fs https://api.github.com/repos/axp-os/app_aosmium/releases|jq -r '.[]|select(.assets[].name|endswith("webview32-signed.apk")).tag_name'|head -n1)"
+        set +x;auth="Authorization: token ${GITHUB_TOKEN}"
 
-        # check tag's existence
-        _id="$(curl -fs -H "${auth}" "${api}/tags/${version%-*}" | jq -r .id)"
-        [ -z "${_id}" ] || [ "${_id}" = "null" ] || exit 0
-
-        # create new tag
-        _id="$(echo "{\"tag_name\":\"${version%-*}\",\"name\":\"${version%-*}\",\"body\":\"${version%-*}\",\"draft\":true}" | curl -s -d@- -H "${auth}" -H "Content-Type: application/json" "${api}" | jq -r .id)"
-        [ -n "${_id}" ] && [ "${_id}" != "null" ] || exit 0
-
+        _id="${{ needs.prepare.outputs.RELEASE_ID }}" version_code="${{ needs.prepare.outputs.VERSION_CODE }}"
+        set +x
         gh_release_put(){ curl -fs -H "${auth}" -H "Content-Type: application/octet-stream" -o /dev/null --data-binary "@${1}" "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/${_id}/assets?name=${2}"; }
 
-        curl -sSLO https://github.com/uazo/cromite/releases/download/${version}/${i:-arm64}_SystemWebView.apk
+        curl -fsSLO https://github.com/axp-os/app_aosmium/releases/download/${version}/webview32-signed.apk
+
+        cp AOSmiumWebView/module.prop .
+        #updateJson=https://github.com/zer0def/NanoDroid/releases/latest/download/NanoDroid-AOSmiumWebView-arm.json
+        cat <<EOF >>module.prop
+        version=${version%-*}
+        versionCode=${version_code}
+        EOF
+
+        mkdir -p system/product/app/AOSmiumWebView/lib/arm{,64} \
+          system/product/app/webview system/product/overlay \
+          system/etc/init.d
+
+        touch system/product/app/webview/.replace
+        cp AOSmiumWebView/SystemWebviewOverlay.apk system/product/overlay/AOSmiumWebviewOverlay.apk
+        sed -i 's/^_app=.*/_app=org.axpos.aosmium_wv/' service.sh
+
+        mv "webview32-signed.apk" system/product/app/AOSmiumWebView/AOSmiumWebView.apk
+        unzip -l system/product/app/AOSmiumWebView/AOSmiumWebView.apk | awk '/-v7a\/.*\.so$/{print $NF}' | xargs -- unzip -qojd system/product/app/AOSmiumWebView/lib/arm system/product/app/AOSmiumWebView/AOSmiumWebView.apk
+
+        zip -r "NanoDroid-AOSmiumWebView-v${version%-*}-arm.zip" system/ module.prop service.sh
+        set +x;gh_release_put "NanoDroid-AOSmiumWebView-v${version%-*}-arm.zip" "NanoDroid-AOSmiumWebView-v${version%-*}-arm.zip"
+
+        cat <<EOF >"NanoDroid-AOSmiumWebView-arm.json"
+        {
+          "version":"${version%-*}",
+          "versionCode":"${version_code}",
+          "zipUrl":"https://github.com/${GITHUB_REPOSITORY}/releases/download/${version_code}/NanoDroid-AOSmiumWebView-v${version%-*}-arm.zip",
+          "changelog":"https://raw.githubusercontent.com/zer0def/NanoDroid/personal/README.md"
+        }
+        EOF
+        set +x;gh_release_put "NanoDroid-AOSmiumWebView-arm.json" "NanoDroid-AOSmiumWebView-arm.json"
+  aosmium-arm64:
+    runs-on: ubuntu-24.04
+    needs:
+    - prepare
+    #if: needs.prepare.outputs.AOSMIUM_ARM64_SKIP == '0'
+    if: needs.prepare.outputs.RELEASE_ID != '0'
+    steps:
+    - name: run
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        [ "${{ needs.prepare.outputs.AOSMIUM_ARM64_SKIP }}" -eq 0 ] || exit 0
+        [ "$(id -u)" -eq 0 ] || SUDO=sudo
+        ${SUDO} apk add --no-cache ca-certificates curl git jq unzip zip || { export DEBIAN_FRONTEND=noninteractive; ${SUDO} apt-get update; ${SUDO} apt-get install --no-install-recommends -y ca-certificates curl git jq unzip zip; }
+        git clone --depth=1 "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" .
+
+        version="$(curl -fs https://api.github.com/repos/axp-os/app_aosmium/releases|jq -r '.[]|select(.assets[].name|endswith("webview64-signed.apk")).tag_name'|head -n1)"
+        set +x;auth="Authorization: token ${GITHUB_TOKEN}"
+
+        _id="${{ needs.prepare.outputs.RELEASE_ID }}" version_code="${{ needs.prepare.outputs.VERSION_CODE }}"
+        set +x
+        gh_release_put(){ curl -fs -H "${auth}" -H "Content-Type: application/octet-stream" -o /dev/null --data-binary "@${1}" "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/${_id}/assets?name=${2}"; }
+
+        curl -fsSLO https://github.com/axp-os/app_aosmium/releases/download/${version}/webview64-signed.apk
+
+        cp AOSmiumWebView/module.prop .
+        #updateJson=https://github.com/zer0def/NanoDroid/releases/latest/download/NanoDroid-AOSmiumWebView-arm64.json
+        cat <<EOF >>module.prop
+        version=${version%-*}
+        versionCode=${version_code}
+        EOF
+
+        mkdir -p system/product/app/AOSmiumWebView/lib/arm{,64} \
+          system/product/app/webview system/product/overlay \
+          system/etc/init.d
+
+        touch system/product/app/webview/.replace
+        cp AOSmiumWebView/SystemWebviewOverlay.apk system/product/overlay/AOSmiumWebviewOverlay.apk
+        sed -i 's/^_app=.*/_app=org.axpos.aosmium_wv/' service.sh
+
+        mv "webview64-signed.apk" system/product/app/AOSmiumWebView/AOSmiumWebView.apk
+        unzip -l system/product/app/AOSmiumWebView/AOSmiumWebView.apk | awk '/-v7a\/.*\.so$/{print $NF}' | xargs -- unzip -qojd system/product/app/AOSmiumWebView/lib/arm system/product/app/AOSmiumWebView/AOSmiumWebView.apk
+        unzip -l system/product/app/AOSmiumWebView/AOSmiumWebView.apk | awk '/-v8a\/.*\.so$/{print $NF}' | xargs -- unzip -qojd system/product/app/AOSmiumWebView/lib/arm64 system/product/app/AOSmiumWebView/AOSmiumWebView.apk
+
+        zip -r "NanoDroid-AOSmiumWebView-v${version%-*}-arm64.zip" system/ module.prop service.sh
+        set +x;gh_release_put "NanoDroid-AOSmiumWebView-v${version%-*}-arm64.zip" "NanoDroid-AOSmiumWebView-v${version%-*}-arm64.zip"
+
+        cat <<EOF >"NanoDroid-AOSmiumWebView-arm64.json"
+        {
+          "version":"${version%-*}",
+          "versionCode":"${version_code}",
+          "zipUrl":"https://github.com/${GITHUB_REPOSITORY}/releases/download/${version_code}/NanoDroid-AOSmiumWebView-v${version%-*}-arm64.zip",
+          "changelog":"https://raw.githubusercontent.com/zer0def/NanoDroid/personal/README.md"
+        }
+        EOF
+        set +x;gh_release_put "NanoDroid-AOSmiumWebView-arm64.json" "NanoDroid-AOSmiumWebView-arm64.json"
+  cromite:
+    runs-on: ubuntu-24.04
+    needs:
+    - prepare
+    #if: needs.prepare.outputs.CROMITE_SKIP == '0'
+    if: needs.prepare.outputs.RELEASE_ID != '0'
+    steps:
+    - name: run
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        [ "${{ needs.prepare.outputs.CROMITE_SKIP }}" -eq 0 ] || exit 0
+        [ "$(id -u)" -eq 0 ] || SUDO=sudo
+        ${SUDO} apk add --no-cache ca-certificates curl git jq unzip zip || { export DEBIAN_FRONTEND=noninteractive; ${SUDO} apt-get update; ${SUDO} apt-get install --no-install-recommends -y ca-certificates curl git jq unzip zip; }
+        git clone --depth=1 "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" .
+
+        version="$(curl -fs https://api.github.com/repos/uazo/cromite/releases|jq -r '.[]|select(.assets[].name|contains("SystemWebView")).tag_name'|head -n1)" version_code=$(date +%s)
+        set +x;auth="Authorization: token ${GITHUB_TOKEN}"
+
+        _id="${{ needs.prepare.outputs.RELEASE_ID }}" version_code="${{ needs.prepare.outputs.VERSION_CODE }}"
+        set +x
+        gh_release_put(){ curl -fs -H "${auth}" -H "Content-Type: application/octet-stream" -o /dev/null --data-binary "@${1}" "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/${_id}/assets?name=${2}"; }
+
+        curl -fsSLO https://github.com/uazo/cromite/releases/download/${version}/arm64_SystemWebView.apk
 
         cp CromiteWebView/module.prop .
-        #updateJson=https://github.com/zer0def/NanoDroid/releases/latest/download/NanoDroid-CromiteWebView-${i:-arm64}.json
+        #updateJson=https://github.com/zer0def/NanoDroid/releases/latest/download/NanoDroid-CromiteWebView-arm64.json
         cat <<EOF >>module.prop
         version=${version%-*}
         versionCode=${version_code}
@@ -38,24 +223,37 @@ jobs:
           system/etc/init.d
 
         touch system/product/app/webview/.replace
-        cp CromiteWebView/SystemWebviewOverlay.apk system/product/overlay/SystemWebviewOverlay.apk
-        #cp service.sh system/etc/init.d/10-com.android.webview
+        cp CromiteWebView/SystemWebviewOverlay.apk system/product/overlay/CromiteWebviewOverlay.apk
+        sed -i 's/^_app=.*/_app=com.android.webview/' service.sh
 
-        mv "${i:-arm64}_SystemWebView.apk" system/product/app/CromiteWebView/CromiteWebView.apk
+        mv "arm64_SystemWebView.apk" system/product/app/CromiteWebView/CromiteWebView.apk
         unzip -l system/product/app/CromiteWebView/CromiteWebView.apk | awk '/-v7a\/.*\.so$/{print $NF}' | xargs -- unzip -qojd system/product/app/CromiteWebView/lib/arm system/product/app/CromiteWebView/CromiteWebView.apk
         unzip -l system/product/app/CromiteWebView/CromiteWebView.apk | awk '/-v8a\/.*\.so$/{print $NF}' | xargs -- unzip -qojd system/product/app/CromiteWebView/lib/arm64 system/product/app/CromiteWebView/CromiteWebView.apk
 
-        zip -r "NanoDroid-CromiteWebView-${version%-*}-${i:-arm64}.zip" system/ module.prop service.sh
-        gh_release_put "NanoDroid-CromiteWebView-${version%-*}-${i:-arm64}.zip" "NanoDroid-CromiteWebView-${version%-*}-${i:-arm64}.zip"
+        zip -r "NanoDroid-CromiteWebView-${version%-*}-arm64.zip" system/ module.prop service.sh
+        set +x;gh_release_put "NanoDroid-CromiteWebView-${version%-*}-arm64.zip" "NanoDroid-CromiteWebView-${version%-*}-arm64.zip"
 
-        cat <<EOF >"NanoDroid-CromiteWebView-${i:-arm64}.json"
+        cat <<EOF >"NanoDroid-CromiteWebView-arm64.json"
         {
           "version":"${version%-*}",
           "versionCode":"${version_code}",
-          "zipUrl":"https://github.com/${GITHUB_REPOSITORY}/releases/download/${version%-*}/NanoDroid-CromiteWebView-${version%-*}-${i:-arm64}.zip",
+          "zipUrl":"https://github.com/${GITHUB_REPOSITORY}/releases/download/${version_code}/NanoDroid-CromiteWebView-${version%-*}-arm64.zip",
           "changelog":"https://raw.githubusercontent.com/zer0def/NanoDroid/personal/README.md"
         }
         EOF
-        gh_release_put "NanoDroid-CromiteWebView-${i:-arm64}.json" "NanoDroid-CromiteWebView-${i:-arm64}.json"
-
-        echo "{\"draft\":false}" | curl -s -d@- -o /dev/null -XPATCH -H "${auth}" -H "Content-Type: application/json" "${api}/${_id}"
+        set +x;gh_release_put "NanoDroid-CromiteWebView-arm64.json" "NanoDroid-CromiteWebView-arm64.json"
+  publish:
+    runs-on: ubuntu-24.04
+    needs:
+    - prepare
+    - aosmium-arm
+    - aosmium-arm64
+    - cromite
+    if: needs.prepare.outputs.RELEASE_ID != '0'
+    steps:
+    - name: run
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        [ "$(id -u)" -eq 0 ] || SUDO=sudo;${SUDO} apk add --no-cache ca-certificates curl || { export DEBIAN_FRONTEND=noninteractive; ${SUDO} apt-get update; ${SUDO} apt-get install --no-install-recommends -y ca-certificates curl; }
+        set +x;echo "{\"draft\":false}" | curl -s -d@- -o /dev/null -XPATCH -H "Authorization: token ${GITHUB_TOKEN}" -H "Content-Type: application/json" "https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/${{ needs.prepare.outputs.RELEASE_ID }}"
