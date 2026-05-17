@@ -3,7 +3,7 @@ on:
 
 jobs:
   run:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
     - name: run
       env:
@@ -12,13 +12,13 @@ jobs:
         #[ "${GITHUB_TOKEN}" ] || exit 0
 
         api="https://api.github.com/repos/${GITHUB_REPOSITORY}/releases"
-        tag="$(date +%Y%m%d)" auth="Authorization: token ${GITHUB_TOKEN}"
+        _date="$(date +%Y%m%d)" tag="$(date +%Y%m%d%H%M%S)" auth="Authorization: token ${GITHUB_TOKEN}"
         _id="$(curl -fs -H "${auth}" "${api}/tags/${tag}" | jq -r .id)"
         [ -z "${_id}" ] || [ "${_id}" = "null" ] || exit 0
 
         git clone "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" .
 
-        for i in Full CromiteWebView; do
+        for i in Full AOSmiumWebView CromiteWebView; do
           cat <<EOF >>"${i}/module.prop"
         version=${tag}
         versionCode=${tag}
@@ -27,6 +27,7 @@ jobs:
 
         ./build-package pull
         #./build-package all ||:
+        ./build-package aosmiumwebview ||:
         ./build-package cromitewebview ||:
 
         _id="$(echo "{\"tag_name\":\"${tag}\",\"name\":\"${tag}\",\"body\":\"${tag}\",\"draft\":true}" | curl -s -d@- -H "${auth}" -H "Content-Type: application/json" "${api}" | jq -r .id)"
@@ -35,7 +36,7 @@ jobs:
         gh_release_put(){ curl -fs -H "${auth}" -H "Content-Type: application/octet-stream" -o /dev/null --data-binary "@${1}" "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/${_id}/assets?name=${2}"; }
 
         #for i in NanoDroid NanoDroid-BromiteWebView NanoDroid-MulchWebView; do
-        for i in NanoDroid-CromiteWebView; do
+        for i in NanoDroid-AOSmiumWebView NanoDroid-CromiteWebView; do
           cat <<EOF >"${i}.json"
         {
           "version":"${tag}",
@@ -45,7 +46,7 @@ jobs:
         }
         EOF
           gh_release_put "${i}.json" "${i}.json"
-          gh_release_put "${i}-23.2.${tag}.zip" "${i}-23.2.${tag}.zip"
-          gh_release_put "${i}-23.2.${tag}.zip.sha256" "${i}-23.2.${tag}.zip.sha256"
+          gh_release_put "${i}-23.2.${_date}.zip" "${i}-23.2.${tag}.zip"
+          gh_release_put "${i}-23.2.${_date}.zip.sha256" "${i}-23.2.${tag}.zip.sha256"
         done
         echo '{"draft":false}' | curl -s -o /dev/null -XPATCH -d@- -H "${auth}" -H "Content-Type: application/json" "${api}/${_id}"

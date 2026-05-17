@@ -41,14 +41,15 @@ grab_apps () {
 	grab_apk_from_repo ${fd_ANDIODINE[@]}
 	#grab_apk_from_repo ${fd_ANYSOFTKEYBOARD[@]}
 	grab_apk_from_repo ${fd_BINARYEYE[@]}
+	grab_apk_from_repo ${fd_BLERADAR[@]}
 	#grab_apk_from_repo ${fd_BRIAR[@]}
 	grab_apk_from_repo ${fd_CONVERSATIONS[@]}
 	grab_apk_from_repo ${fd_DAVX5[@]}
 	#grab_apk_from_repo ${fd_EXTIRPATER[@]}
-	grab_apk_from_repo ${fd_FOSSBROWSER[@]}
+	#grab_apk_from_repo ${fd_FOSSBROWSER[@]}
 	grab_apk_from_repo ${fd_BREEZYWEATHER[@]}
 	grab_apk_from_repo ${fd_GMAPSWV[@]}
-	grab_apk_from_repo ${fd_GPSTEST[@]}
+	#grab_apk_from_repo ${fd_GPSTEST[@]}
 	grab_apk_from_repo ${fd_HACKERSKEYBOARD[@]}
 	#grab_apk_from_repo ${fd_HYPATIA[@]}
 	grab_apk_from_repo ${fd_IMAGEPIPE[@]}
@@ -60,6 +61,7 @@ grab_apps () {
 	#grab_apk_from_repo ${fd_NEBULO[@]}
 	grab_apk_from_repo ${fd_NEOBACKUP[@]}
 	#grab_apk_from_repo ${fd_NEOSTORE[@]}
+	grab_apk_from_repo ${fd_NETWORKSURVEY[@]}
 	grab_apk_from_repo ${fd_OPENCAMERA[@]}
 	grab_apk_from_repo ${fd_OPENKEYCHAIN[@]}
 	grab_apk_from_repo ${fd_ORGANICMAPS[@]}
@@ -70,8 +72,8 @@ grab_apps () {
 	grab_apk_from_repo ${fd_PRIVACYBLUR[@]}
 	grab_apk_from_repo ${fd_PRIVACYBROWSER[@]}
 	#grab_apk_from_repo ${fd_RCX[@]}
-	grab_apk_from_github ${gh_ROUNDSYNC[@]}
-	grab_apk_from_github ${gh_RSAF[@]}
+	#grab_apk_from_github ${gh_ROUNDSYNC[@]}
+	#grab_apk_from_github ${gh_RSAF[@]}
 	#grab_apk_from_repo ${fd_SAGERNET[@]}
 	#grab_apk_from_repo ${fd_SCHILDICHAT[@]}
 	#grab_apk_from_repo ${fd_SCRAMBLEDEXIF[@]}
@@ -106,7 +108,7 @@ grab_apps () {
 	#grab_apk_from_repo ${fd_FCITX5_arm[@]}
 	#grab_apk_from_repo ${fd_FCITX5ANTHY_arm[@]}
 
-	grab_apk_from_repo ${fd_SEAL_arm64[@]}
+	#grab_apk_from_repo ${fd_SEAL_arm64[@]}
 	#grab_apk_from_repo ${fd_SEAL_arm[@]}
 	grab_apk_from_repo ${fd_VLC_arm64[@]}
 	#grab_apk_from_repo ${fd_VLC_arm[@]}
@@ -115,13 +117,15 @@ grab_apps () {
 	grab_apk_from_repo ${fd_HAIL[@]}
 	#grab_apk_from_repo ${fd_INSULAR[@]}  # breaks
 	grab_apk_from_repo ${fd_MERXURYBLOCKER[@]}
-	grab_apk_from_repo ${fd_SMARTPACKPKGMGR[@]}
+	#grab_apk_from_repo ${fd_SMARTPACKPKGMGR[@]}
 	#grab_apk_from_github ${gh_SDMAIDSE[@]}
 	grab_apk_from_github ${gh_SHIZUKU[@]}
 
 	# GitHub
 	#grab_apk_from_github ${gh_BROMITE_arm64[@]}
 	#grab_apk_from_github ${gh_BROMITE_x64[@]}
+	#grab_apk_from_github ${gh_AOSMIUM_arm64[@]}
+	#grab_apk_from_github ${gh_AOSMIUM_arm[@]}
 	#grab_apk_from_github ${gh_FAIREMAIL[@]}
 	grab_apk_from_github ${gh_NETGUARD[@]}
 	#grab_apk_from_github ${gh_SIGNALFOSS[@]}
@@ -148,6 +152,8 @@ grab_webview () {
 	#grab_apk_from_repo ${mulch_WEBVIEW_arm[@]}
 	grab_apk_from_github ${gh_CROMITEWV_arm64[@]}
 	#grab_apk_from_github ${gh_CROMITEWV_x64[@]}
+	grab_apk_from_github ${gh_AOSMIUMWV_arm64[@]}
+	#grab_apk_from_github ${gh_AOSMIUMWV_arm[@]}
 }
 
 update_webview () {

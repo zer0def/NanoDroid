@@ -23,24 +23,10 @@ run_initscripts () {
 	done
 }
 
-install_bromitewebview () {
+install_webview () {
 	# wait until boot completed
 	until [ "$(getprop sys.boot_completed)." = "1." ]; do sleep 1; done
-
-	# Bromite WebView needs to be installed as user app to prevent crashes
-	if [ -d "${MODDIR}/system/product/app" ]; then
-		pm list packages -f | grep -q /data.*org.bromite.webview || \
-			pm install -r "${MODDIR}"/system/product/app/*/*.apk &
-	else
-		pm list packages -f | grep -q /data.*org.bromite.webview || \
-			pm install -r "${MODDIR}"/system/app/*/*.apk &
-	fi
-}
-
-install_cromitewebview () {
-	# wait until boot completed
-	until [ "$(getprop sys.boot_completed)." = "1." ]; do sleep 1; done
-	_app=com.android.webview
+	_app="${1:-com.android.webview}"
 	_entry="$(pm list packages -f --show-versioncode | grep "=${_app} ")"
 	_apk="${_entry%%=*}"
 	_aapt2="$(command -v aapt2 || "${MODDIR}/system/bin/aapt2")"
@@ -60,12 +46,12 @@ case "${MODULE}" in
 		run_initscripts &
 	;;
 
-	NanoDroid_BromiteWebView )
-		install_bromitewebview &
+	NanoDroid_AOSmiumWebView )
+		install_webview org.axpos.aosmium_wv &
 	;;
 
 	NanoDroid_CromiteWebView )
-		install_cromitewebview &
+		install_webview com.android.webview &
 	;;
 
 	* )
